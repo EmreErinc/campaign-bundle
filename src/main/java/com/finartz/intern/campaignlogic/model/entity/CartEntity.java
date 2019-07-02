@@ -13,8 +13,8 @@ import java.util.List;
 @Setter
 @Builder
 @Document(collection = "cart")
-public class CartEntity {
+public class CartEntity<T extends  CartItem> {
   @Id
   private String id;
-  private List<CartItem> itemList;
+  private List<T> itemList;
 }

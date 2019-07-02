@@ -1,7 +1,6 @@
 package com.finartz.intern.campaignlogic.model.entity;
 
 import com.finartz.intern.campaignlogic.model.value.CampaignStatus;
-import com.finartz.intern.campaignlogic.model.value.Badge;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

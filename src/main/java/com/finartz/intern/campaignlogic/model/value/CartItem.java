@@ -8,8 +8,4 @@ import lombok.Setter;
 @Setter
 @Builder
 public class CartItem {
-  private String itemId;
-  private Double addedAt;
-  private Double updatedAt;
-  private Integer count;
 }

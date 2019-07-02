@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
-public class CartResponse {
+public class CartResponse<T extends CartItem> {
   private String id;
-  private List<CartItem> itemList;
+  private List<T> itemList;
 }

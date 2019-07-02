@@ -7,8 +7,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class CartItemResult extends CartItem{
+public class CartItemDetail {
   private String itemId;
-  private Double price;
+  private Double addedAt;
+  private Double updatedAt;
   private Integer count;
 }

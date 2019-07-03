@@ -1,11 +1,9 @@
 package com.finartz.intern.campaignlogic.model.request;
 
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 @Builder
 public class LoginRequest {
   private String email;

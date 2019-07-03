@@ -1,0 +1,50 @@
+package com.finartz.intern.campaignlogic.model.entity;
+
+import com.finartz.intern.campaignlogic.model.value.Role;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+
+@Entity
+@Table(name = "user")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AccountEntity {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Integer accountId;
+
+  @Column(name = "name")
+  @NotNull
+  private String name;
+
+  @Column(name = "last_name")
+  @NotNull
+  private String lastName;
+
+  @Column(name = "email")
+  @NotNull
+  private String email;
+
+  @Column(name = "password")
+  @NotNull
+  private String password;
+
+  @Column(name = "created_at")
+  @NotNull
+  private Long createdAt;
+
+  @Column(name = "updated_at")
+  private Long updatedAt;
+
+  @Column(name = "role")
+  @NotNull
+  @Enumerated(EnumType.STRING)
+  private Role role;
+}

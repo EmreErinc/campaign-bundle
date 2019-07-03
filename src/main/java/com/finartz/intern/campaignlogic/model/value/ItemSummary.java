@@ -1,15 +1,13 @@
 package com.finartz.intern.campaignlogic.model.value;
 
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 @Builder
 public class ItemSummary {
   private String id;
   private Double price;
   private String name;
-  private Cargo cargo;
+  private CargoType cargoType;
 }

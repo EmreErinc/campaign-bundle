@@ -1,13 +1,14 @@
 package com.finartz.intern.campaignlogic.model.request;
 
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+import javax.validation.constraints.NotNull;
+
+@Data
 @Builder
 public class RegisterRequest {
+  @NotNull
   private String name;
   private String lastName;
   private String email;

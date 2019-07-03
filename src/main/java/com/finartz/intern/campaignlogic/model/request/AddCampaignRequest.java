@@ -1,16 +1,18 @@
 package com.finartz.intern.campaignlogic.model.request;
 
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 @Builder
 public class AddCampaignRequest {
   private String id;
-  private Double startAt;
-  private Double endAt;
+  private String itemId;
+  private String title;
+  private Long startAt;
+  private Long endAt;
   private Integer cartLimit;
   private Integer campaignLimit;
+  private Integer requirement;
+  private Integer gift;
 }

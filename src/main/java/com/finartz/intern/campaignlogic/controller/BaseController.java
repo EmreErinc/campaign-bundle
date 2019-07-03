@@ -10,7 +10,7 @@ public abstract class BaseController{
   @Autowired
   private JwtTokenProvider jwtTokenProvider;
 
-  public String getUserIdFromHeader(HttpHeaders headers) {
+  public String getAccountIdFromHeader(HttpHeaders headers) {
     return jwtTokenProvider
         .getIdFromToken(headers.get("Authorization")
             .get(0)

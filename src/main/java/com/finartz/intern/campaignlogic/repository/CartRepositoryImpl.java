@@ -10,8 +10,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 public class CartRepositoryImpl implements CartRepository {
-  //TODO cart infos will add to mongodb
-
   @Autowired
   private MongoTemplate mongoTemplate;
 
@@ -29,12 +27,12 @@ public class CartRepositoryImpl implements CartRepository {
   @Override
   public CartEntity updateCart(CartEntity cartEntity) {
     Query query = new Query();
-    query.addCriteria(Criteria.where("_id").is(cartEntity.getId()));
+    query.addCriteria(Criteria.where("_id").is(cartEntity.getCartId()));
 
     Update update = new Update();
     update.set("itemList", cartEntity.getItemList());
 
     mongoTemplate.updateFirst(query, update, CartEntity.class);
-    return getCart(cartEntity.getId());
+    return getCart(cartEntity.getCartId());
   }
 }

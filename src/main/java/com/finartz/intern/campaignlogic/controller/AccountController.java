@@ -28,4 +28,9 @@ public class AccountController extends BaseController {
   public LoginResponse login(@RequestBody LoginRequest request) {
     return accountService.loginUser(request);
   }
+
+  @PostMapping("/seller/register")
+  public RegisterResponse sellerRegister(@RequestBody RegisterRequest request){
+    return accountService.addSellerAccount(request);
+  }
 }

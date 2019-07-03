@@ -1,5 +1,5 @@
 package com.finartz.intern.campaignlogic.model.value;
 
-public enum  Cargo {
-  FREE, PAY
+public enum SellerStatus {
+  ACTIVE, FORBIDDEN, CANCELED
 }

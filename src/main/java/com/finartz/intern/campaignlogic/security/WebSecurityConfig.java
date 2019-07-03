@@ -11,8 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import static com.finartz.intern.campaignlogic.security.SecurityConstants.SIGN_IN_URL;
-import static com.finartz.intern.campaignlogic.security.SecurityConstants.SIGN_UP_URL;
+import static com.finartz.intern.campaignlogic.security.SecurityConstants.*;
 
 @Configuration
 @EnableWebSecurity
@@ -42,6 +41,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         .authorizeRequests()
         .antMatchers(SIGN_IN_URL).permitAll()
         .antMatchers(SIGN_UP_URL).permitAll()
+        .antMatchers(SELLER_SIGN_UP).permitAll()
         .anyRequest().authenticated()
         .and()
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)

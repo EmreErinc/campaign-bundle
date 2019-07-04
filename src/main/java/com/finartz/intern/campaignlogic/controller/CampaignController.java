@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -22,7 +23,7 @@ public class CampaignController extends BaseController {
   }
 
   @PostMapping
-  public CampaignResponse addCampaign(@RequestHeader HttpHeaders headers, @RequestBody AddCampaignRequest request) {
+  public CampaignResponse addCampaign(@RequestHeader HttpHeaders headers, @RequestBody @Valid AddCampaignRequest request) {
     return campaignService.addCampaign(getAccountIdFromHeader(headers), request);
   }
 

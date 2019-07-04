@@ -4,6 +4,8 @@ import com.finartz.intern.campaignlogic.commons.Converters;
 import com.finartz.intern.campaignlogic.model.entity.SellerEntity;
 import com.finartz.intern.campaignlogic.model.request.AddSellerRequest;
 import com.finartz.intern.campaignlogic.model.response.SellerResponse;
+import com.finartz.intern.campaignlogic.model.value.Role;
+import com.finartz.intern.campaignlogic.repository.AccountRepository;
 import com.finartz.intern.campaignlogic.repository.SellerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
@@ -12,30 +14,34 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-public class SellerServiceImpl implements SellerService {
+public class SellerServiceImpl extends BaseServiceImpl implements SellerService {
   private SellerRepository sellerRepository;
 
   @Autowired
-  public SellerServiceImpl(SellerRepository sellerRepository) {
+  public SellerServiceImpl(SellerRepository sellerRepository,
+                           AccountRepository accountRepository) {
+    super(accountRepository, sellerRepository);
     this.sellerRepository = sellerRepository;
   }
 
   @Override
   public SellerResponse addSeller(String accountId, AddSellerRequest request) {
-    //TODO should add privilege controls
+    if (getRoleByAccountId(accountId).equals(Role.USER)){
+      throw new ApplicationContextException("You don't have permission for this operation");
+    }
 
     return Converters
         .sellerEntityToSellerResponse(
             sellerRepository
                 .save(Converters
-                    .addSellerRequestToSellerEntity(request)));
+                    .addSellerRequestToSellerEntity(accountId,request)));
   }
 
   @Override
   public SellerResponse getSeller(String sellerId) {
     //TODO should add privilege controls
 
-    Optional<SellerEntity> optionalSellerEntity = sellerRepository.findById(sellerId);
+    Optional<SellerEntity> optionalSellerEntity = sellerRepository.findById(Integer.valueOf(sellerId));
 
     if (!optionalSellerEntity.isPresent()) {
       throw new ApplicationContextException("Seller Not Found");

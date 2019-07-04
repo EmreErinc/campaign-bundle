@@ -22,7 +22,7 @@ import static com.finartz.intern.campaignlogic.security.SecurityConstants.TOKEN_
 
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
-  //@Autowired
+  @Autowired
   @Resource(name = "accountService")
   private UserDetailsService userDetailsService;
 

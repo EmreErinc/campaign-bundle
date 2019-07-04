@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CartRepository{
-  CartEntity getCart(String cartId);
+  CartEntity findCart(int cartId);
 
   boolean createCart();
 

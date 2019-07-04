@@ -15,9 +15,9 @@ public class CartController extends BaseController {
     this.cartService = cartService;
   }
 
-  @GetMapping("/add/{id}/{count}")
-  public boolean addToCart(@RequestHeader HttpHeaders header, @PathVariable String id, @PathVariable String count) {
-    return cartService.addToCart(getAccountIdFromHeader(header), id, count);
+  @GetMapping("/add/{itemId}/{count}")
+  public boolean addToCart(@RequestHeader HttpHeaders header, @PathVariable String itemId, @PathVariable String count) {
+    return cartService.addToCart(getAccountIdFromHeader(header), itemId, count);
   }
 
   @GetMapping("/remove/{id}")

@@ -37,42 +37,44 @@ public class Converters {
     return LoginResponse.builder()
         .name(accountEntity.getName())
         .lastName(accountEntity.getLastName())
-        .id(accountEntity.getAccountId().toString())
+        .id(accountEntity.getId().toString())
         .build();
   }
 
-  public static SellerEntity addSellerRequestToSellerEntity(AddSellerRequest request) {
+  public static SellerEntity addSellerRequestToSellerEntity(String accountId, AddSellerRequest request) {
     return SellerEntity.builder()
         .name(request.getName())
         .address(request.getAddress())
         .createdAt(Instant.now().toEpochMilli())
         .status(SellerStatus.ACTIVE)
+        .accountId(Integer.valueOf(accountId))
         .build();
   }
 
   public static SellerResponse sellerEntityToSellerResponse(SellerEntity sellerEntity) {
     return SellerResponse.builder()
-        .id(sellerEntity.getSellerId().toString())
+        .id(sellerEntity.getId().toString())
         .name(sellerEntity.getName())
         .address(sellerEntity.getAddress())
         .build();
   }
 
-  public static ItemEntity addItemRequestToItemEntity(AddItemRequest request, String sellerId) {
+  public static ItemEntity addItemRequestToItemEntity(AddItemRequest request, int sellerId) {
     return ItemEntity.builder()
         .name(request.getName())
         .price(request.getPrice())
         .description(request.getDescription())
         .createdAt(Instant.now().toEpochMilli())
-        .sellerId(Integer.valueOf(sellerId))
+        .sellerId(sellerId)
         .cargoType(request.getCargoType())
         .cargoCompany(request.getCargoCompany())
+        .stock(request.getStock())
         .build();
   }
 
   public static ItemResponse itemEntityToItemResponse(ItemEntity itemEntity) {
     return ItemResponse.builder()
-        .id(itemEntity.getItemId().toString())
+        .id(itemEntity.getId().toString())
         .name(itemEntity.getName())
         .price(itemEntity.getPrice())
         .cargoType(itemEntity.getCargoType())
@@ -82,7 +84,7 @@ public class Converters {
 
   public static ItemDetail itemEntityToItemDetail(ItemEntity itemEntity) {
     return ItemDetail.builder()
-        .id(itemEntity.getItemId().toString())
+        .id(itemEntity.getId().toString())
         .name(itemEntity.getName())
         .description(itemEntity.getDescription())
         .cargoType(itemEntity.getCargoType())
@@ -99,14 +101,14 @@ public class Converters {
 
   public static ItemSummary itemEntityToItemSummary(ItemEntity itemEntity) {
     return ItemSummary.builder()
-        .id(itemEntity.getItemId().toString())
+        .id(itemEntity.getId().toString())
         .name(itemEntity.getName())
         .cargoType(itemEntity.getCargoType())
         .price(itemEntity.getPrice())
         .build();
   }
 
-  public static CampaignEntity addCampaignRequestToCampaignEntity(AddCampaignRequest request, String sellerId) {
+  public static CampaignEntity addCampaignRequestToCampaignEntity(AddCampaignRequest request, int sellerId) {
     return CampaignEntity.builder()
         .title(request.getTitle())
         .startAt(request.getStartAt())
@@ -124,8 +126,8 @@ public class Converters {
 
   public static CampaignResponse campaignEntityToCampaignResponse(CampaignEntity campaignEntity) {
     return CampaignResponse.builder()
-        .itemId(campaignEntity.getItemId())
-        .sellerId(campaignEntity.getSellerId())
+        .itemId(campaignEntity.getItemId().toString())
+        .sellerId(campaignEntity.getSellerId().toString())
         .title(campaignEntity.getTitle())
         .campaignLimit(campaignEntity.getCampaignLimit())
         .cartLimit(campaignEntity.getCartLimit())
@@ -167,7 +169,7 @@ public class Converters {
 
   public static SaleResponse saleEntityToSaleResponse(SalesEntity salesEntity){
     return SaleResponse.builder()
-        .saleId(salesEntity.getSaleId())
+        .saleId(salesEntity.getId())
         .build();
   }
 }

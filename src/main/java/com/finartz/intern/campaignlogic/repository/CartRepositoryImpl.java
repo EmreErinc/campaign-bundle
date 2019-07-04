@@ -14,7 +14,7 @@ public class CartRepositoryImpl implements CartRepository {
   private MongoTemplate mongoTemplate;
 
   @Override
-  public CartEntity getCart(String cartId) {
+  public CartEntity findCart(int cartId) {
     return mongoTemplate.findById(cartId, CartEntity.class);
   }
 
@@ -27,12 +27,12 @@ public class CartRepositoryImpl implements CartRepository {
   @Override
   public CartEntity updateCart(CartEntity cartEntity) {
     Query query = new Query();
-    query.addCriteria(Criteria.where("_id").is(cartEntity.getCartId()));
+    query.addCriteria(Criteria.where("_id").is(cartEntity.getId()));
 
     Update update = new Update();
     update.set("itemList", cartEntity.getItemList());
 
     mongoTemplate.updateFirst(query, update, CartEntity.class);
-    return getCart(cartEntity.getCartId());
+    return findCart(Integer.valueOf(cartEntity.getId()));
   }
 }

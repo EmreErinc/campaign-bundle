@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping("/seller")
 public class SellerController extends BaseController{
@@ -18,7 +20,7 @@ public class SellerController extends BaseController{
   }
 
   @PostMapping
-  public SellerResponse addSeller(@RequestHeader HttpHeaders headers, AddSellerRequest request){
+  public SellerResponse addSeller(@RequestHeader HttpHeaders headers,@RequestBody @Valid AddSellerRequest request){
     return sellerService.addSeller(getAccountIdFromHeader(headers), request);
   }
 

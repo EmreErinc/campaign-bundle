@@ -12,7 +12,9 @@ import com.finartz.intern.campaignlogic.repository.AccountRepository;
 import com.finartz.intern.campaignlogic.security.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,7 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-@Service("accountService")
+@Service(value = "accountService")
 public class AccountServiceImpl implements  AccountService, UserDetailsService {
   private final JwtTokenProvider jwtTokenProvider;
   private final AccountRepository accountRepository;
@@ -43,10 +45,10 @@ public class AccountServiceImpl implements  AccountService, UserDetailsService {
     String cartId = "null-cart-id";
 
     return RegisterResponse.builder()
-        .id(accountEntity.getAccountId().toString())
+        .id(accountEntity.getId().toString())
         .name(accountEntity.getName())
         .lastName(accountEntity.getLastName())
-        .token(generateToken(accountEntity.getAccountId().toString(), cartId, Role.USER))
+        .token(generateToken(accountEntity.getId().toString(), cartId, Role.USER))
         .build();
   }
 
@@ -62,7 +64,7 @@ public class AccountServiceImpl implements  AccountService, UserDetailsService {
     String cartId = "null-cart-id";
 
     LoginResponse loginResponse = Converters.accountToLoginResponse(optionalUserEntity.get());
-    loginResponse.setToken(generateToken(optionalUserEntity.get().getAccountId().toString(), cartId, optionalUserEntity.get().getRole()));
+    loginResponse.setToken(generateToken(optionalUserEntity.get().getId().toString(), cartId, optionalUserEntity.get().getRole()));
 
     return loginResponse;
   }
@@ -79,10 +81,10 @@ public class AccountServiceImpl implements  AccountService, UserDetailsService {
     String cartId = "null-cart-id";
 
     return RegisterResponse.builder()
-        .id(accountEntity.getAccountId().toString())
+        .id(accountEntity.getId().toString())
         .name(accountEntity.getName())
         .lastName(accountEntity.getLastName())
-        .token(generateToken(accountEntity.getAccountId().toString(), cartId, Role.SELLER))
+        .token(generateToken(accountEntity.getId().toString(), cartId, Role.SELLER))
         .build();
   }
 
@@ -97,7 +99,7 @@ public class AccountServiceImpl implements  AccountService, UserDetailsService {
   @Override
   public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
     //AccountEntity userEntity = userRepository.findByEmail(email);
-    Optional<AccountEntity> userEntity = accountRepository.findById(userId);
+    Optional<AccountEntity> userEntity = accountRepository.findById(Integer.valueOf(userId));
     if (!userEntity.isPresent()) {
       try {
         throw new Exception("AccountEntity Not Found");
@@ -105,13 +107,13 @@ public class AccountServiceImpl implements  AccountService, UserDetailsService {
         e.printStackTrace();
       }
     }
-    return new org.springframework.security.core.userdetails.User(userEntity.get().getEmail(), userEntity.get().getPassword(), getAuthority(userEntity.get()));
+    return new User(userEntity.get().getEmail(), userEntity.get().getPassword(), getAuthority(userEntity.get()));
   }
 
-  private Set getAuthority(AccountEntity accountEntity) {
-    Set authorities = new HashSet<>();
+  private Set<GrantedAuthority> getAuthority(AccountEntity accountEntity) {
+    Set<GrantedAuthority> authorities = new HashSet<>();
     //accountEntity.getRole().getRoles().forEach(role -> authorities.add(new SimpleGrantedAuthority(role.name())));
-    authorities.add(accountEntity.getRole());
+    authorities.add(new SimpleGrantedAuthority(accountEntity.getRole().name()));
     return authorities;
   }
 }

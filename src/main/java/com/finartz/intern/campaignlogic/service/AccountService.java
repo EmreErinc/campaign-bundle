@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 @Service
 public interface AccountService {
   RegisterResponse addUser(RegisterRequest request);
+
   LoginResponse loginUser(LoginRequest request);
+
   RegisterResponse addSellerAccount(RegisterRequest request);
 }

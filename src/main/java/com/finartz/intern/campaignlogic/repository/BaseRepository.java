@@ -6,12 +6,14 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BaseRepository<T, String> extends CrudRepository<T, String>{
-  Optional<T> findByName(String s);
+  Optional<T> findById(int id);
 
-  Optional<T> findByEmail(String s);
+  //Optional<T> findByName(String s);
 
-  boolean existsByEmail(String s);
+  //Optional<T> findByEmail(String s);
 
-  Optional<List<T>> findBySellerId(String s);
+  //boolean existsByEmail(String s);
+
+  //Optional<List<T>> findBySellerId(String s);
 
 }

@@ -7,5 +7,5 @@ import java.util.Optional;
 public interface BaseService {
   Role getRoleByAccountId(String accountId);
 
-  Optional<String> getSellerIdByAccountId(String accountId);
+  Optional<Integer> getSellerIdByAccountId(String accountId);
 }

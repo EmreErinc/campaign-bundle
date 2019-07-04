@@ -10,7 +10,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "user")
+@Table(name = "users")
 @Data
 @Builder
 @NoArgsConstructor
@@ -18,7 +18,7 @@ import javax.validation.constraints.NotNull;
 public class AccountEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer accountId;
+  private Integer id;
 
   @Column(name = "name")
   @NotNull

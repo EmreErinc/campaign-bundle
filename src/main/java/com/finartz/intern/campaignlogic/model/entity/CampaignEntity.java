@@ -1,26 +1,32 @@
 package com.finartz.intern.campaignlogic.model.entity;
 
 import com.finartz.intern.campaignlogic.model.value.CampaignStatus;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
+@Entity
+@Table(name = "campaigns")
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CampaignEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer campaignId;
+  private Integer id;
 
   @Column(name = "item_id")
   @NotNull
-  private String itemId;
+  private Integer itemId;
 
   @Column(name = "seller_id")
   @NotNull
-  private String sellerId;
+  private Integer sellerId;
 
   @Column(name = "title")
   @NotNull

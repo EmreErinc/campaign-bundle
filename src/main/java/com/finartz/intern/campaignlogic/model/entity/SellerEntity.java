@@ -1,6 +1,7 @@
 package com.finartz.intern.campaignlogic.model.entity;
 
 import com.finartz.intern.campaignlogic.model.value.SellerStatus;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,14 +10,15 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "seller")
+@Table(name = "sellers")
 @Data
 @Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class SellerEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer sellerId;
+  private Integer id;
 
   @Column(name = "seller_name")
   @NotNull

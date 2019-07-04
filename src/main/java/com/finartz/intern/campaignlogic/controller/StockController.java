@@ -6,6 +6,8 @@ import com.finartz.intern.campaignlogic.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping("/stock")
 public class StockController extends BaseController{
@@ -17,7 +19,7 @@ public class StockController extends BaseController{
   }
 
   @PostMapping
-  public StockResponse addStock(@RequestBody AddStockRequest request){
+  public StockResponse addStock(@RequestBody @Valid AddStockRequest request){
     return stockService.addStock(request);
   }
 

@@ -1,18 +1,24 @@
 package com.finartz.intern.campaignlogic.model.entity;
 
 import com.finartz.intern.campaignlogic.model.value.CargoType;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
+@Entity
+@Table(name = "items")
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ItemEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer itemId;
+  private Integer id;
 
   @Column(name = "seller_id")
   @NotNull
@@ -42,4 +48,8 @@ public class ItemEntity {
 
   @Column(name = "updated_at")
   private Long updatedAt;
+
+  @Column(name = "stock")
+  @NotNull
+  private Integer stock;
 }

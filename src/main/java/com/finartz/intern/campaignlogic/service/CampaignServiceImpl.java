@@ -1,23 +1,27 @@
 package com.finartz.intern.campaignlogic.service;
 
 import com.finartz.intern.campaignlogic.commons.Converters;
-import com.finartz.intern.campaignlogic.model.entity.CampaignEntity;
 import com.finartz.intern.campaignlogic.model.request.AddCampaignRequest;
 import com.finartz.intern.campaignlogic.model.response.CampaignResponse;
 import com.finartz.intern.campaignlogic.model.value.CampaignStatus;
 import com.finartz.intern.campaignlogic.model.value.CampaignSummary;
+import com.finartz.intern.campaignlogic.repository.AccountRepository;
 import com.finartz.intern.campaignlogic.repository.CampaignRepository;
+import com.finartz.intern.campaignlogic.repository.SellerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public abstract class CampaignServiceImpl implements CampaignService, BaseService {
-  private CampaignRepository campaignRepository;
+public class CampaignServiceImpl extends BaseServiceImpl implements CampaignService {
+  private final CampaignRepository campaignRepository;
 
   @Autowired
-  public CampaignServiceImpl(CampaignRepository campaignRepository) {
+  public CampaignServiceImpl(CampaignRepository campaignRepository,
+                             AccountRepository accountRepository,
+                             SellerRepository sellerRepository) {
+    super(accountRepository, sellerRepository);
     this.campaignRepository = campaignRepository;
   }
 
@@ -26,7 +30,7 @@ public abstract class CampaignServiceImpl implements CampaignService, BaseServic
     //TODO yetki kontrolü eklencek
     //TODO ürüne ait başka kampanya var mı yok mu
 
-    String sellerId = getSellerIdByAccountId(accountId).get();
+    Integer sellerId = getSellerIdByAccountId(accountId).get();
 
     return Converters
         .campaignEntityToCampaignResponse(
@@ -42,14 +46,14 @@ public abstract class CampaignServiceImpl implements CampaignService, BaseServic
     return Converters
         .campaignEntityToCampaignResponse(
             campaignRepository
-                .findById(campaignId).get());
+                .findById(Integer.valueOf(campaignId)).get());
   }
 
   @Override
   public boolean updateCampaignStatus(String accountId, String campaignId, CampaignStatus status) {
     //TODO kullanıcı yetki durumu sorgulanacak
 
-    campaignRepository.updateCampaign(status, campaignId);
+    //campaignRepository.updateCampaign(status, campaignId);
     return true;
   }
 
@@ -60,10 +64,10 @@ public abstract class CampaignServiceImpl implements CampaignService, BaseServic
     return Converters
         .campaignEntitiesToCampaignSummaries(
             campaignRepository
-                .findBySellerId(sellerId).get());
+                .findBySellerId(Integer.valueOf(sellerId)).get());
   }
 
-  public boolean userAvailableForCampaign(String accountId, String campaignId){
+  public boolean userAvailableForCampaign(String accountId, String campaignId) {
     //TODO DO THIS IMMEDIATELY
     return false;
   }

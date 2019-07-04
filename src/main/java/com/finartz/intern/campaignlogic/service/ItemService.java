@@ -16,4 +16,6 @@ public interface ItemService {
   List<ItemSummary> searchItemList(Optional<String> accountId, Optional<String> searchText);
 
   List<ItemSummary> getSellerItems(Optional<String> accountId, String sellerId);
+
+  List<ItemSummary> getItemList(Optional<String> accountId, Optional<String> text);
 }

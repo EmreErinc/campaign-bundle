@@ -21,11 +21,10 @@ public class BaseServiceImpl implements BaseService {
   }
 
   public Role getRoleByAccountId(String accountId) {
-    return accountRepository.findById(accountId).get().getRole();
+    return accountRepository.findById(Integer.valueOf(accountId)).get().getRole();
   }
 
-  @Override
-  public Optional<String> getSellerIdByAccountId(String accountId) {
-    return Optional.of(sellerRepository.findByAccountId(accountId).get().getSellerId().toString());
+  public Optional<Integer> getSellerIdByAccountId(String accountId) {
+    return Optional.of(sellerRepository.findByAccountId(Integer.valueOf(accountId)).get().getId());
   }
 }

@@ -10,9 +10,9 @@ import java.util.List;
 
 @Data
 @Builder
-@Document(collection = "cart")
+@Document(collection = "carts")
 public class CartEntity<T extends  CartItem> {
   @Id
-  private String cartId;
+  private String id;
   private List<T> itemList;
 }

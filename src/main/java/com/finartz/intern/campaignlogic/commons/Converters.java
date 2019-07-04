@@ -41,13 +41,13 @@ public class Converters {
         .build();
   }
 
-  public static SellerEntity addSellerRequestToSellerEntity(String accountId, AddSellerRequest request) {
+  public static SellerEntity addSellerRequestToSellerEntity(int accountId, AddSellerRequest request) {
     return SellerEntity.builder()
         .name(request.getName())
         .address(request.getAddress())
         .createdAt(Instant.now().toEpochMilli())
         .status(SellerStatus.ACTIVE)
-        .accountId(Integer.valueOf(accountId))
+        .accountId(accountId)
         .build();
   }
 
@@ -157,19 +157,21 @@ public class Converters {
         .build();
   }
 
-  public static SalesEntity saleRequestToSaleEntity(SaleRequest request, String accountId){
+  public static SalesEntity saleItemRequestToSaleEntity(CartItem saleItem, int accountId){
     return SalesEntity.builder()
-        .itemId(request.getItemId())
-        .count(request.getCount())
-        .ownerId(Integer.valueOf(accountId))
-        .price(request.getPrice())
+        .itemId(saleItem.getItemId())
+        .count(saleItem.getCount())
+        .ownerId(accountId)
+        .price(saleItem.getPrice())
         .soldAt(Instant.now().toEpochMilli())
         .build();
   }
 
-  public static SaleResponse saleEntityToSaleResponse(SalesEntity salesEntity){
-    return SaleResponse.builder()
-        .saleId(salesEntity.getId())
+  public static CartResponse cartEntityToCartResponse(CartEntity cartEntity){
+        //TODO fix it list
+
+    return CartResponse.builder()
+        .itemList(cartEntity.getItemList())
         .build();
   }
 }

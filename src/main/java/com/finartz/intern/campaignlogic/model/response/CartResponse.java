@@ -9,6 +9,5 @@ import java.util.List;
 @Data
 @Builder
 public class CartResponse<T extends CartItem> {
-  private String id;
   private List<T> itemList;
 }

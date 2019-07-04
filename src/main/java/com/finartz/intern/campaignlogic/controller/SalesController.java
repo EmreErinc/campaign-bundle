@@ -8,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 
 @RestController
 @RequestMapping("/sale")
@@ -20,7 +21,7 @@ public class SalesController extends BaseController {
   }
 
   @PostMapping
-  public SaleResponse addSale(@RequestHeader HttpHeaders headers, @RequestBody @Valid SaleRequest request) {
+  public SaleResponse addSale(@RequestHeader HttpHeaders headers, @RequestBody @Valid @Min(1) SaleRequest request) {
     return salesService.addSale(getAccountIdFromHeader(headers), request);
   }
 }

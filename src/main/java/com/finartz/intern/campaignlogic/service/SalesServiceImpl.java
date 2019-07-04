@@ -8,6 +8,9 @@ import com.finartz.intern.campaignlogic.repository.SalesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class SalesServiceImpl implements SalesService {
   private SalesRepository salesRepository;
@@ -18,9 +21,16 @@ public class SalesServiceImpl implements SalesService {
   }
 
   @Override
-  public SaleResponse addSale(String accountId, SaleRequest request) {
-    SalesEntity salesEntity = salesRepository.save(Converters.saleRequestToSaleEntity(request, accountId));
+  public SaleResponse addSale(int accountId, SaleRequest request) {
+    //SalesEntity salesEntity = salesRepository.save(Converters.saleRequestToSaleEntity(request, accountId));
 
-    return Converters.saleEntityToSaleResponse(salesEntity);
+    List<Integer> saleIds = new ArrayList<>();
+
+    request.getItems().forEach(saleItem ->
+      saleIds.add(salesRepository.save(Converters.saleItemRequestToSaleEntity(saleItem, accountId)).getId())
+    );
+
+    //return Converters.saleEntityToSaleResponse(salesEntity);
+    return SaleResponse.builder().saleIds(saleIds).build();
   }
 }

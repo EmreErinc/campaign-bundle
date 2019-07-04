@@ -1,9 +1,9 @@
 package com.finartz.intern.campaignlogic.model.value;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Builder;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
+@Builder
 public class CartItem {
 }

@@ -10,11 +10,11 @@ public abstract class BaseController{
   @Autowired
   private JwtTokenProvider jwtTokenProvider;
 
-  public String getAccountIdFromHeader(HttpHeaders headers) {
-    return jwtTokenProvider
+  public Integer getAccountIdFromHeader(HttpHeaders headers) {
+    return Integer.valueOf(jwtTokenProvider
         .getIdFromToken(headers.get("Authorization")
             .get(0)
-            .replace(TOKEN_PREFIX, ""));
+            .replace(TOKEN_PREFIX, "")));
   }
 
   public String getCartIdFromHeader(HttpHeaders headers){

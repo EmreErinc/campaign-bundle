@@ -1,5 +1,6 @@
 package com.finartz.intern.campaignlogic.controller;
 
+import com.finartz.intern.campaignlogic.model.response.CartResponse;
 import com.finartz.intern.campaignlogic.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -16,22 +17,27 @@ public class CartController extends BaseController {
   }
 
   @GetMapping("/add/{itemId}/{count}")
-  public boolean addToCart(@RequestHeader HttpHeaders header, @PathVariable String itemId, @PathVariable String count) {
-    return cartService.addToCart(getAccountIdFromHeader(header), itemId, count);
+  public boolean addToCart(@RequestHeader HttpHeaders headers, @PathVariable String itemId, @PathVariable String count) {
+    return cartService.addToCart(getAccountIdFromHeader(headers), getCartIdFromHeader(headers), itemId, count);
   }
 
-  @GetMapping("/remove/{id}")
-  public boolean removeFromCart(@RequestHeader HttpHeaders header, @PathVariable String id) {
-    return cartService.removeFromCart(getCartIdFromHeader(header), id);
+  @GetMapping("/remove/{itemId}")
+  public boolean removeFromCart(@RequestHeader HttpHeaders headers, @PathVariable String itemId) {
+    return cartService.removeFromCart(getAccountIdFromHeader(headers), getCartIdFromHeader(headers), itemId);
   }
 
-  @GetMapping("/inc/{id}")
-  public boolean incrementItem(@RequestHeader HttpHeaders headers, @PathVariable String id) {
-    return cartService.incrementItem(getAccountIdFromHeader(headers), id);
+  @GetMapping("/inc/{itemId}")
+  public boolean incrementItem(@RequestHeader HttpHeaders headers, @PathVariable String itemId) {
+    return cartService.incrementItem(getAccountIdFromHeader(headers), getCartIdFromHeader(headers), itemId);
   }
 
-  @GetMapping("/dec/{id}")
-  public boolean decrementItem(@RequestHeader HttpHeaders headers, @PathVariable String id) {
-    return cartService.decrementItem(getAccountIdFromHeader(headers), id);
+  @GetMapping("/dec/{itemId}")
+  public boolean decrementItem(@RequestHeader HttpHeaders headers, @PathVariable String itemId) {
+    return cartService.decrementItem(getAccountIdFromHeader(headers), getCartIdFromHeader(headers), itemId);
+  }
+
+  @GetMapping
+  public CartResponse getMyCart(@RequestHeader HttpHeaders headers){
+    return cartService.getCart(getCartIdFromHeader(headers));
   }
 }

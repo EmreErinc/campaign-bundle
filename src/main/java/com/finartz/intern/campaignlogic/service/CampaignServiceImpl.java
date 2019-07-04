@@ -26,7 +26,7 @@ public class CampaignServiceImpl extends BaseServiceImpl implements CampaignServ
   }
 
   @Override
-  public CampaignResponse addCampaign(String accountId, AddCampaignRequest request) {
+  public CampaignResponse addCampaign(int accountId, AddCampaignRequest request) {
     //TODO yetki kontrolü eklencek
     //TODO ürüne ait başka kampanya var mı yok mu
 
@@ -40,7 +40,7 @@ public class CampaignServiceImpl extends BaseServiceImpl implements CampaignServ
   }
 
   @Override
-  public CampaignResponse getCampaign(String accountId, String campaignId) {
+  public CampaignResponse getCampaign(int accountId, String campaignId) {
     //TODO kullanıcı campaign status sorgulanacak
 
     return Converters
@@ -50,7 +50,7 @@ public class CampaignServiceImpl extends BaseServiceImpl implements CampaignServ
   }
 
   @Override
-  public boolean updateCampaignStatus(String accountId, String campaignId, CampaignStatus status) {
+  public boolean updateCampaignStatus(int accountId, String campaignId, CampaignStatus status) {
     //TODO kullanıcı yetki durumu sorgulanacak
 
     //campaignRepository.updateCampaign(status, campaignId);
@@ -58,7 +58,7 @@ public class CampaignServiceImpl extends BaseServiceImpl implements CampaignServ
   }
 
   @Override
-  public List<CampaignSummary> getCampaignList(String accountId, String sellerId) {
+  public List<CampaignSummary> getCampaignList(int accountId, String sellerId) {
     //TODO kullanıcı campaign status sorgulanacak
 
     return Converters
@@ -67,7 +67,7 @@ public class CampaignServiceImpl extends BaseServiceImpl implements CampaignServ
                 .findBySellerId(Integer.valueOf(sellerId)).get());
   }
 
-  public boolean userAvailableForCampaign(String accountId, String campaignId) {
+  public boolean userAvailableForCampaign(int accountId, String campaignId) {
     //TODO DO THIS IMMEDIATELY
     return false;
   }

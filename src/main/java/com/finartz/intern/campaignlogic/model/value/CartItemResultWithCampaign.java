@@ -5,11 +5,10 @@ import lombok.Data;
 
 @Data
 @Builder
-public class CartItemResultWithCampaign extends CartItem{
-  private String itemId;
-  private Double price;
-  private Integer mainCount;
-  private Integer giftCount;
+public class CartItemResultWithCampaign extends CartItem {
+  private Integer expectedGiftCount;
   private Integer totalItemCount;
   private Badge badge;
+
+  private CartItemResult cartItemResult;
 }

@@ -1,23 +1,18 @@
 package com.finartz.intern.campaignlogic.model.request;
 
+import com.finartz.intern.campaignlogic.model.value.CartItem;
 import lombok.Builder;
 import lombok.Data;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @Data
 @Builder
 public class SaleRequest {
 
-  @NotNull(message = "itemId should not be empty")
-  private Integer itemId;
-
-  @NotNull(message = "sellerId should not be empty")
-  private Integer sellerId;
-
-  @NotNull(message = "count should not be empty")
-  private Integer count;
-
-  @NotNull(message = "price should not be empty")
-  private Double price;
+  @Valid
+  @NotNull(message = "sale list should not be empty")
+  private List<CartItem> items;
 }

@@ -1,27 +1,28 @@
 package com.finartz.intern.campaignlogic.repository;
 
 import com.finartz.intern.campaignlogic.model.entity.CartEntity;
-import com.finartz.intern.campaignlogic.model.value.CartItem;
-import com.mongodb.client.result.UpdateResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
+@Service
 public class CartRepositoryImpl implements CartRepository {
   @Autowired
   private MongoTemplate mongoTemplate;
 
   @Override
-  public CartEntity findCart(int cartId) {
-    return mongoTemplate.findById(cartId, CartEntity.class);
+  public Optional<CartEntity> findCart(String cartId) {
+    return Optional.ofNullable(mongoTemplate.findById(cartId, CartEntity.class));
   }
 
   @Override
-  public boolean createCart() {
-    CartEntity cartEntity = mongoTemplate.save(CartEntity.builder().build());
-    return cartEntity != null;
+  public CartEntity createCart(int accountId) {
+    return mongoTemplate.save(CartEntity.builder().accountId(accountId).build());
   }
 
   @Override
@@ -33,6 +34,6 @@ public class CartRepositoryImpl implements CartRepository {
     update.set("itemList", cartEntity.getItemList());
 
     mongoTemplate.updateFirst(query, update, CartEntity.class);
-    return findCart(Integer.valueOf(cartEntity.getId()));
+    return findCart(cartEntity.getId()).get();
   }
 }

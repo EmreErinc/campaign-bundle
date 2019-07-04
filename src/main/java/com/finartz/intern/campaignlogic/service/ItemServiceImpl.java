@@ -31,7 +31,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
   }
 
   @Override
-  public ItemResponse addItem(String accountId, AddItemRequest request) {
+  public ItemResponse addItem(int accountId, AddItemRequest request) {
 
     if (!getRoleByAccountId(accountId).equals(Role.SELLER)) {
       throw new ApplicationContextException("You do not have permission for this operation");
@@ -51,7 +51,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
   }
 
   @Override
-  public ItemDetail getItem(Optional<String> accountId, String itemId) {
+  public ItemDetail getItem(Optional<Integer> accountId, String itemId) {
     //TODO accountId ye ilişkin kampanyadan yararlanma durumuları kontrol edilip ona göre response dönmeli
 
     return Converters
@@ -61,7 +61,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
   }
 
   @Override
-  public List<ItemSummary> searchItemList(Optional<String> accountId, Optional<String> searchText) {
+  public List<ItemSummary> searchItemList(Optional<Integer> accountId, Optional<String> searchText) {
     return null;
   }
 
@@ -73,7 +73,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
   }*/
 
   @Override
-  public List<ItemSummary> getSellerItems(Optional<String> accountId, String sellerId) {
+  public List<ItemSummary> getSellerItems(Optional<Integer> accountId, String sellerId) {
     //TODO accountId ye ilişkin kampanyadan yararlanma durumuları kontrol edilip ona göre response dönmeli
 
     return Converters
@@ -83,7 +83,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
   }
 
   @Override
-  public List<ItemSummary> getItemList(Optional<String> accountId, Optional<String> text) {
+  public List<ItemSummary> getItemList(Optional<Integer> accountId, Optional<String> text) {
     //TODO ilgili account a göre kontrol yapılacak
 
     List<ItemSummary> itemSummaries = new ArrayList<>();

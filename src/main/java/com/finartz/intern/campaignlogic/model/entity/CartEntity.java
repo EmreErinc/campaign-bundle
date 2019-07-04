@@ -11,8 +11,9 @@ import java.util.List;
 @Data
 @Builder
 @Document(collection = "carts")
-public class CartEntity<T extends  CartItem> {
+public class CartEntity<T extends CartItem> {
   @Id
   private String id;
+  private Integer accountId;
   private List<T> itemList;
 }

@@ -8,11 +8,11 @@ import com.finartz.intern.campaignlogic.model.value.CampaignSummary;
 import java.util.List;
 
 public interface CampaignService {
-  CampaignResponse addCampaign(String accountId, AddCampaignRequest request);
+  CampaignResponse addCampaign(int accountId, AddCampaignRequest request);
 
-  CampaignResponse getCampaign(String accountId, String campaignId);
+  CampaignResponse getCampaign(int accountId, String campaignId);
 
-  boolean updateCampaignStatus(String accountId, String campaignId, CampaignStatus status);
+  boolean updateCampaignStatus(int accountId, String campaignId, CampaignStatus status);
 
-  List<CampaignSummary> getCampaignList(String accountId, String sellerId);
+  List<CampaignSummary> getCampaignList(int accountId, String sellerId);
 }

@@ -9,13 +9,13 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ItemService {
-  ItemResponse addItem(String accountId, AddItemRequest request);
+  ItemResponse addItem(int accountId, AddItemRequest request);
 
-  ItemDetail getItem(Optional<String> accountId, String itemId);
+  ItemDetail getItem(Optional<Integer> accountId, String itemId);
 
-  List<ItemSummary> searchItemList(Optional<String> accountId, Optional<String> searchText);
+  List<ItemSummary> searchItemList(Optional<Integer> accountId, Optional<String> searchText);
 
-  List<ItemSummary> getSellerItems(Optional<String> accountId, String sellerId);
+  List<ItemSummary> getSellerItems(Optional<Integer> accountId, String sellerId);
 
-  List<ItemSummary> getItemList(Optional<String> accountId, Optional<String> text);
+  List<ItemSummary> getItemList(Optional<Integer> accountId, Optional<String> text);
 }

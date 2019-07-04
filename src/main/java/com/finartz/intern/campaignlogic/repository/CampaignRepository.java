@@ -20,4 +20,6 @@ public interface CampaignRepository extends BaseRepository<CampaignEntity, Strin
   //void updateCampaign(CampaignStatus status, String campaignId);
 
   Optional<List<CampaignEntity>> findBySellerId(int sellerId);
+
+  Optional<CampaignEntity> findByItemId(int itemId);
 }

@@ -26,11 +26,15 @@ import java.util.*;
 public class AccountServiceImpl implements  AccountService, UserDetailsService {
   private final JwtTokenProvider jwtTokenProvider;
   private final AccountRepository accountRepository;
+  private final CartService cartService;
 
   @Autowired
-  public AccountServiceImpl(AccountRepository accountRepository, JwtTokenProvider jwtTokenProvider) {
+  public AccountServiceImpl(AccountRepository accountRepository,
+                            JwtTokenProvider jwtTokenProvider,
+                            CartService cartService) {
     this.accountRepository = accountRepository;
     this.jwtTokenProvider = jwtTokenProvider;
+    this.cartService = cartService;
   }
 
   @Override
@@ -42,7 +46,7 @@ public class AccountServiceImpl implements  AccountService, UserDetailsService {
     AccountEntity accountEntity = accountRepository.save(Converters.registerRequestToUserEntity(request));
 
     //TODO create cart
-    String cartId = "null-cart-id";
+    String cartId = cartService.createCart(accountEntity.getId());;
 
     return RegisterResponse.builder()
         .id(accountEntity.getId().toString())
@@ -61,7 +65,7 @@ public class AccountServiceImpl implements  AccountService, UserDetailsService {
     }
 
     //TODO create cart
-    String cartId = "null-cart-id";
+    String cartId = cartService.createCart(optionalUserEntity.get().getId());
 
     LoginResponse loginResponse = Converters.accountToLoginResponse(optionalUserEntity.get());
     loginResponse.setToken(generateToken(optionalUserEntity.get().getId().toString(), cartId, optionalUserEntity.get().getRole()));
@@ -78,7 +82,7 @@ public class AccountServiceImpl implements  AccountService, UserDetailsService {
     AccountEntity accountEntity = accountRepository.save(Converters.registerSellerRequestToUserEntity(request));
 
     //TODO create cart
-    String cartId = "null-cart-id";
+    String cartId = cartService.createCart(accountEntity.getId());
 
     return RegisterResponse.builder()
         .id(accountEntity.getId().toString())

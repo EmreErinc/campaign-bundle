@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "items")
@@ -30,9 +31,11 @@ public class ItemEntity {
 
   @Column(name = "name")
   @NotNull
+  @Size(min = 3, max = 70)
   private String name;
 
   @Column(name = "description")
+  @Size(min = 3, max = 255)
   private String description;
 
   @Column(name = "cargo_status")
@@ -40,6 +43,7 @@ public class ItemEntity {
   private CargoType cargoType;
 
   @Column(name = "cargo_company")
+  @Size(min = 3, max = 50)
   private String cargoCompany;
 
   @Column(name = "created_at")

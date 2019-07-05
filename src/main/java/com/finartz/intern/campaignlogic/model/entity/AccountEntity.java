@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "users")
@@ -22,18 +23,22 @@ public class AccountEntity {
 
   @Column(name = "name")
   @NotNull
+  @Size(min = 3, max = 50)
   private String name;
 
   @Column(name = "last_name")
   @NotNull
+  @Size(min = 3, max = 50)
   private String lastName;
 
   @Column(name = "email")
   @NotNull
+  @Size(min = 3, max = 50)
   private String email;
 
   @Column(name = "password")
   @NotNull
+  @Size(min = 3, max = 50)
   private String password;
 
   @Column(name = "created_at")

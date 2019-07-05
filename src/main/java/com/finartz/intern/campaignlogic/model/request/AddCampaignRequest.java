@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Data
 @Builder
@@ -13,6 +14,7 @@ public class AddCampaignRequest {
   private Integer itemId;
 
   @NotNull(message = "title should not be empty")
+  @Size(min = 3, max = 255)
   private String title;
 
   @NotNull(message = "startAt should not be empty")

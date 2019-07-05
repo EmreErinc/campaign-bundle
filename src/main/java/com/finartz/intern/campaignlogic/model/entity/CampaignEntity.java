@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "campaigns")
@@ -30,6 +31,7 @@ public class CampaignEntity {
 
   @Column(name = "title")
   @NotNull
+  @Size(min = 3, max = 255)
   private String title;
 
   @Column(name = "start_at")

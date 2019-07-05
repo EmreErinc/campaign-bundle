@@ -21,17 +21,17 @@ public class CartController extends BaseController {
     return cartService.addToCart(getAccountIdFromHeader(headers), getCartIdFromHeader(headers), itemId, count);
   }
 
-  @GetMapping("/remove/{itemId}")
+  @GetMapping("/{itemId}/remove")
   public boolean removeFromCart(@RequestHeader HttpHeaders headers, @PathVariable String itemId) {
     return cartService.removeFromCart(getAccountIdFromHeader(headers), getCartIdFromHeader(headers), itemId);
   }
 
-  @GetMapping("/inc/{itemId}")
+  @GetMapping("/{itemId}/inc")
   public boolean incrementItem(@RequestHeader HttpHeaders headers, @PathVariable String itemId) {
     return cartService.incrementItem(getAccountIdFromHeader(headers), getCartIdFromHeader(headers), itemId);
   }
 
-  @GetMapping("/dec/{itemId}")
+  @GetMapping("/{itemId}/dec")
   public boolean decrementItem(@RequestHeader HttpHeaders headers, @PathVariable String itemId) {
     return cartService.decrementItem(getAccountIdFromHeader(headers), getCartIdFromHeader(headers), itemId);
   }

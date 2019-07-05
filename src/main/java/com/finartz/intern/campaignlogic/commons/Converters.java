@@ -117,7 +117,7 @@ public class Converters {
         .cartLimit(request.getCartLimit())
         .createdAt(Instant.now().toEpochMilli())
         .requirementCount(request.getRequirement())
-        .giftCount(request.getGift())
+        .expectedGiftCount(request.getGift())
         .status(CampaignStatus.ACTIVE)
         .itemId(request.getItemId())
         .sellerId(sellerId)
@@ -134,7 +134,7 @@ public class Converters {
         .startAt(campaignEntity.getStartAt())
         .endAt(campaignEntity.getEndAt())
         .requirementCount(campaignEntity.getRequirementCount())
-        .giftCount(campaignEntity.getGiftCount())
+        .giftCount(campaignEntity.getExpectedGiftCount())
         .status(campaignEntity.getStatus())
         .build();
   }
@@ -157,7 +157,7 @@ public class Converters {
         .build();
   }
 
-  public static SalesEntity saleItemRequestToSaleEntity(CartItem saleItem, int accountId){
+  /*public static SalesEntity saleItemRequestToSaleEntity(CartItem saleItem, int accountId){
     return SalesEntity.builder()
         .itemId(saleItem.getItemId())
         .count(saleItem.getCount())
@@ -165,13 +165,13 @@ public class Converters {
         .price(saleItem.getPrice())
         .soldAt(Instant.now().toEpochMilli())
         .build();
-  }
+  }*/
 
   public static CartResponse cartEntityToCartResponse(CartEntity cartEntity){
         //TODO fix it list
 
     return CartResponse.builder()
-        .itemList(cartEntity.getItemList())
+        .itemList(cartEntity.getCartItems())
         .build();
   }
 }

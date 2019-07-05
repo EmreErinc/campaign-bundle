@@ -5,9 +5,7 @@ import com.finartz.intern.campaignlogic.model.entity.SellerEntity;
 import com.finartz.intern.campaignlogic.model.request.AddSellerRequest;
 import com.finartz.intern.campaignlogic.model.response.SellerResponse;
 import com.finartz.intern.campaignlogic.model.value.Role;
-import com.finartz.intern.campaignlogic.repository.AccountRepository;
-import com.finartz.intern.campaignlogic.repository.CampaignRepository;
-import com.finartz.intern.campaignlogic.repository.SellerRepository;
+import com.finartz.intern.campaignlogic.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.stereotype.Service;
@@ -21,8 +19,10 @@ public class SellerServiceImpl extends BaseServiceImpl implements SellerService 
   @Autowired
   public SellerServiceImpl(SellerRepository sellerRepository,
                            AccountRepository accountRepository,
-                           CampaignRepository campaignRepository) {
-    super(accountRepository, sellerRepository, campaignRepository);
+                           CampaignRepository campaignRepository,
+                           ItemRepository itemRepository,
+                           SalesRepository salesRepository) {
+    super(accountRepository, sellerRepository, campaignRepository, itemRepository, salesRepository);
     this.sellerRepository = sellerRepository;
   }
 

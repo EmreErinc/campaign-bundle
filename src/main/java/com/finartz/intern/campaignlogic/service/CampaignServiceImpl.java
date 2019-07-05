@@ -5,9 +5,7 @@ import com.finartz.intern.campaignlogic.model.request.AddCampaignRequest;
 import com.finartz.intern.campaignlogic.model.response.CampaignResponse;
 import com.finartz.intern.campaignlogic.model.value.CampaignStatus;
 import com.finartz.intern.campaignlogic.model.value.CampaignSummary;
-import com.finartz.intern.campaignlogic.repository.AccountRepository;
-import com.finartz.intern.campaignlogic.repository.CampaignRepository;
-import com.finartz.intern.campaignlogic.repository.SellerRepository;
+import com.finartz.intern.campaignlogic.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +18,10 @@ public class CampaignServiceImpl extends BaseServiceImpl implements CampaignServ
   @Autowired
   public CampaignServiceImpl(CampaignRepository campaignRepository,
                              AccountRepository accountRepository,
-                             SellerRepository sellerRepository) {
-    super(accountRepository, sellerRepository);
+                             SellerRepository sellerRepository,
+                             ItemRepository itemRepository,
+                             SalesRepository salesRepository) {
+    super(accountRepository, sellerRepository, campaignRepository, itemRepository, salesRepository);
     this.campaignRepository = campaignRepository;
   }
 

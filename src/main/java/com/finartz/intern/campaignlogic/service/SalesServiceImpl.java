@@ -1,7 +1,5 @@
 package com.finartz.intern.campaignlogic.service;
 
-import com.finartz.intern.campaignlogic.commons.Converters;
-import com.finartz.intern.campaignlogic.model.entity.SalesEntity;
 import com.finartz.intern.campaignlogic.model.request.SaleRequest;
 import com.finartz.intern.campaignlogic.model.response.SaleResponse;
 import com.finartz.intern.campaignlogic.repository.SalesRepository;
@@ -26,9 +24,9 @@ public class SalesServiceImpl implements SalesService {
 
     List<Integer> saleIds = new ArrayList<>();
 
-    request.getItems().forEach(saleItem ->
-      saleIds.add(salesRepository.save(Converters.saleItemRequestToSaleEntity(saleItem, accountId)).getId())
-    );
+    //request.getItems().forEach(saleItem ->
+      //saleIds.add(salesRepository.save(Converters.saleItemRequestToSaleEntity(saleItem, accountId)).getId())
+    //);
 
     //return Converters.saleEntityToSaleResponse(salesEntity);
     return SaleResponse.builder().saleIds(saleIds).build();

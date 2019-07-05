@@ -7,9 +7,7 @@ import com.finartz.intern.campaignlogic.model.response.ItemResponse;
 import com.finartz.intern.campaignlogic.model.value.ItemDetail;
 import com.finartz.intern.campaignlogic.model.value.ItemSummary;
 import com.finartz.intern.campaignlogic.model.value.Role;
-import com.finartz.intern.campaignlogic.repository.AccountRepository;
-import com.finartz.intern.campaignlogic.repository.ItemRepository;
-import com.finartz.intern.campaignlogic.repository.SellerRepository;
+import com.finartz.intern.campaignlogic.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.stereotype.Service;
@@ -25,8 +23,10 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
   @Autowired
   public ItemServiceImpl(ItemRepository itemRepository,
                          AccountRepository accountRepository,
-                         SellerRepository sellerRepository) {
-    super(accountRepository, sellerRepository);
+                         SellerRepository sellerRepository,
+                         CampaignRepository campaignRepository,
+                         SalesRepository salesRepository) {
+    super(accountRepository, sellerRepository, campaignRepository, itemRepository, salesRepository);
     this.itemRepository = itemRepository;
   }
 

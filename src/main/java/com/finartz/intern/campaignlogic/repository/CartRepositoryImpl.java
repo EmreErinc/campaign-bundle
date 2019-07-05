@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.Optional;
 
 @Service
@@ -22,7 +23,11 @@ public class CartRepositoryImpl implements CartRepository {
 
   @Override
   public CartEntity createCart(int accountId) {
-    return mongoTemplate.save(CartEntity.builder().accountId(accountId).build());
+    return mongoTemplate
+        .save(CartEntity.builder()
+            .accountId(accountId)
+            .cartItems(Collections.emptyList())
+            .build());
   }
 
   @Override
@@ -31,7 +36,7 @@ public class CartRepositoryImpl implements CartRepository {
     query.addCriteria(Criteria.where("_id").is(cartEntity.getId()));
 
     Update update = new Update();
-    update.set("itemList", cartEntity.getItemList());
+    update.set("cartItems", cartEntity.getCartItems());
 
     mongoTemplate.updateFirst(query, update, CartEntity.class);
     return findCart(cartEntity.getId()).get();

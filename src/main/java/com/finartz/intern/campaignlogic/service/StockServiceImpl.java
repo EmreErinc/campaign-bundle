@@ -2,21 +2,16 @@ package com.finartz.intern.campaignlogic.service;
 
 import com.finartz.intern.campaignlogic.model.request.AddStockRequest;
 import com.finartz.intern.campaignlogic.model.response.StockResponse;
-import com.finartz.intern.campaignlogic.repository.AccountRepository;
 import com.finartz.intern.campaignlogic.repository.ItemRepository;
-import com.finartz.intern.campaignlogic.repository.SellerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class StockServiceImpl extends BaseServiceImpl implements StockService {
+public class StockServiceImpl implements StockService {
   private ItemRepository itemRepository;
 
   @Autowired
-  public StockServiceImpl(AccountRepository accountRepository,
-                          SellerRepository sellerRepository,
-                          ItemRepository itemRepository) {
-    super(accountRepository, sellerRepository);
+  public StockServiceImpl(ItemRepository itemRepository) {
     this.itemRepository = itemRepository;
   }
 

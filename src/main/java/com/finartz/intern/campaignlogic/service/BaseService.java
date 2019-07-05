@@ -11,4 +11,18 @@ public interface BaseService {
   Optional<Integer> getSellerIdByAccountId(int accountId);
 
   Optional<CampaignEntity> getCampaignByItemId(int itemId);
+
+  Optional<Integer> getSellerIdByItemId(int itemId);
+
+  boolean campaignIsAvailable(int itemId);
+
+  boolean stockIsAvailable(int itemId, int expectedSaleAndGiftCount);
+
+  Integer getItemStock(int itemId);
+
+  Optional<Boolean> campaignLimitIsAvailable(int accountId, int itemId);
+
+  Integer getCampaignUsageLimit(int accountId, int itemId);
+
+  Integer getCampaignCartLimit(int itemId);
 }

@@ -1,9 +1,11 @@
 package com.finartz.intern.campaignlogic.service;
 
 import com.finartz.intern.campaignlogic.commons.Converters;
+import com.finartz.intern.campaignlogic.model.entity.CampaignEntity;
 import com.finartz.intern.campaignlogic.model.entity.ItemEntity;
 import com.finartz.intern.campaignlogic.model.request.AddItemRequest;
 import com.finartz.intern.campaignlogic.model.response.ItemResponse;
+import com.finartz.intern.campaignlogic.model.value.Badge;
 import com.finartz.intern.campaignlogic.model.value.ItemDetail;
 import com.finartz.intern.campaignlogic.model.value.ItemSummary;
 import com.finartz.intern.campaignlogic.model.value.Role;
@@ -53,12 +55,23 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
 
   @Override
   public ItemDetail getItem(Optional<Integer> accountId, String itemId) {
-    //TODO accountId ye ilişkin kampanyadan yararlanma durumuları kontrol edilip ona göre response dönmeli
-
-    return Converters
+    ItemDetail itemDetail = Converters
         .itemEntityToItemDetail(
             itemRepository
-                .findById(Integer.valueOf(itemId)).get());
+                .findById(Integer.valueOf(itemId)).get(), Badge.builder().build());
+
+    if (accountId.isPresent()) {
+      Optional<CampaignEntity> optionalCampaignEntity = getCampaignByItemId(Integer.valueOf(itemId));
+
+      if (optionalCampaignEntity.isPresent() && campaignLimitIsAvailable(accountId.get(), Integer.valueOf(itemId)).get()) {
+        Badge badge = Badge.builder()
+            .gift(optionalCampaignEntity.get().getExpectedGiftCount())
+            .requirement(optionalCampaignEntity.get().getRequirementCount())
+            .build();
+        itemDetail.setBadge(badge);
+      }
+    }
+    return itemDetail;
   }
 
   @Override
@@ -74,26 +87,33 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
   }*/
 
   @Override
-  public List<ItemSummary> getSellerItems(Optional<Integer> accountId, String sellerId) {
-    //TODO accountId ye ilişkin kampanyadan yararlanma durumuları kontrol edilip ona göre response dönmeli
-
-    return Converters
-        .itemEntitiesToItemSummaries(
-            itemRepository
-                .findBySellerId(Integer.valueOf(sellerId)).get());
-  }
-
-  @Override
   public List<ItemSummary> getItemList(Optional<Integer> accountId, Optional<String> text) {
-    //TODO ilgili account a göre kontrol yapılacak
 
     List<ItemSummary> itemSummaries = new ArrayList<>();
-
     itemRepository
         .findAll()
         .forEach(itemEntity -> itemSummaries
             .add(Converters.itemEntityToItemSummary(itemEntity)));
 
+    itemSummaries.stream().forEach(itemSummary -> {
+      itemSummary.setBadge(getBadgeByItemId(Integer.valueOf(itemSummary.getId())).get());
+    });
+
+    if (accountId.isPresent()) {
+      //TODO ilgili account a göre kontrol yapılacak
+    }
     return itemSummaries;
+  }
+
+  @Override
+  public List<ItemSummary> getSellerItems(Optional<Integer> accountId, String sellerId) {
+    if (accountId.isPresent()) {
+      //TODO accountId ye ilişkin kampanyadan yararlanma durumuları kontrol edilip ona göre response dönmeli
+    }
+
+    return Converters
+        .itemEntitiesToItemSummaries(
+            itemRepository
+                .findBySellerId(Integer.valueOf(sellerId)).get());
   }
 }

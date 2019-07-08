@@ -11,4 +11,5 @@ public class ItemDetail {
   private String name;
   private String description;
   private CargoType cargoType;
+  private Badge badge;
 }

@@ -4,6 +4,7 @@ import com.finartz.intern.campaignlogic.model.entity.CampaignEntity;
 import com.finartz.intern.campaignlogic.model.entity.CartEntity;
 import com.finartz.intern.campaignlogic.model.entity.ItemEntity;
 import com.finartz.intern.campaignlogic.model.entity.SalesEntity;
+import com.finartz.intern.campaignlogic.model.value.Badge;
 import com.finartz.intern.campaignlogic.model.value.Role;
 import com.finartz.intern.campaignlogic.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class BaseServiceImpl implements BaseService {
@@ -75,7 +77,27 @@ public class BaseServiceImpl implements BaseService {
 
   @Override
   public Integer getItemStock(int itemId) {
-    return itemRepository.findById(itemId).get().getStock();
+    Optional<List<SalesEntity>> optionalSalesEntities = salesRepository.getByItemId(itemId);
+    if (!optionalSalesEntities.isPresent()){
+      throw new ApplicationContextException("Ürün Bulunamadı.");
+    }
+    int sumOfSales = optionalSalesEntities
+        .get()
+        .stream()
+        .filter(salesEntity -> salesEntity.getSaleCount() != null)
+        .collect(Collectors.toList())
+        .stream()
+        .mapToInt(SalesEntity::getSaleCount).sum();
+    int sumOfGifts = optionalSalesEntities
+        .get()
+        .stream()
+        .filter(salesEntity -> salesEntity.getGiftCount() != null)
+        .collect(Collectors.toList())
+        .stream()
+        .mapToInt(SalesEntity::getGiftCount).sum();
+    int stock = itemRepository.findById(itemId).get().getStock();
+
+    return stock - (sumOfSales + sumOfGifts);
   }
 
   @Override
@@ -84,14 +106,31 @@ public class BaseServiceImpl implements BaseService {
     if (!optionalSalesEntities.isPresent()){
       return Optional.of(false);
     }
+    Optional<CampaignEntity> optionalCampaignEntity = campaignRepository.findByItemId(itemId);
+    if (!optionalCampaignEntity.isPresent()){
+      throw new ApplicationContextException("Kampanya Bulunamadı.");
+    }
+    int sumOfSales = optionalSalesEntities
+        .get()
+        .stream()
+        .filter(salesEntity -> salesEntity.getSaleCount() != null)
+        .collect(Collectors.toList())
+        .stream()
+        .mapToInt(SalesEntity::getSaleCount).sum();
 
-    Integer campaignLimit = campaignRepository.findByItemId(itemId).get().getCampaignLimit();
-    return Optional.of(optionalSalesEntities.get().size() <= campaignLimit);
+    int campaignLimit = optionalCampaignEntity.get().getCampaignLimit();
+    int cartLimit = optionalCampaignEntity.get().getCartLimit();
+    return Optional.of(sumOfSales / cartLimit <= campaignLimit);
   }
 
   @Override
   public Integer getCampaignUsageLimit(int accountId, int itemId) {
     Optional<List<SalesEntity>> optionalSalesEntities = salesRepository.findByOwnerIdAndItemId(accountId, itemId);
+    Optional<CampaignEntity> optionalCampaignEntity = campaignRepository.findByItemId(itemId);
+
+    int campaignLimit = optionalCampaignEntity.get().getCampaignLimit();
+    int cartLimit = optionalCampaignEntity.get().getCartLimit();
+
     return optionalSalesEntities.map(List::size).orElse(0);
   }
 
@@ -120,5 +159,15 @@ public class BaseServiceImpl implements BaseService {
       throw new ApplicationContextException("Ürün Bulunamadı.");
     }
     return optionalItemEntity.get().getPrice();
+  }
+
+  @Override
+  public Optional<Badge> getBadgeByItemId(int itemId) {
+    Optional<CampaignEntity> optionalCampaignEntity = campaignRepository.findByItemId(itemId);
+
+    return Optional.of(Badge.builder()
+        .requirement(optionalCampaignEntity.get().getRequirementCount())
+        .gift(optionalCampaignEntity.get().getExpectedGiftCount())
+        .build());
   }
 }

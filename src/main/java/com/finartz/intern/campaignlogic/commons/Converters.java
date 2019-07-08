@@ -82,13 +82,14 @@ public class Converters {
         .build();
   }
 
-  public static ItemDetail itemEntityToItemDetail(ItemEntity itemEntity) {
+  public static ItemDetail itemEntityToItemDetail(ItemEntity itemEntity, Badge badge) {
     return ItemDetail.builder()
         .id(itemEntity.getId().toString())
         .name(itemEntity.getName())
         .description(itemEntity.getDescription())
         .cargoType(itemEntity.getCargoType())
         .price(itemEntity.getPrice())
+        .badge(badge)
         .build();
   }
 

@@ -10,4 +10,5 @@ public class ItemSummary {
   private Double price;
   private String name;
   private CargoType cargoType;
+  private Badge badge;
 }

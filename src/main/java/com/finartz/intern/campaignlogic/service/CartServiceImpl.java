@@ -131,7 +131,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
           int giftCount = calculateGiftCount(campaignEntity, itemOnCart + count);
 
           if (campaignEntity.getCartLimit() <= itemOnCart + count) {
-            SuitableSaleAndGiftCount suitableCount = addOneByOneToCart(campaignEntity, itemId, itemOnCart, count);
+            SuitableSaleAndGiftCount suitableCount = addOneByOneToCart(campaignEntity, itemId, itemOnCart);
             optionalCartItem
                 .map(item -> {
                   item.setSaleCount(suitableCount.getSaleCount() + optionalCartItem.get().getSaleCount());
@@ -157,8 +157,9 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
         },
         //item not found on cart
         () -> {
+          //if desired item count exceeds campaign cart limit
           if (campaignEntity.getCartLimit() <= count) {
-            SuitableSaleAndGiftCount suitableCount = addOneByOneToCart(campaignEntity, itemId, 0, count);
+            SuitableSaleAndGiftCount suitableCount = addOneByOneToCart(campaignEntity, itemId, 0);
             cartEntity
                 .getCartItems()
                 .add(CartItem.builder()
@@ -168,7 +169,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
                     .addedAt(Instant.now().toEpochMilli())
                     .hasCampaign(true)
                     .campaignParams(prepareCampaignParams(campaignEntity, suitableCount.getGiftCount(), suitableCount.getSaleCount()))
-                    .price(getItemPrice(itemId))
+                    .price(getItemPrice(itemId) * suitableCount.getSaleCount())
                     .build());
           } else {
             int giftCount = calculateGiftCount(campaignEntity, count);
@@ -184,7 +185,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
                       .addedAt(Instant.now().toEpochMilli())
                       .hasCampaign(true)
                       .campaignParams(prepareCampaignParams(campaignEntity, giftCount, count))
-                      .price(getItemPrice(itemId))
+                      .price(getItemPrice(itemId) * count)
                       .build());
             }
           }
@@ -193,7 +194,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
     return cartEntity;
   }
 
-  private SuitableSaleAndGiftCount addOneByOneToCart(CampaignEntity campaignEntity, int itemId, int itemOnCart, int desiredSaleCount) {
+  private SuitableSaleAndGiftCount addOneByOneToCart(CampaignEntity campaignEntity, int itemId, int itemOnCart) {
     boolean cont = true;
     int addition = 1;
     int suitableGiftCount = 0;
@@ -258,7 +259,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
                     .saleCount(count)
                     .addedAt(Instant.now().toEpochMilli())
                     .hasCampaign(false)
-                    .price(getItemPrice(itemId))
+                    .price(getItemPrice(itemId) * count)
                     .build());
           }
         }

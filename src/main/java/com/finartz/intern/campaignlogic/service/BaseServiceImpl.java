@@ -1,10 +1,13 @@
 package com.finartz.intern.campaignlogic.service;
 
 import com.finartz.intern.campaignlogic.model.entity.CampaignEntity;
+import com.finartz.intern.campaignlogic.model.entity.CartEntity;
+import com.finartz.intern.campaignlogic.model.entity.ItemEntity;
 import com.finartz.intern.campaignlogic.model.entity.SalesEntity;
 import com.finartz.intern.campaignlogic.model.value.Role;
 import com.finartz.intern.campaignlogic.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContextException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -18,18 +21,21 @@ public class BaseServiceImpl implements BaseService {
   private CampaignRepository campaignRepository;
   private ItemRepository itemRepository;
   private SalesRepository salesRepository;
+  private CartRepository cartRepository;
 
   @Autowired
   public BaseServiceImpl(AccountRepository accountRepository,
                          SellerRepository sellerRepository,
                          CampaignRepository campaignRepository,
                          ItemRepository itemRepository,
-                         SalesRepository salesRepository) {
+                         SalesRepository salesRepository,
+                         CartRepository cartRepository) {
     this.accountRepository = accountRepository;
     this.sellerRepository = sellerRepository;
     this.campaignRepository = campaignRepository;
     this.itemRepository = itemRepository;
     this.salesRepository = salesRepository;
+    this.cartRepository = cartRepository;
   }
 
   public Role getRoleByAccountId(int accountId) {
@@ -54,6 +60,9 @@ public class BaseServiceImpl implements BaseService {
   public boolean campaignIsAvailable(int itemId) {
     Optional<CampaignEntity> campaignEntity = campaignRepository.findByItemId(itemId);
     Long current = Instant.now().toEpochMilli();
+    if (!campaignEntity.isPresent()){
+      throw new ApplicationContextException("Kampanya Bulunamadı.");
+    }
 
     return (current > campaignEntity.get().getStartAt() && current < campaignEntity.get().getEndAt());
   }
@@ -93,5 +102,23 @@ public class BaseServiceImpl implements BaseService {
       return 0;
     }
     return optionalCampaignEntity.get().getCartLimit();
+  }
+
+  @Override
+  public CartEntity getCartById(String cartId) {
+    Optional<CartEntity> optionalCartEntity = cartRepository.findCart(cartId);
+    if (!optionalCartEntity.isPresent()){
+      throw new ApplicationContextException("Sepet Bulunamadı.");
+    }
+    return optionalCartEntity.get();
+  }
+
+  @Override
+  public Double getItemPrice(int itemId) {
+    Optional<ItemEntity> optionalItemEntity = itemRepository.findById(itemId);
+    if (!optionalItemEntity.isPresent()){
+      throw new ApplicationContextException("Ürün Bulunamadı.");
+    }
+    return optionalItemEntity.get().getPrice();
   }
 }

@@ -25,8 +25,9 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
                          AccountRepository accountRepository,
                          SellerRepository sellerRepository,
                          CampaignRepository campaignRepository,
-                         SalesRepository salesRepository) {
-    super(accountRepository, sellerRepository, campaignRepository, itemRepository, salesRepository);
+                         SalesRepository salesRepository,
+                         CartRepository cartRepository) {
+    super(accountRepository, sellerRepository, campaignRepository, itemRepository, salesRepository, cartRepository);
     this.itemRepository = itemRepository;
   }
 

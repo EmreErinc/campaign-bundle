@@ -27,9 +27,12 @@ public class SalesEntity {
   @NotNull
   private Integer itemId;
 
-  @Column(name = "count")
+  @Column(name = "sale_count")
   @NotNull
-  private Integer count;
+  private Integer saleCount;
+
+  @Column(name = "gift_count")
+  private Integer giftCount;
 
   @Column(name = "sold_at")
   @NotNull

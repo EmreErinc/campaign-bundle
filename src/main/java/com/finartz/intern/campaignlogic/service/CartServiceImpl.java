@@ -7,6 +7,7 @@ import com.finartz.intern.campaignlogic.model.response.CartResponse;
 import com.finartz.intern.campaignlogic.model.value.Badge;
 import com.finartz.intern.campaignlogic.model.value.CampaignParams;
 import com.finartz.intern.campaignlogic.model.value.CartItem;
+import com.finartz.intern.campaignlogic.model.value.SuitableSaleAndGiftCount;
 import com.finartz.intern.campaignlogic.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
@@ -27,7 +28,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
                          CampaignRepository campaignRepository,
                          ItemRepository itemRepository,
                          SalesRepository salesRepository) {
-    super(accountRepository, sellerRepository, campaignRepository, itemRepository, salesRepository);
+    super(accountRepository, sellerRepository, campaignRepository, itemRepository, salesRepository, cartRepository);
     this.cartRepository = cartRepository;
   }
 
@@ -55,9 +56,9 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
     if (!campaignLimitIsAvailable(accountId, itemId).isPresent()) {
       throw new ApplicationContextException("Kampanya Limitinizi Doldurdunuz");
     }
-    if (!cartLimitAvailability(cartId, itemId, itemCount)) {
+    /*if (!cartLimitAvailability(cartId, itemId, itemCount)) {
       throw new ApplicationContextException("Sepet Limitinizi Doldurdunuz");
-    }
+    }*/
     return true;
   }
 
@@ -129,8 +130,17 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
           int itemOnCart = cartItem.getSaleCount();
           int giftCount = calculateGiftCount(campaignEntity, itemOnCart + count);
 
-          if (campaignEntity.getCartLimit() > itemOnCart + count) {
-            //TODO add one-by-one addition
+          if (campaignEntity.getCartLimit() <= itemOnCart + count) {
+            SuitableSaleAndGiftCount suitableCount = addOneByOneToCart(campaignEntity, itemId, itemOnCart, count);
+            optionalCartItem
+                .map(item -> {
+                  item.setSaleCount(suitableCount.getSaleCount() + optionalCartItem.get().getSaleCount());
+                  item.setUpdatedAt(Instant.now().toEpochMilli());
+                  item.setCampaignParams(prepareCampaignParams(campaignEntity, suitableCount.getGiftCount(), itemOnCart + suitableCount.getSaleCount()));
+                  return true;
+                });
+            cartEntity.getCartItems().remove(itemIndex);
+            cartEntity.getCartItems().add(itemIndex, optionalCartItem.get());
           } else {
             if (stockIsAvailable(itemId, giftCount + itemOnCart + count)) {
               optionalCartItem
@@ -148,7 +158,18 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
         //item not found on cart
         () -> {
           if (campaignEntity.getCartLimit() <= count) {
-            //TODO add one-by-one addition
+            SuitableSaleAndGiftCount suitableCount = addOneByOneToCart(campaignEntity, itemId, 0, count);
+            cartEntity
+                .getCartItems()
+                .add(CartItem.builder()
+                    .itemId(itemId)
+                    .sellerId(sellerId)
+                    .saleCount(count)
+                    .addedAt(Instant.now().toEpochMilli())
+                    .hasCampaign(true)
+                    .campaignParams(prepareCampaignParams(campaignEntity, suitableCount.getGiftCount(), suitableCount.getSaleCount()))
+                    .price(getItemPrice(itemId))
+                    .build());
           } else {
             int giftCount = calculateGiftCount(campaignEntity, count);
 
@@ -163,12 +184,38 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
                       .addedAt(Instant.now().toEpochMilli())
                       .hasCampaign(true)
                       .campaignParams(prepareCampaignParams(campaignEntity, giftCount, count))
+                      .price(getItemPrice(itemId))
                       .build());
             }
           }
         }
     );
     return cartEntity;
+  }
+
+  private SuitableSaleAndGiftCount addOneByOneToCart(CampaignEntity campaignEntity, int itemId, int itemOnCart, int desiredSaleCount) {
+    boolean cont = true;
+    int addition = 1;
+    int suitableGiftCount = 0;
+
+    while (cont) {
+      //calculate gift count for desired sale count, increase one by one
+      suitableGiftCount = calculateGiftCount(campaignEntity, itemOnCart + addition);
+
+      //checks item count reach to limit or not
+      //checks stock is suitable for this operation
+      if ((campaignEntity.getCartLimit() >= itemOnCart + addition)
+          && stockIsAvailable(itemId, itemOnCart + suitableGiftCount + addition)) {
+        addition++;
+      } else {
+        cont = false;
+      }
+    }
+
+    return SuitableSaleAndGiftCount.builder()
+        .saleCount(addition - 1)
+        .giftCount(suitableGiftCount)
+        .build();
   }
 
   private CartEntity addItemToCart(String cartId, int itemId, int count) {
@@ -211,6 +258,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
                     .saleCount(count)
                     .addedAt(Instant.now().toEpochMilli())
                     .hasCampaign(false)
+                    .price(getItemPrice(itemId))
                     .build());
           }
         }

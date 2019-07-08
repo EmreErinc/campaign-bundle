@@ -52,7 +52,7 @@ public class BaseServiceImpl implements BaseService {
 
   @Override
   public boolean campaignIsAvailable(int itemId) {
-    Optional<CampaignEntity> campaignEntity = campaignRepository.findById(itemId);
+    Optional<CampaignEntity> campaignEntity = campaignRepository.findByItemId(itemId);
     Long current = Instant.now().toEpochMilli();
 
     return (current > campaignEntity.get().getStartAt() && current < campaignEntity.get().getEndAt());

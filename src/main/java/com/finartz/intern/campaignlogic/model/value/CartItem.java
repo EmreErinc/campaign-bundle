@@ -7,7 +7,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
-public class CartItem<T extends AdditionalParams> {
+public class CartItem {
   @NotNull(message = "itemId should not be empty")
   private Integer itemId;
 
@@ -23,5 +23,5 @@ public class CartItem<T extends AdditionalParams> {
   private Long addedAt;
   private Long updatedAt;
   private Boolean hasCampaign;
-  private T additionalParams;
+  private CampaignParams campaignParams;
 }

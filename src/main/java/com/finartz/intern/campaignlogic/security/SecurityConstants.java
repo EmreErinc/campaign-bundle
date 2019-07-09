@@ -1,13 +1,22 @@
 package com.finartz.intern.campaignlogic.security;
 
 public class SecurityConstants {
-  public static final String SIGN_UP_URL = "/register";
-  public static final String SIGN_IN_URL = "/login";
-  public static final String SELLER_SIGN_UP = "/seller/register";
-  public static final String ITEM_LIST = "/item";
-  public static final String ITEM_DETAIL = "/item/{itemId}";
-  public static final String SELLER_ITEMS = "/item/seller/{sellerId}";
-  public static final String SELLER_DETAIL = "/seller/{sellerId}";
+  public static final String[] WHITE_LIST = {"/register",
+      "/seller/register",
+      "/login",
+      "/item",
+      "/item/{itemId}",
+      "/item/seller/{sellerId}",
+      "/seller/{sellerId}"};
+
+  public static final String[] SWAGGER_URLS = {"/v2/api-docs",
+      "/configuration/ui",
+      "/swagger-resources",
+      "/configuration/security",
+      "/swagger-ui.html",
+      "/webjars/**",
+      "/swagge‌​r-ui.html"};
+
   public static final String SECRET = "1EyF7VvkbafufWntanQo";
   public static final String SECRET_KEY = "KtsgWPBIC7FSkHKXbP3A";
   public static final String SALT_KEY = "br79RcYwdOJw7b3zIrQW";

@@ -283,9 +283,10 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
   @Override
   public boolean incrementItem(int accountId, String cartId, String itemId) {
     if (itemAvailability(accountId, cartId, Integer.valueOf(itemId), 1)) {
-      CartEntity cartEntity = addItemToCart(cartId, Integer.valueOf(itemId), 1);
-      CartEntity updatedCartEntity = updateCartEntity(cartEntity, accountId, Integer.valueOf(itemId));
-      return true;
+      //CartEntity cartEntity = addItemToCart(cartId, Integer.valueOf(itemId), 1);
+      //CartEntity updatedCartEntity = updateCartEntity(cartEntity, accountId, Integer.valueOf(itemId));
+      //return true;
+      return addToCart(accountId, cartId, itemId, String.valueOf(1));
     }
     return false;
   }
@@ -293,9 +294,12 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
   @Override
   public boolean decrementItem(int accountId, String cartId, String itemId) {
     if (itemAvailability(accountId, cartId, Integer.valueOf(itemId), -1)) {
-      CartEntity cartEntity = addItemToCart(cartId, Integer.valueOf(itemId), -1);
-      CartEntity updatedCartEntity = updateCartEntity(cartEntity, accountId, Integer.valueOf(itemId));
-      return true;
+      //CartEntity cartEntity = addItemToCart(cartId, Integer.valueOf(itemId), -1);
+      //CartEntity updatedCartEntity = updateCartEntity(cartEntity, accountId, Integer.valueOf(itemId));
+      //return true;
+      //TODO fix under zero issue
+      //TODO should return explicit response
+      return addToCart(accountId, cartId, itemId, String.valueOf(-1));
     }
     return false;
   }

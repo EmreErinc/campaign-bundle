@@ -32,7 +32,7 @@ public class AccountController extends BaseController {
   }
 
   @PostMapping("/seller/register")
-  public RegisterResponse sellerRegister(@RequestBody @Valid RegisterRequest request){
+  public RegisterResponse sellerRegister(@RequestBody @Valid RegisterRequest request) {
     return accountService.addSellerAccount(request);
   }
 }

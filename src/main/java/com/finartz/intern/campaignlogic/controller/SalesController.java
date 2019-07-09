@@ -21,6 +21,6 @@ public class SalesController extends BaseController {
 
   @PostMapping
   public SaleResponse addSale(@RequestHeader HttpHeaders headers) {
-    return salesService.addSale(getAccountIdFromHeader(headers), getCartIdFromHeader(headers));
+    return salesService.addSale(getAccountIdFromHeader(headers).get(), getCartIdFromHeader(headers));
   }
 }

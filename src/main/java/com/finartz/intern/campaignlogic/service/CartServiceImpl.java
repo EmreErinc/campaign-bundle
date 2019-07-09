@@ -53,7 +53,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
 
   private boolean itemAvailability(int accountId, String cartId, int itemId, int itemCount) {
     //checks campaign limit availability
-    if (!campaignLimitIsAvailable(accountId, itemId).isPresent()) {
+    if (!campaignLimitIsAvailableForAccount(accountId, itemId).isPresent()) {
       throw new ApplicationContextException("Kampanya Limitinizi Doldurdunuz");
     }
     /*if (!cartLimitAvailability(cartId, itemId, itemCount)) {
@@ -74,7 +74,6 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
   }
 
   private CartEntity updateCartEntity(CartEntity cartEntity, int accountId, int itemId) {
-
     CartItem updatedItem = cartEntity.getCartItems().stream().filter(cartItem -> cartItem.getItemId().equals(itemId)).findFirst().get();
     int updatedItemIndex = cartEntity.getCartItems().indexOf(updatedItem);
     cartEntity.getCartItems().remove(updatedItemIndex);

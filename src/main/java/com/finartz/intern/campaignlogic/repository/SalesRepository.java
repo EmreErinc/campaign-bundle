@@ -8,5 +8,7 @@ import java.util.Optional;
 public interface SalesRepository extends BaseRepository<SalesEntity, String> {
   Optional<List<SalesEntity>> findByOwnerIdAndItemId(int accountId, int itemId);
 
-  Optional<List<SalesEntity>> getByItemId (int itemId);
+  Optional<List<SalesEntity>> findByItemId(int itemId);
+
+  Optional<List<SalesEntity>> findByOwnerId(int userId);
 }

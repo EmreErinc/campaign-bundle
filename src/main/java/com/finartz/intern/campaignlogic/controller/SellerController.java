@@ -11,7 +11,7 @@ import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/seller")
-public class SellerController extends BaseController{
+public class SellerController extends BaseController {
   private SellerService sellerService;
 
   @Autowired
@@ -20,12 +20,12 @@ public class SellerController extends BaseController{
   }
 
   @PostMapping
-  public SellerResponse addSeller(@RequestHeader HttpHeaders headers,@RequestBody @Valid AddSellerRequest request){
-    return sellerService.addSeller(getAccountIdFromHeader(headers), request);
+  public SellerResponse addSeller(@RequestHeader HttpHeaders headers, @RequestBody @Valid AddSellerRequest request) {
+    return sellerService.addSeller(getAccountIdFromHeader(headers).get(), request);
   }
 
   @GetMapping("/{sellerId}")
-  public SellerResponse getSeller(@PathVariable String sellerId){
+  public SellerResponse getSeller(@PathVariable String sellerId) {
     return sellerService.getSeller(sellerId);
   }
 }

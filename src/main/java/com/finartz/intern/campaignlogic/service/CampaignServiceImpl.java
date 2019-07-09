@@ -1,14 +1,19 @@
 package com.finartz.intern.campaignlogic.service;
 
 import com.finartz.intern.campaignlogic.commons.Converters;
+import com.finartz.intern.campaignlogic.model.entity.CampaignEntity;
 import com.finartz.intern.campaignlogic.model.request.AddCampaignRequest;
 import com.finartz.intern.campaignlogic.model.response.CampaignResponse;
+import com.finartz.intern.campaignlogic.model.value.Badge;
 import com.finartz.intern.campaignlogic.model.value.CampaignStatus;
 import com.finartz.intern.campaignlogic.model.value.CampaignSummary;
+import com.finartz.intern.campaignlogic.model.value.Role;
 import com.finartz.intern.campaignlogic.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContextException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -28,49 +33,56 @@ public class CampaignServiceImpl extends BaseServiceImpl implements CampaignServ
 
   @Override
   public CampaignResponse addCampaign(int accountId, AddCampaignRequest request) {
-    //TODO yetki kontrolü eklencek
     //TODO ürüne ait başka kampanya var mı yok mu
+    if (!getRoleByAccountId(accountId).equals(Role.SELLER)) {
+      throw new ApplicationContextException("You do not have permission for this operation");
+    }
 
     Integer sellerId = getSellerIdByAccountId(accountId).get();
+    CampaignEntity campaignEntity = campaignRepository
+        .save(Converters
+            .addCampaignRequestToCampaignEntity(request, sellerId));
 
     return Converters
-        .campaignEntityToCampaignResponse(
-            campaignRepository
-                .save(Converters
-                    .addCampaignRequestToCampaignEntity(request, sellerId)));
+        .campaignEntityToCampaignResponse(campaignEntity, getBadgeByCampaignId(campaignEntity.getId()).get());
   }
 
   @Override
   public CampaignResponse getCampaign(int accountId, String campaignId) {
-    //TODO kullanıcı campaign status sorgulanacak
-
-    return Converters
+    CampaignResponse campaignResponse = Converters
         .campaignEntityToCampaignResponse(
             campaignRepository
-                .findById(Integer.valueOf(campaignId)).get());
+                .findById(Integer.valueOf(campaignId)).get(), getBadgeByCampaignId(Integer.valueOf(campaignId)).get());
+
+    if (userAvailableForCampaign(accountId, Integer.valueOf(campaignId))) {
+      campaignResponse.setBadge(Badge.builder().build());
+    }
+    return campaignResponse;
   }
 
   @Override
   public boolean updateCampaignStatus(int accountId, String campaignId, CampaignStatus status) {
-    //TODO kullanıcı yetki durumu sorgulanacak
+    if (!getRoleByAccountId(accountId).equals(Role.SELLER)) {
+      throw new ApplicationContextException("You do not have permission for this operation");
+    }
 
-    //campaignRepository.updateCampaign(status, campaignId);
+    CampaignEntity campaignEntity = campaignRepository.findById(Integer.valueOf(campaignId)).get();
+    campaignEntity.setStatus(CampaignStatus.valueOf(status.name()));
+    campaignRepository.save(campaignEntity);
     return true;
   }
 
   @Override
   public List<CampaignSummary> getCampaignList(int accountId, String sellerId) {
-    //TODO kullanıcı campaign status sorgulanacak
+    List<CampaignEntity> campaignEntities = campaignRepository
+        .findBySellerId(Integer.valueOf(sellerId)).get();
 
-    return Converters
-        .campaignEntitiesToCampaignSummaries(
-            campaignRepository
-                .findBySellerId(Integer.valueOf(sellerId)).get());
+    List<CampaignSummary> campaignSummaries = new ArrayList<>();
+    campaignEntities
+        .forEach(campaignEntity ->
+            campaignSummaries
+                .add(prepareCampaignEntityToList(accountId, campaignEntity)));
+
+    return campaignSummaries;
   }
-
-  public boolean userAvailableForCampaign(int accountId, String campaignId) {
-    //TODO DO THIS IMMEDIATELY
-    return false;
-  }
-
 }

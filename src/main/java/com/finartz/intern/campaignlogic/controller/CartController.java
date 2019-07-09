@@ -18,22 +18,22 @@ public class CartController extends BaseController {
 
   @GetMapping("/add/{itemId}/{count}")
   public boolean addToCart(@RequestHeader HttpHeaders headers, @PathVariable String itemId, @PathVariable String count) {
-    return cartService.addToCart(getAccountIdFromHeader(headers), getCartIdFromHeader(headers), itemId, count);
+    return cartService.addToCart(getAccountIdFromHeader(headers).get(), getCartIdFromHeader(headers), itemId, count);
   }
 
   @GetMapping("/{itemId}/remove")
   public boolean removeFromCart(@RequestHeader HttpHeaders headers, @PathVariable String itemId) {
-    return cartService.removeFromCart(getAccountIdFromHeader(headers), getCartIdFromHeader(headers), itemId);
+    return cartService.removeFromCart(getAccountIdFromHeader(headers).get(), getCartIdFromHeader(headers), itemId);
   }
 
   @GetMapping("/{itemId}/inc")
   public boolean incrementItem(@RequestHeader HttpHeaders headers, @PathVariable String itemId) {
-    return cartService.incrementItem(getAccountIdFromHeader(headers), getCartIdFromHeader(headers), itemId);
+    return cartService.incrementItem(getAccountIdFromHeader(headers).get(), getCartIdFromHeader(headers), itemId);
   }
 
   @GetMapping("/{itemId}/dec")
   public boolean decrementItem(@RequestHeader HttpHeaders headers, @PathVariable String itemId) {
-    return cartService.decrementItem(getAccountIdFromHeader(headers), getCartIdFromHeader(headers), itemId);
+    return cartService.decrementItem(getAccountIdFromHeader(headers).get(), getCartIdFromHeader(headers), itemId);
   }
 
   @GetMapping

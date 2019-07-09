@@ -1,14 +1,15 @@
 package com.finartz.intern.campaignlogic.commons;
 
 import com.finartz.intern.campaignlogic.model.entity.*;
-import com.finartz.intern.campaignlogic.model.request.*;
+import com.finartz.intern.campaignlogic.model.request.AddCampaignRequest;
+import com.finartz.intern.campaignlogic.model.request.AddItemRequest;
+import com.finartz.intern.campaignlogic.model.request.AddSellerRequest;
+import com.finartz.intern.campaignlogic.model.request.RegisterRequest;
 import com.finartz.intern.campaignlogic.model.response.*;
 import com.finartz.intern.campaignlogic.model.value.*;
 import com.finartz.intern.campaignlogic.security.Utils;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class Converters {
   public static AccountEntity registerRequestToUserEntity(RegisterRequest request) {
@@ -93,19 +94,13 @@ public class Converters {
         .build();
   }
 
-  public static List<ItemSummary> itemEntitiesToItemSummaries(List<ItemEntity> itemEntities) {
-    return itemEntities
-        .stream()
-        .map(Converters::itemEntityToItemSummary)
-        .collect(Collectors.toList());
-  }
-
-  public static ItemSummary itemEntityToItemSummary(ItemEntity itemEntity) {
+  public static ItemSummary itemEntityToItemSummary(ItemEntity itemEntity, Badge badge) {
     return ItemSummary.builder()
-        .id(itemEntity.getId().toString())
+        .id(itemEntity.getId())
         .name(itemEntity.getName())
         .cargoType(itemEntity.getCargoType())
         .price(itemEntity.getPrice())
+        .badge(badge)
         .build();
   }
 
@@ -125,52 +120,34 @@ public class Converters {
         .build();
   }
 
-  public static CampaignResponse campaignEntityToCampaignResponse(CampaignEntity campaignEntity) {
+  public static CampaignResponse campaignEntityToCampaignResponse(CampaignEntity campaignEntity, Badge badge) {
     return CampaignResponse.builder()
-        .itemId(campaignEntity.getItemId().toString())
-        .sellerId(campaignEntity.getSellerId().toString())
+        .itemId(campaignEntity.getItemId())
+        .sellerId(campaignEntity.getSellerId())
         .title(campaignEntity.getTitle())
         .campaignLimit(campaignEntity.getCampaignLimit())
         .cartLimit(campaignEntity.getCartLimit())
         .startAt(campaignEntity.getStartAt())
         .endAt(campaignEntity.getEndAt())
-        .requirementCount(campaignEntity.getRequirementCount())
-        .giftCount(campaignEntity.getExpectedGiftCount())
+        .badge(badge)
         .status(campaignEntity.getStatus())
         .build();
   }
 
-  public static List<CampaignSummary> campaignEntitiesToCampaignSummaries(List<CampaignEntity> campaignEntities) {
-    return campaignEntities
-        .stream()
-        .map(Converters::campaignEntityToCampaignSummary)
-        .collect(Collectors.toList());
-  }
-
-  public static CampaignSummary campaignEntityToCampaignSummary(CampaignEntity campaignEntity) {
+  public static CampaignSummary campaignEntityToCampaignSummary(CampaignEntity campaignEntity, Badge badge) {
     return CampaignSummary.builder()
+        .campaignId(campaignEntity.getId())
         .title(campaignEntity.getTitle())
         .startAt(campaignEntity.getStartAt())
         .endAt(campaignEntity.getEndAt())
         .campaignLimit(campaignEntity.getCampaignLimit())
         .cartLimit(campaignEntity.getCartLimit())
         .status(campaignEntity.getStatus())
+        .badge(badge)
         .build();
   }
-
-  /*public static SalesEntity saleItemRequestToSaleEntity(CartItem saleItem, int accountId){
-    return SalesEntity.builder()
-        .itemId(saleItem.getItemId())
-        .count(saleItem.getCount())
-        .ownerId(accountId)
-        .price(saleItem.getPrice())
-        .soldAt(Instant.now().toEpochMilli())
-        .build();
-  }*/
 
   public static CartResponse cartEntityToCartResponse(CartEntity cartEntity){
-        //TODO fix it list
-
     return CartResponse.builder()
         .itemList(cartEntity.getCartItems())
         .build();

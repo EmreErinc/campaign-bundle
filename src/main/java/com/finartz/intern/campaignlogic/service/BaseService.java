@@ -3,8 +3,10 @@ package com.finartz.intern.campaignlogic.service;
 import com.finartz.intern.campaignlogic.model.entity.CampaignEntity;
 import com.finartz.intern.campaignlogic.model.entity.CartEntity;
 import com.finartz.intern.campaignlogic.model.value.Badge;
+import com.finartz.intern.campaignlogic.model.value.CampaignSummary;
 import com.finartz.intern.campaignlogic.model.value.Role;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface BaseService {
@@ -22,15 +24,27 @@ public interface BaseService {
 
   Integer getItemStock(int itemId);
 
-  Optional<Boolean> campaignLimitIsAvailable(int accountId, int itemId);
+  Optional<Boolean> campaignLimitIsAvailableForAccount(int accountId, int itemId);
 
-  Integer getCampaignUsageLimit(int accountId, int itemId);
+  Optional<Integer> getCampaignItemUsageCount(int accountId, int itemId);
+
+  Optional<Integer> getCampaignUsageCount(int accountId, int itemId);
 
   Integer getCampaignCartLimit(int itemId);
+
+  Integer getCampaignLimit(int itemId);
 
   CartEntity getCartById(String cartId);
 
   Double getItemPrice(int itemId);
 
   Optional<Badge> getBadgeByItemId(int itemId);
+
+  Optional<Badge> getBadgeByCampaignId(int campaignId);
+
+  List<CampaignEntity> getUsedCampaignsByUserId(int userId);
+
+  Boolean userAvailableForCampaign(int accountId, int campaignId);
+
+  CampaignSummary prepareCampaignEntityToList(int accountId, CampaignEntity campaignEntity);
 }

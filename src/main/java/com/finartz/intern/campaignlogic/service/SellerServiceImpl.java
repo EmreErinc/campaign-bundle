@@ -29,7 +29,7 @@ public class SellerServiceImpl extends BaseServiceImpl implements SellerService 
 
   @Override
   public SellerResponse addSeller(int accountId, AddSellerRequest request) {
-    if (getRoleByAccountId(accountId).equals(Role.USER)){
+    if (getRoleByAccountId(accountId).equals(Role.USER)) {
       throw new ApplicationContextException("You don't have permission for this operation");
     }
 
@@ -37,13 +37,11 @@ public class SellerServiceImpl extends BaseServiceImpl implements SellerService 
         .sellerEntityToSellerResponse(
             sellerRepository
                 .save(Converters
-                    .addSellerRequestToSellerEntity(accountId,request)));
+                    .addSellerRequestToSellerEntity(accountId, request)));
   }
 
   @Override
   public SellerResponse getSeller(String sellerId) {
-    //TODO should add privilege controls
-
     Optional<SellerEntity> optionalSellerEntity = sellerRepository.findById(Integer.valueOf(sellerId));
 
     if (!optionalSellerEntity.isPresent()) {

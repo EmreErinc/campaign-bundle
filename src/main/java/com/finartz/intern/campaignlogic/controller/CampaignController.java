@@ -24,26 +24,26 @@ public class CampaignController extends BaseController {
 
   @PostMapping
   public CampaignResponse addCampaign(@RequestHeader HttpHeaders headers, @RequestBody @Valid AddCampaignRequest request) {
-    return campaignService.addCampaign(getAccountIdFromHeader(headers), request);
+    return campaignService.addCampaign(getAccountIdFromHeader(headers).get(), request);
   }
 
   @GetMapping("/{campaignId}/cancel")
   public boolean cancelCampaign(@RequestHeader HttpHeaders headers, @PathVariable String campaignId) {
-    return campaignService.updateCampaignStatus(getAccountIdFromHeader(headers), campaignId, CampaignStatus.CANCELED);
+    return campaignService.updateCampaignStatus(getAccountIdFromHeader(headers).get(), campaignId, CampaignStatus.CANCELED);
   }
 
   @GetMapping("/{campaignId}/active")
   public boolean activeCampaign(@RequestHeader HttpHeaders headers, @PathVariable String campaignId) {
-    return campaignService.updateCampaignStatus(getAccountIdFromHeader(headers), campaignId, CampaignStatus.ACTIVE);
+    return campaignService.updateCampaignStatus(getAccountIdFromHeader(headers).get(), campaignId, CampaignStatus.ACTIVE);
   }
 
   @GetMapping("/{campaignId}")
   public CampaignResponse getCampaign(@RequestHeader HttpHeaders headers, @PathVariable String campaignId) {
-    return campaignService.getCampaign(getAccountIdFromHeader(headers), campaignId);
+    return campaignService.getCampaign(getAccountIdFromHeader(headers).get(), campaignId);
   }
 
   @GetMapping("/seller/{sellerId}")
   public List<CampaignSummary> getSellerCampaigns(@RequestHeader HttpHeaders headers, @PathVariable String sellerId) {
-    return campaignService.getCampaignList(getAccountIdFromHeader(headers), sellerId);
+    return campaignService.getCampaignList(getAccountIdFromHeader(headers).get(), sellerId);
   }
 }

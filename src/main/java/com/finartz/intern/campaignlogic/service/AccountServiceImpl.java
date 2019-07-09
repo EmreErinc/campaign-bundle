@@ -2,13 +2,13 @@ package com.finartz.intern.campaignlogic.service;
 
 import com.finartz.intern.campaignlogic.commons.Converters;
 import com.finartz.intern.campaignlogic.model.entity.AccountEntity;
-import com.finartz.intern.campaignlogic.security.JwtTokenProvider;
 import com.finartz.intern.campaignlogic.model.request.LoginRequest;
 import com.finartz.intern.campaignlogic.model.request.RegisterRequest;
 import com.finartz.intern.campaignlogic.model.response.LoginResponse;
 import com.finartz.intern.campaignlogic.model.response.RegisterResponse;
 import com.finartz.intern.campaignlogic.model.value.Role;
 import com.finartz.intern.campaignlogic.repository.AccountRepository;
+import com.finartz.intern.campaignlogic.security.JwtTokenProvider;
 import com.finartz.intern.campaignlogic.security.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
@@ -20,10 +20,12 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 @Service(value = "accountService")
-public class AccountServiceImpl implements  AccountService, UserDetailsService {
+public class AccountServiceImpl implements AccountService, UserDetailsService {
   private final JwtTokenProvider jwtTokenProvider;
   private final AccountRepository accountRepository;
   private final CartService cartService;
@@ -39,14 +41,13 @@ public class AccountServiceImpl implements  AccountService, UserDetailsService {
 
   @Override
   public RegisterResponse addUser(RegisterRequest request) {
-    if (accountRepository.existsByEmail(request.getEmail())){
+    if (accountRepository.existsByEmail(request.getEmail())) {
       throw new RuntimeException("User Account Already Exists");
     }
 
     AccountEntity accountEntity = accountRepository.save(Converters.registerRequestToUserEntity(request));
-
-    //TODO create cart
-    String cartId = cartService.createCart(accountEntity.getId());;
+    String cartId = cartService.createCart(accountEntity.getId());
+    ;
 
     return RegisterResponse.builder()
         .id(accountEntity.getId().toString())
@@ -60,11 +61,10 @@ public class AccountServiceImpl implements  AccountService, UserDetailsService {
   public LoginResponse loginUser(LoginRequest request) {
     Optional<AccountEntity> optionalUserEntity = accountRepository.findByEmailAndPassword(request.getEmail(), Utils.encrypt(request.getPassword()));
 
-    if (!optionalUserEntity.isPresent()){
+    if (!optionalUserEntity.isPresent()) {
       throw new ApplicationContextException("User Not Found");
     }
 
-    //TODO create cart
     String cartId = cartService.createCart(optionalUserEntity.get().getId());
 
     LoginResponse loginResponse = Converters.accountToLoginResponse(optionalUserEntity.get());
@@ -75,13 +75,11 @@ public class AccountServiceImpl implements  AccountService, UserDetailsService {
 
   @Override
   public RegisterResponse addSellerAccount(RegisterRequest request) {
-    if (accountRepository.existsByEmail(request.getEmail())){
+    if (accountRepository.existsByEmail(request.getEmail())) {
       throw new RuntimeException("Seller Account Already Exists");
     }
 
     AccountEntity accountEntity = accountRepository.save(Converters.registerSellerRequestToUserEntity(request));
-
-    //TODO create cart
     String cartId = cartService.createCart(accountEntity.getId());
 
     return RegisterResponse.builder()

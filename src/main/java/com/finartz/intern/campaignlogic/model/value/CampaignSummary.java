@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 @Builder
 public class CampaignSummary {
+  private Integer campaignId;
   private String title;
   private Long startAt;
   private Long endAt;
@@ -13,4 +14,5 @@ public class CampaignSummary {
   private Integer campaignLimit;
   private CampaignStatus status;
   private String campaignTitle;
+  private Badge badge;
 }

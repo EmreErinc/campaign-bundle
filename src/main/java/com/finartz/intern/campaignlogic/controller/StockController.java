@@ -10,7 +10,7 @@ import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/stock")
-public class StockController extends BaseController{
+public class StockController extends BaseController {
   private StockService stockService;
 
   @Autowired
@@ -19,12 +19,12 @@ public class StockController extends BaseController{
   }
 
   @PostMapping
-  public StockResponse addStock(@RequestBody @Valid AddStockRequest request){
+  public StockResponse addStock(@RequestBody @Valid AddStockRequest request) {
     return stockService.addStock(request);
   }
 
   @GetMapping("/{itemId}")
-  public StockResponse getStock(@PathVariable String itemId){
+  public StockResponse getStock(@PathVariable String itemId) {
     return stockService.getStockCount(itemId);
   }
 }

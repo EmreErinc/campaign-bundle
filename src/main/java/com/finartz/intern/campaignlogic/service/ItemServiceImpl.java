@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
@@ -35,7 +36,6 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
 
   @Override
   public ItemResponse addItem(int accountId, AddItemRequest request) {
-
     if (!getRoleByAccountId(accountId).equals(Role.SELLER)) {
       throw new ApplicationContextException("You do not have permission for this operation");
     }
@@ -60,17 +60,19 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
             itemRepository
                 .findById(Integer.valueOf(itemId)).get(), Badge.builder().build());
 
-    if (accountId.isPresent()) {
-      Optional<CampaignEntity> optionalCampaignEntity = getCampaignByItemId(Integer.valueOf(itemId));
+    Optional<CampaignEntity> optionalCampaignEntity = getCampaignByItemId(Integer.valueOf(itemId));
+    Badge badge = Badge.builder()
+        .gift(optionalCampaignEntity.get().getExpectedGiftCount())
+        .requirement(optionalCampaignEntity.get().getRequirementCount())
+        .build();
+    itemDetail.setBadge(badge);
 
-      if (optionalCampaignEntity.isPresent() && campaignLimitIsAvailable(accountId.get(), Integer.valueOf(itemId)).get()) {
-        Badge badge = Badge.builder()
-            .gift(optionalCampaignEntity.get().getExpectedGiftCount())
-            .requirement(optionalCampaignEntity.get().getRequirementCount())
-            .build();
-        itemDetail.setBadge(badge);
+    accountId.ifPresent(id -> {
+      if (!campaignLimitIsAvailableForAccount(accountId.get(), Integer.valueOf(itemId)).get()) {
+        itemDetail.setBadge(Badge.builder().build());
       }
-    }
+    });
+
     return itemDetail;
   }
 
@@ -79,41 +81,67 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
     return null;
   }
 
-  /*@Override
-  public List<ItemSummary> getItemList(Optional<String> accountId, Optional<String> searchText) {
-    //TODO accountId ye ilişkin kampanyadan yararlanma durumuları kontrol edilip ona göre response dönmeli
-
-    return null;
-  }*/
-
   @Override
   public List<ItemSummary> getItemList(Optional<Integer> accountId, Optional<String> text) {
 
+    //for all items
     List<ItemSummary> itemSummaries = new ArrayList<>();
     itemRepository
         .findAll()
         .forEach(itemEntity -> itemSummaries
-            .add(Converters.itemEntityToItemSummary(itemEntity)));
+            .add(Converters.itemEntityToItemSummary(itemEntity, getBadgeByItemId(itemEntity.getId()).get())));
 
-    itemSummaries.stream().forEach(itemSummary -> {
-      itemSummary.setBadge(getBadgeByItemId(Integer.valueOf(itemSummary.getId())).get());
-    });
+    accountId.ifPresent(id -> eliminateUsedCampaignItems(itemSummaries, id)
+        .forEach(itemSummary ->
+            itemSummaries
+                .stream()
+                .filter(itemSum ->
+                    itemSum.getId()
+                        .equals(itemSummary.getId()))
+                .findFirst()
+                .get()
+                //set as null badge
+                .setBadge(Badge.builder().build())));
 
-    if (accountId.isPresent()) {
-      //TODO ilgili account a göre kontrol yapılacak
-    }
     return itemSummaries;
   }
 
   @Override
   public List<ItemSummary> getSellerItems(Optional<Integer> accountId, String sellerId) {
-    if (accountId.isPresent()) {
-      //TODO accountId ye ilişkin kampanyadan yararlanma durumuları kontrol edilip ona göre response dönmeli
-    }
+    List<ItemSummary> itemSummaries = new ArrayList<>();
 
-    return Converters
-        .itemEntitiesToItemSummaries(
-            itemRepository
-                .findBySellerId(Integer.valueOf(sellerId)).get());
+    itemRepository
+        .findBySellerId(Integer.valueOf(sellerId))
+        .get()
+        .forEach(itemEntity -> itemSummaries
+            .add(Converters.itemEntityToItemSummary(itemEntity, getBadgeByItemId(itemEntity.getId()).get())));
+
+    accountId.ifPresent(id -> eliminateUsedCampaignItems(itemSummaries, id)
+        .forEach(itemSummary ->
+            itemSummaries
+                .stream()
+                .filter(itemSum ->
+                    itemSum.getId()
+                        .equals(itemSummary.getId()))
+                .findFirst()
+                .get()
+                //set as null badge
+                .setBadge(Badge.builder().build())));
+    return itemSummaries;
+  }
+
+  private List<ItemSummary> eliminateUsedCampaignItems(List<ItemSummary> itemSummaries, int accountId) {
+    //shows user's used campaigns
+    List<CampaignEntity> usedCampaigns = getUsedCampaignsByUserId(accountId);
+    return itemSummaries
+        .stream()
+        .filter(itemSummary ->
+            usedCampaigns
+                .stream()
+                //checks campaign limit status
+                .anyMatch(campaignEntity -> !campaignLimitIsAvailableForAccount(accountId, itemSummary.getId()).get()
+                    || campaignEntity.getItemId().equals(itemSummary.getId()))
+        )
+        .collect(Collectors.toList());
   }
 }

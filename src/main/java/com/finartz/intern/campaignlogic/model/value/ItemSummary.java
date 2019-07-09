@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 @Builder
 public class ItemSummary {
-  private String id;
+  private Integer id;
   private Double price;
   private String name;
   private CargoType cargoType;

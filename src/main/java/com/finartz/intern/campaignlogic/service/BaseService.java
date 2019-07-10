@@ -22,6 +22,8 @@ public interface BaseService {
 
   boolean stockIsAvailable(int itemId, int expectedSaleAndGiftCount);
 
+  boolean itemOnCampaign(int itemId);
+
   Integer getItemStock(int itemId);
 
   Optional<Boolean> campaignLimitIsAvailableForAccount(int accountId, int itemId);
@@ -47,4 +49,6 @@ public interface BaseService {
   Boolean userAvailableForCampaign(int accountId, int campaignId);
 
   CampaignSummary prepareCampaignEntityToList(int accountId, CampaignEntity campaignEntity);
+
+  Integer getItemCountOnCart(String cartId, int itemId);
 }

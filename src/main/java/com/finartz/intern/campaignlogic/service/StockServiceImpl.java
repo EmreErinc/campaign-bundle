@@ -27,14 +27,14 @@ public class StockServiceImpl extends BaseServiceImpl implements StockService {
     int newStock = currentStock + request.getStock();
     itemRepository.addStock(newStock, request.getItemId());
     return StockResponse.builder()
-        .stock(itemRepository.findById(request.getItemId()).get().getStock().toString())
+        .stock(itemRepository.findById(request.getItemId()).get().getStock())
         .build();
   }
 
   @Override
   public StockResponse getStockCount(String itemId) {
     return StockResponse.builder()
-        .stock(getItemStock(Integer.valueOf(itemId)).toString())
+        .stock(getItemStock(Integer.valueOf(itemId)))
         .build();
   }
 }

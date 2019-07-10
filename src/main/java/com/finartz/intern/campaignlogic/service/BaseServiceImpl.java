@@ -7,6 +7,7 @@ import com.finartz.intern.campaignlogic.model.entity.ItemEntity;
 import com.finartz.intern.campaignlogic.model.entity.SalesEntity;
 import com.finartz.intern.campaignlogic.model.value.Badge;
 import com.finartz.intern.campaignlogic.model.value.CampaignSummary;
+import com.finartz.intern.campaignlogic.model.value.CartItem;
 import com.finartz.intern.campaignlogic.model.value.Role;
 import com.finartz.intern.campaignlogic.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,8 +76,16 @@ public class BaseServiceImpl implements BaseService {
 
   @Override
   public boolean stockIsAvailable(int itemId, int expectedSaleAndGiftCount) {
-    Integer stock = itemRepository.findById(itemId).get().getStock();
+    Integer stock = getItemStock(itemId);
     return (stock - expectedSaleAndGiftCount >= 0);
+  }
+
+  @Override
+  public boolean itemOnCampaign(int itemId) {
+    return campaignRepository
+        .findByItemId(itemId)
+        .map(campaignEntity -> true)
+        .orElse(false);
   }
 
   @Override
@@ -186,22 +195,15 @@ public class BaseServiceImpl implements BaseService {
 
   @Override
   public Optional<Badge> getBadgeByItemId(int itemId) {
-    Optional<CampaignEntity> optionalCampaignEntity = campaignRepository.findByItemId(itemId);
-
-    return optionalCampaignEntity
-        .map(campaignEntity ->
-            Optional.of(Badge.builder()
-                .requirement(campaignEntity.getRequirementCount())
-                .gift(campaignEntity.getExpectedGiftCount())
-                .build()))
-        .orElseGet(() ->
-            Optional.of(Badge.builder().build()));
+    return mapCampaignEntityBadge(campaignRepository.findByItemId(itemId));
   }
 
   @Override
   public Optional<Badge> getBadgeByCampaignId(int campaignId) {
-    Optional<CampaignEntity> optionalCampaignEntity = campaignRepository.findById(campaignId);
+    return mapCampaignEntityBadge(campaignRepository.findById(campaignId));
+  }
 
+  private Optional<Badge> mapCampaignEntityBadge(Optional<CampaignEntity> optionalCampaignEntity) {
     return optionalCampaignEntity
         .map(campaignEntity ->
             Optional.of(Badge.builder()
@@ -245,5 +247,15 @@ public class BaseServiceImpl implements BaseService {
       badge = getBadgeByCampaignId(campaignEntity.getId()).get();
     }
     return Converters.campaignEntityToCampaignSummary(campaignEntity, badge);
+  }
+
+  @Override
+  public Integer getItemCountOnCart(String cartId, int itemId) {
+    return getCartById(cartId)
+        .getCartItems()
+        .stream()
+        .filter(cartItem -> cartItem.getItemId().equals(itemId))
+        .findFirst()
+        .map(CartItem::getSaleCount).orElse(0);
   }
 }

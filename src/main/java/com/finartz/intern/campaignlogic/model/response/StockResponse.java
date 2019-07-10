@@ -6,5 +6,5 @@ import lombok.Data;
 @Data
 @Builder
 public class StockResponse {
-  private String stock;
+  private Integer stock;
 }

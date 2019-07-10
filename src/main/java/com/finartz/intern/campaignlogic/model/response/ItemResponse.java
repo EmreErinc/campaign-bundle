@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 @Builder
 public class ItemResponse {
-  private String id;
+  private Integer itemId;
   private Double price;
   private String name;
   private String description;

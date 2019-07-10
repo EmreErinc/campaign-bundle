@@ -38,7 +38,7 @@ public class Converters {
     return LoginResponse.builder()
         .name(accountEntity.getName())
         .lastName(accountEntity.getLastName())
-        .id(accountEntity.getId().toString())
+        .id(accountEntity.getId())
         .build();
   }
 
@@ -54,7 +54,7 @@ public class Converters {
 
   public static SellerResponse sellerEntityToSellerResponse(SellerEntity sellerEntity) {
     return SellerResponse.builder()
-        .id(sellerEntity.getId().toString())
+        .id(sellerEntity.getId())
         .name(sellerEntity.getName())
         .address(sellerEntity.getAddress())
         .build();
@@ -75,7 +75,7 @@ public class Converters {
 
   public static ItemResponse itemEntityToItemResponse(ItemEntity itemEntity) {
     return ItemResponse.builder()
-        .id(itemEntity.getId().toString())
+        .itemId(itemEntity.getId())
         .name(itemEntity.getName())
         .price(itemEntity.getPrice())
         .cargoType(itemEntity.getCargoType())

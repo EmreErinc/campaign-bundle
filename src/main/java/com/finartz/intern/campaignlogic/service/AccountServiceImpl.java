@@ -47,10 +47,9 @@ public class AccountServiceImpl implements AccountService, UserDetailsService {
 
     AccountEntity accountEntity = accountRepository.save(Converters.registerRequestToUserEntity(request));
     String cartId = cartService.createCart(accountEntity.getId());
-    ;
 
     return RegisterResponse.builder()
-        .id(accountEntity.getId().toString())
+        .id(accountEntity.getId())
         .name(accountEntity.getName())
         .lastName(accountEntity.getLastName())
         .token(generateToken(accountEntity.getId().toString(), cartId, Role.USER))
@@ -83,7 +82,7 @@ public class AccountServiceImpl implements AccountService, UserDetailsService {
     String cartId = cartService.createCart(accountEntity.getId());
 
     return RegisterResponse.builder()
-        .id(accountEntity.getId().toString())
+        .id(accountEntity.getId())
         .name(accountEntity.getName())
         .lastName(accountEntity.getLastName())
         .token(generateToken(accountEntity.getId().toString(), cartId, Role.SELLER))

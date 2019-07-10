@@ -75,7 +75,7 @@ public class CampaignServiceImpl extends BaseServiceImpl implements CampaignServ
   @Override
   public List<CampaignSummary> getCampaignList(int accountId, String sellerId) {
     List<CampaignEntity> campaignEntities = campaignRepository
-        .findBySellerIdAndStatusEquals(Integer.valueOf(sellerId), CampaignStatus.ACTIVE).get();
+        .findBySellerId(Integer.valueOf(sellerId)).get();
 
     List<CampaignSummary> campaignSummaries = new ArrayList<>();
     campaignEntities

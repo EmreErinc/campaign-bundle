@@ -69,7 +69,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
 
   @Override
   public CartResponse decrementItem(int accountId, String cartId, String itemId) {
-    if (itemAvailability(accountId, cartId, Integer.valueOf(itemId), -1)) {
+    if (itemOnCart(cartId, Integer.valueOf(itemId)) && itemAvailability(accountId, cartId, Integer.valueOf(itemId), -1)) {
       updateCart(accountId, cartId, itemId, String.valueOf(-1));
       if (getItemCountOnCart(cartId, Integer.valueOf(itemId)).equals(0)) {
         removeFromCart(accountId, cartId, itemId);
@@ -103,16 +103,25 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
   private boolean itemAvailability(int accountId, String cartId, int itemId, int itemCount) {
     //checks campaign is available on current date
     if (!campaignIsAvailable(itemId)) {
-      throw new ApplicationContextException("Kampanya Süresi Doldu.");
+      //throw new ApplicationContextException("Kampanya Süresi Doldu.");
+      return false;
     }
 
-    //checks campaign limit availability
-    if (!campaignLimitIsAvailableForAccount(accountId, itemId).isPresent()) {
-      throw new ApplicationContextException("Kampanya Limitinizi Doldurdunuz");
+    if (!itemOnCampaign(itemId) && itemOnCart(cartId, itemId)){
+      //  throw new ApplicationContextException("Ürün Sepette Bulunamadı.");
+      return false;
     }
-    //if (itemOnCampaign(itemId) && !cartLimitAvailability(cartId, itemId, itemCount)) {
-    //  throw new ApplicationContextException("Sepet Limitinizi Doldurdunuz");
-    //}
+
+    if (!campaignLimitIsAvailableForAccount(accountId, itemId)) {
+      //throw new ApplicationContextException("Kampanya Limitinizi Doldurdunuz");
+      return false;
+    }
+
+    if (!cartLimitAvailability(cartId, itemId, itemCount)) {
+      //  throw new ApplicationContextException("Sepet Limitinizi Doldurdunuz");
+      return false;
+    }
+
     return true;
   }
 
@@ -157,18 +166,17 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
           //check stock availability
           if (stockIsAvailable && updatedSaleCount >= 0) {
             optionalCartItem
-                .map(item -> {
+                .ifPresent(item -> {
                   item.setPrice(updatedSaleCount * itemPrice);
                   item.setSaleCount(updatedSaleCount);
                   item.setUpdatedAt(Instant.now().toEpochMilli());
                   item.setCampaignParams(prepareCampaignParams(campaignEntity, giftCount, updatedSaleCount));
-                  return item;
                 });
             cartEntity.getCartItems().remove(itemIndex);
             cartEntity.getCartItems().add(itemIndex, optionalCartItem.get());
           } else { //stock is not available for direct addition
             optionalCartItem
-                .map(item -> {
+                .ifPresent(item -> {
                   //describes which sale and gift count available for this item operation
                   SuitableSaleAndGiftCount suitableCount = addOneByOneToCart(campaignEntity, itemOnCart);
 
@@ -176,7 +184,6 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
                   item.setSaleCount(suitableCount.getSaleCount());
                   item.setUpdatedAt(Instant.now().toEpochMilli());
                   item.setCampaignParams(prepareCampaignParams(campaignEntity, suitableCount.getGiftCount(), suitableCount.getSaleCount()));
-                  return item;
                 });
             cartEntity.getCartItems().remove(itemIndex);
             cartEntity.getCartItems().add(itemIndex, optionalCartItem.get());

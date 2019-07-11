@@ -1,7 +1,10 @@
 package com.finartz.intern.campaignlogic.security;
 
 public class SecurityConstants {
-  public static final String[] WHITE_LIST = {"/register",
+  private SecurityConstants() {
+  }
+
+  protected static final String[] WHITE_LIST = {"/register",
       "/seller/register",
       "/login",
       "/item",
@@ -9,7 +12,7 @@ public class SecurityConstants {
       "/item/seller/{sellerId}",
       "/seller/{sellerId}"};
 
-  public static final String[] SWAGGER_URLS = {"/v2/api-docs",
+  protected static final String[] SWAGGER_URLS = {"/v2/api-docs",
       "/configuration/ui",
       "/configuration/security",
       "/swagger-resources",
@@ -20,7 +23,7 @@ public class SecurityConstants {
   public static final String SECRET = "1EyF7VvkbafufWntanQo";
   public static final String SECRET_KEY = "KtsgWPBIC7FSkHKXbP3A";
   public static final String SALT_KEY = "br79RcYwdOJw7b3zIrQW";
-  public static final long EXPIRATION_TIME = 60 * 60 * 24 * 7 * 1000;
+  public static final int EXPIRATION_TIME = 60 * 60 * 24 * 7 * 1000;
   public static final String TOKEN_PREFIX = "Bearer ";
   public static final String HEADER_STRING = "Authorization";
   public static final String AUTHORITIES = "Scopes";

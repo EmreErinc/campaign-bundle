@@ -10,6 +10,7 @@ import com.finartz.intern.campaignlogic.model.value.Role;
 import com.finartz.intern.campaignlogic.repository.AccountRepository;
 import com.finartz.intern.campaignlogic.security.JwtTokenProvider;
 import com.finartz.intern.campaignlogic.security.Utils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.security.core.GrantedAuthority;
@@ -24,6 +25,9 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+import static com.finartz.intern.campaignlogic.security.Errors.*;
+
+@Slf4j
 @Service(value = "accountService")
 public class AccountServiceImpl implements AccountService, UserDetailsService {
   private final JwtTokenProvider jwtTokenProvider;
@@ -42,7 +46,7 @@ public class AccountServiceImpl implements AccountService, UserDetailsService {
   @Override
   public RegisterResponse addUser(RegisterRequest request) {
     if (accountRepository.existsByEmail(request.getEmail())) {
-      throw new RuntimeException("User Account Already Exists");
+      throw new ApplicationContextException(ACCOUNT_ALREADY_EXISTS);
     }
 
     AccountEntity accountEntity = accountRepository.save(Converters.registerRequestToUserEntity(request));
@@ -61,7 +65,7 @@ public class AccountServiceImpl implements AccountService, UserDetailsService {
     Optional<AccountEntity> optionalUserEntity = accountRepository.findByEmailAndPassword(request.getEmail(), Utils.encrypt(request.getPassword()));
 
     if (!optionalUserEntity.isPresent()) {
-      throw new ApplicationContextException("User Not Found");
+      throw new ApplicationContextException(ACCOUNT_NOT_FOUND);
     }
 
     String cartId = cartService.createCart(optionalUserEntity.get().getId());
@@ -75,7 +79,7 @@ public class AccountServiceImpl implements AccountService, UserDetailsService {
   @Override
   public RegisterResponse addSellerAccount(RegisterRequest request) {
     if (accountRepository.existsByEmail(request.getEmail())) {
-      throw new RuntimeException("Seller Account Already Exists");
+      throw new ApplicationContextException(SELLER_ALREADY_EXISTS);
     }
 
     AccountEntity accountEntity = accountRepository.save(Converters.registerSellerRequestToUserEntity(request));
@@ -92,28 +96,27 @@ public class AccountServiceImpl implements AccountService, UserDetailsService {
 
   private String generateToken(String userId, String cartId, Role role) {
     SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role.name());
-    //authorities.add(new SimpleGrantedAuthority(role.name()));
-    //roles.forEach(role -> authorities.add(new SimpleGrantedAuthority(role.name())));
     return jwtTokenProvider.generateToken(userId, cartId, authority);
   }
 
   @Override
   public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
-    //AccountEntity userEntity = userRepository.findByEmail(email);
     Optional<AccountEntity> userEntity = accountRepository.findById(Integer.valueOf(userId));
     if (!userEntity.isPresent()) {
       try {
-        throw new Exception("AccountEntity Not Found");
+        throw new ApplicationContextException(ACCOUNT_NOT_FOUND);
       } catch (Exception e) {
-        e.printStackTrace();
+        log.info(ACCOUNT_NOT_FOUND + e.toString());
       }
+    }
+    if (!userEntity.isPresent()) {
+      throw new ApplicationContextException(ACCOUNT_NOT_FOUND);
     }
     return new User(userEntity.get().getEmail(), userEntity.get().getPassword(), getAuthority(userEntity.get()));
   }
 
   private Set<GrantedAuthority> getAuthority(AccountEntity accountEntity) {
     Set<GrantedAuthority> authorities = new HashSet<>();
-    //accountEntity.getRole().getRoles().forEach(role -> authorities.add(new SimpleGrantedAuthority(role.name())));
     authorities.add(new SimpleGrantedAuthority(accountEntity.getRole().name()));
     return authorities;
   }

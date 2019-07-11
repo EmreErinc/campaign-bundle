@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.finartz.intern.campaignlogic.security.SecurityConstants.*;
@@ -39,7 +38,7 @@ public class JwtTokenProvider {
         .toString();
   }
 
-  public String getCartIdFromToken(String token){
+  public String getCartIdFromToken(String token) {
     return Jwts.parser()
         .setSigningKey(SECRET)
         .parseClaimsJws(token)

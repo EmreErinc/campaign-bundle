@@ -12,6 +12,9 @@ import com.finartz.intern.campaignlogic.security.Utils;
 import java.time.Instant;
 
 public class Converters {
+  private Converters() {
+  }
+
   public static AccountEntity registerRequestToUserEntity(RegisterRequest request) {
     return AccountEntity.builder()
         .name(request.getName())

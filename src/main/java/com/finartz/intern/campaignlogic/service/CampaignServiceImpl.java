@@ -51,8 +51,8 @@ public class CampaignServiceImpl extends BaseServiceImpl implements CampaignServ
   public CampaignResponse getCampaign(int accountId, String campaignId) {
     CampaignResponse campaignResponse = Converters
         .campaignEntityToCampaignResponse(
-            campaignRepository
-                .findById(Integer.valueOf(campaignId)).get(), getBadgeByCampaignId(Integer.valueOf(campaignId)).get());
+            getCampaignEntity(Integer.valueOf(campaignId)),
+            getBadgeByCampaignId(Integer.valueOf(campaignId)).get());
 
     if (userAvailableForCampaign(accountId, Integer.valueOf(campaignId))) {
       campaignResponse.setBadge(Badge.builder().build());

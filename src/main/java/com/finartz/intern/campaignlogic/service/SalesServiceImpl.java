@@ -30,7 +30,7 @@ public class SalesServiceImpl extends BaseServiceImpl implements SalesService {
   public SaleResponse addSale(int accountId, String cartId) {
     List<Integer> saleIds = new ArrayList<>();
     List<SalesEntity> salesEntities = new ArrayList<>();
-    CartEntity cartEntity = getCartById(cartId);
+    CartEntity cartEntity = getCartEntityById(cartId);
 
     cartEntity
         .getCartItems()

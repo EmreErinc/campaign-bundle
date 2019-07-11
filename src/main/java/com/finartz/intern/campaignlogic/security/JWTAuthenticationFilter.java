@@ -41,9 +41,8 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
       accessToken = header.replace(TOKEN_PREFIX, "");
       try {
         userId = tokenProvider.getIdFromToken(accessToken);
-        //username = tokenProvider.getUsernameFromToken(accessToken);
       } catch (IllegalArgumentException e) {
-        logger.error("an error occured during getting username from token", e);
+        logger.error("an error occurred during getting username from token", e);
       } catch (ExpiredJwtException e) {
         logger.warn("the token is expired and not valid anymore", e);
       } catch (SignatureException e) {
@@ -55,7 +54,6 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
     if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
       UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
-      //UserDetails userDetails = userServiceImpl.loadUserByUsername(username);
 
       if (tokenProvider.validateToken(accessToken)) {
         UsernamePasswordAuthenticationToken authentication = tokenProvider.getAuthentication(accessToken, userDetails);

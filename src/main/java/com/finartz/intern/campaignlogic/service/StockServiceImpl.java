@@ -23,11 +23,11 @@ public class StockServiceImpl extends BaseServiceImpl implements StockService {
 
   @Override
   public StockResponse addStock(AddStockRequest request) {
-    int currentStock = itemRepository.findById(request.getItemId()).get().getStock();
+    int currentStock = getItemEntity(request.getItemId()).getStock();
     int newStock = currentStock + request.getStock();
     itemRepository.addStock(newStock, request.getItemId());
     return StockResponse.builder()
-        .stock(itemRepository.findById(request.getItemId()).get().getStock())
+        .stock(currentStock)
         .build();
   }
 

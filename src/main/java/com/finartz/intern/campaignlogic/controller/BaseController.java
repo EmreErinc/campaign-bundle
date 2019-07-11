@@ -6,16 +6,16 @@ import org.springframework.http.HttpHeaders;
 
 import java.util.Optional;
 
-import static com.finartz.intern.campaignlogic.security.SecurityConstants.TOKEN_PREFIX;
+import static com.finartz.intern.campaignlogic.security.SecurityConstants.*;
 
 public abstract class BaseController {
   @Autowired
   private JwtTokenProvider jwtTokenProvider;
 
   public Optional<Integer> getAccountIdFromHeader(HttpHeaders headers) {
-    if (headers.containsKey("Authorization")) {
+    if (headers.containsKey(HEADER_STRING)) {
       return Optional.of(Integer.valueOf(jwtTokenProvider
-          .getIdFromToken(headers.get("Authorization")
+          .getIdFromToken(headers.get(HEADER_STRING)
               .get(0)
               .replace(TOKEN_PREFIX, ""))));
     }
@@ -24,7 +24,7 @@ public abstract class BaseController {
 
   public String getCartIdFromHeader(HttpHeaders headers) {
     return jwtTokenProvider
-        .getCartIdFromToken(headers.get("Authorization")
+        .getCartIdFromToken(headers.get(HEADER_STRING)
             .get(0)
             .replace(TOKEN_PREFIX, ""));
   }

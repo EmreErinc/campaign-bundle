@@ -1,5 +1,7 @@
 package com.finartz.intern.campaignlogic.security;
 
+import lombok.extern.slf4j.Slf4j;
+
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -12,7 +14,12 @@ import java.util.Base64;
 import static com.finartz.intern.campaignlogic.security.SecurityConstants.SALT_KEY;
 import static com.finartz.intern.campaignlogic.security.SecurityConstants.SECRET_KEY;
 
+@Slf4j
 public class Utils {
+  private Utils() {
+    throw new IllegalStateException("Utility class");
+  }
+
   public static String encrypt(String strToEncrypt)
   {
     try
@@ -25,13 +32,13 @@ public class Utils {
       SecretKey tmp = factory.generateSecret(spec);
       SecretKeySpec secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
 
-      Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+      Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
       cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivParameterSpec);
       return Base64.getEncoder().encodeToString(cipher.doFinal(strToEncrypt.getBytes("UTF-8")));
     }
     catch (Exception e)
     {
-      System.out.println("Error while encrypting: " + e.toString());
+      log.info("Error while encrypting: " + e.toString());
     }
     return null;
   }

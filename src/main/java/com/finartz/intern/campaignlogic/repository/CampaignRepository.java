@@ -13,5 +13,5 @@ public interface CampaignRepository extends BaseRepository<CampaignEntity, Strin
 
   Optional<CampaignEntity> findByItemId(int itemId);
 
-  Optional<Boolean> existsByItemId(int itemId);
+  Boolean existsByItemId(int itemId);
 }

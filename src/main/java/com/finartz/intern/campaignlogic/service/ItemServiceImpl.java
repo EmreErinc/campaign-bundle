@@ -10,6 +10,8 @@ import com.finartz.intern.campaignlogic.model.value.ItemDetail;
 import com.finartz.intern.campaignlogic.model.value.ItemSummary;
 import com.finartz.intern.campaignlogic.model.value.Role;
 import com.finartz.intern.campaignlogic.repository.*;
+import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.finartz.intern.campaignlogic.security.Errors.*;
+
+@Slf4j
 @Service
 public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
   private ItemRepository itemRepository;
@@ -56,34 +61,32 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
   @Override
   public ItemDetail getItem(Optional<Integer> accountId, String itemId) {
     ItemDetail itemDetail = Converters
-        .itemEntityToItemDetail(
-            itemRepository
-                .findById(Integer.valueOf(itemId)).get(), Badge.builder().build());
+        .itemEntityToItemDetail(getItemEntity(Integer.valueOf(itemId)), Badge.builder().build());
 
     Optional<CampaignEntity> optionalCampaignEntity = getCampaignByItemId(Integer.valueOf(itemId));
-    Badge badge = Badge.builder()
-        .gift(optionalCampaignEntity.get().getExpectedGiftCount())
-        .requirement(optionalCampaignEntity.get().getRequirementCount())
-        .build();
-    itemDetail.setBadge(badge);
+    if (optionalCampaignEntity.isPresent()){
+      Badge badge = Badge.builder()
+          .gift(optionalCampaignEntity.get().getExpectedGiftCount())
+          .requirement(optionalCampaignEntity.get().getRequirementCount())
+          .build();
+      itemDetail.setBadge(badge);
 
-    accountId.ifPresent(id -> {
-      if (!campaignLimitIsAvailableForAccount(accountId.get(), Integer.valueOf(itemId)).get()) {
-        itemDetail.setBadge(Badge.builder().build());
-      }
-    });
-
+      accountId.ifPresent(id -> {
+        if (!campaignLimitIsAvailableForAccount(accountId.get(), Integer.valueOf(itemId))) {
+          itemDetail.setBadge(Badge.builder().build());
+        }
+      });
+    }
     return itemDetail;
   }
 
   @Override
   public List<ItemSummary> searchItemList(Optional<Integer> accountId, Optional<String> searchText) {
-    return null;
+    return Lists.newArrayList(ItemSummary.builder().build());
   }
 
   @Override
   public List<ItemSummary> getItemList(Optional<Integer> accountId, Optional<String> text) {
-
     //for all items
     List<ItemSummary> itemSummaries = new ArrayList<>();
     itemRepository
@@ -110,8 +113,12 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
   public List<ItemSummary> getSellerItems(Optional<Integer> accountId, String sellerId) {
     List<ItemSummary> itemSummaries = new ArrayList<>();
 
-    itemRepository
-        .findBySellerId(Integer.valueOf(sellerId))
+    Optional<List<ItemEntity>> optionalItemEntities = itemRepository.findBySellerId(Integer.valueOf(sellerId));
+    if (!optionalItemEntities.isPresent()){
+      throw new ApplicationContextException(ITEM_NOT_FOUND);
+    }
+
+    optionalItemEntities
         .get()
         .forEach(itemEntity -> itemSummaries
             .add(Converters.itemEntityToItemSummary(itemEntity, getBadgeByItemId(itemEntity.getId()).get())));
@@ -139,7 +146,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
             usedCampaigns
                 .stream()
                 //checks campaign limit status
-                .anyMatch(campaignEntity -> !campaignLimitIsAvailableForAccount(accountId, itemSummary.getId()).get()
+                .anyMatch(campaignEntity -> !campaignLimitIsAvailableForAccount(accountId, itemSummary.getId())
                     || campaignEntity.getItemId().equals(itemSummary.getId()))
         )
         .collect(Collectors.toList());

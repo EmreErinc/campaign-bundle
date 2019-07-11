@@ -1,14 +1,18 @@
 package com.finartz.intern.campaignlogic.model.request;
 
 import com.finartz.intern.campaignlogic.model.value.CargoType;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class AddItemRequest {
 
   @NotNull(message = "name should not be empty")

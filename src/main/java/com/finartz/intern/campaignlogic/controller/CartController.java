@@ -37,7 +37,7 @@ public class CartController extends BaseController {
   }
 
   @GetMapping
-  public CartResponse getMyCart(@RequestHeader HttpHeaders headers){
+  public CartResponse getMyCart(@RequestHeader HttpHeaders headers) {
     return cartService.getCart(getCartIdFromHeader(headers));
   }
 }

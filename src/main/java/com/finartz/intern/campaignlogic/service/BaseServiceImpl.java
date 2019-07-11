@@ -119,23 +119,26 @@ public class BaseServiceImpl implements BaseService {
   @Override
   public Integer getItemStock(int itemId) {
     Optional<List<SalesEntity>> optionalSalesEntities = salesRepository.findByItemId(itemId);
-    if (!optionalSalesEntities.isPresent()) {
-      throw new ApplicationContextException(ITEM_NOT_FOUND);
+    int sumOfSales = 0;
+    int sumOfGifts = 0;
+
+    //if no item sales
+    if (optionalSalesEntities.isPresent()) {
+      sumOfSales = optionalSalesEntities
+          .get()
+          .stream()
+          .filter(salesEntity -> salesEntity.getSaleCount() != null)
+          .collect(Collectors.toList())
+          .stream()
+          .mapToInt(SalesEntity::getSaleCount).sum();
+      sumOfGifts = optionalSalesEntities
+          .get()
+          .stream()
+          .filter(salesEntity -> salesEntity.getGiftCount() != null)
+          .collect(Collectors.toList())
+          .stream()
+          .mapToInt(SalesEntity::getGiftCount).sum();
     }
-    int sumOfSales = optionalSalesEntities
-        .get()
-        .stream()
-        .filter(salesEntity -> salesEntity.getSaleCount() != null)
-        .collect(Collectors.toList())
-        .stream()
-        .mapToInt(SalesEntity::getSaleCount).sum();
-    int sumOfGifts = optionalSalesEntities
-        .get()
-        .stream()
-        .filter(salesEntity -> salesEntity.getGiftCount() != null)
-        .collect(Collectors.toList())
-        .stream()
-        .mapToInt(SalesEntity::getGiftCount).sum();
     Optional<ItemEntity> optionalItemEntity = itemRepository.findById(itemId);
     if (!optionalItemEntity.isPresent()){
       throw new ApplicationContextException(ITEM_NOT_FOUND);

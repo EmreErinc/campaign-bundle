@@ -27,7 +27,7 @@ public class StockServiceImpl extends BaseServiceImpl implements StockService {
     int newStock = currentStock + request.getStock();
     itemRepository.addStock(newStock, request.getItemId());
     return StockResponse.builder()
-        .stock(currentStock)
+        .stock(newStock)
         .build();
   }
 

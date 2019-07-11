@@ -127,7 +127,11 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
 
   private boolean cartLimitAvailability(String cartId, int itemId, int itemCount) {
     CartEntity cartEntity = findCart(cartId);
-    int cartLimit = getCampaignCartLimit(itemId);
+    //int cartLimit = getCampaignCartLimit(itemId);
+    Optional<CampaignEntity> optionalCampaignEntity = getCampaignByItemId(itemId);
+    if (!optionalCampaignEntity.isPresent()){
+      return true;
+    }
 
     Optional<CartItem> optionalCartItem = cartEntity
         .getCartItems()
@@ -139,7 +143,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
     if (optionalCartItem.isPresent()) {
       saleCount = optionalCartItem.get().getSaleCount();
     }
-    return saleCount + itemCount <= cartLimit;
+    return calculateGiftCount(optionalCampaignEntity.get(), saleCount + itemCount) <= optionalCampaignEntity.get().getCartLimit();
   }
 
   private CartEntity addItemToCartWithCampaign(CampaignEntity campaignEntity, String cartId, int itemId, int desiredSaleCount) {
@@ -230,8 +234,8 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
     int quotient = saleCount / requirementCount;
     int possibleGiftCount = quotient * campaignEntity.getExpectedGiftCount();
 
-    if (possibleGiftCount > campaignEntity.getExpectedGiftCount()) {
-      return campaignEntity.getExpectedGiftCount();
+    if (possibleGiftCount > (campaignEntity.getExpectedGiftCount() * campaignEntity.getCartLimit())) {
+      return (campaignEntity.getExpectedGiftCount() * campaignEntity.getCartLimit());
     }
     return possibleGiftCount;
   }

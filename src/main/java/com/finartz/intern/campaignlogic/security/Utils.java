@@ -32,7 +32,7 @@ public class Utils {
       SecretKey tmp = factory.generateSecret(spec);
       SecretKeySpec secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
 
-      Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+      Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
       cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivParameterSpec);
       return Base64.getEncoder().encodeToString(cipher.doFinal(strToEncrypt.getBytes("UTF-8")));
     }

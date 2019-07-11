@@ -64,28 +64,19 @@ public class BaseServiceImpl implements BaseService {
   }
 
   @Override
-  public boolean campaignIsAvailable(int itemId) {
+  public Boolean campaignIsAvailable(int itemId) {
     Optional<CampaignEntity> campaignEntity = campaignRepository.findByItemId(itemId);
     Long current = Instant.now().toEpochMilli();
     if (!campaignEntity.isPresent()) {
       throw new ApplicationContextException("Kampanya Bulunamadı.");
     }
-
     return (current > campaignEntity.get().getStartAt() && current < campaignEntity.get().getEndAt());
   }
 
   @Override
-  public boolean stockIsAvailable(int itemId, int expectedSaleAndGiftCount) {
+  public Boolean stockIsAvailable(int itemId, int expectedSaleAndGiftCount) {
     Integer stock = getItemStock(itemId);
     return (stock - expectedSaleAndGiftCount >= 0);
-  }
-
-  @Override
-  public boolean itemOnCampaign(int itemId) {
-    return campaignRepository
-        .findByItemId(itemId)
-        .map(campaignEntity -> true)
-        .orElse(false);
   }
 
   @Override
@@ -195,15 +186,15 @@ public class BaseServiceImpl implements BaseService {
 
   @Override
   public Optional<Badge> getBadgeByItemId(int itemId) {
-    return mapCampaignEntityBadge(campaignRepository.findByItemId(itemId));
+    return extractCampaignEntityBadge(campaignRepository.findByItemId(itemId));
   }
 
   @Override
   public Optional<Badge> getBadgeByCampaignId(int campaignId) {
-    return mapCampaignEntityBadge(campaignRepository.findById(campaignId));
+    return extractCampaignEntityBadge(campaignRepository.findById(campaignId));
   }
 
-  private Optional<Badge> mapCampaignEntityBadge(Optional<CampaignEntity> optionalCampaignEntity) {
+  private Optional<Badge> extractCampaignEntityBadge(Optional<CampaignEntity> optionalCampaignEntity) {
     return optionalCampaignEntity
         .map(campaignEntity ->
             Optional.of(Badge.builder()

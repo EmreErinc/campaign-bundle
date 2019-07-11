@@ -14,17 +14,23 @@ public interface BaseService {
 
   Optional<Integer> getSellerIdByAccountId(int accountId);
 
-  Optional<CampaignEntity> getCampaignByItemId(int itemId);
-
   Optional<Integer> getSellerIdByItemId(int itemId);
 
-  boolean campaignIsAvailable(int itemId);
-
-  boolean stockIsAvailable(int itemId, int expectedSaleAndGiftCount);
-
-  boolean itemOnCampaign(int itemId);
+  Boolean stockIsAvailable(int itemId, int expectedSaleAndGiftCount);
 
   Integer getItemStock(int itemId);
+
+  Double getItemPrice(int itemId);
+
+  Integer getItemCountOnCart(String cartId, int itemId);
+
+  Boolean userAvailableForCampaign(int accountId, int campaignId);
+
+  Boolean campaignIsAvailable(int itemId);
+
+  Optional<CampaignEntity> getCampaignByItemId(int itemId);
+
+  List<CampaignEntity> getUsedCampaignsByUserId(int userId);
 
   Optional<Boolean> campaignLimitIsAvailableForAccount(int accountId, int itemId);
 
@@ -36,19 +42,11 @@ public interface BaseService {
 
   Integer getCampaignLimit(int itemId);
 
-  CartEntity getCartById(String cartId);
-
-  Double getItemPrice(int itemId);
-
   Optional<Badge> getBadgeByItemId(int itemId);
 
   Optional<Badge> getBadgeByCampaignId(int campaignId);
 
-  List<CampaignEntity> getUsedCampaignsByUserId(int userId);
-
-  Boolean userAvailableForCampaign(int accountId, int campaignId);
-
   CampaignSummary prepareCampaignEntityToList(int accountId, CampaignEntity campaignEntity);
 
-  Integer getItemCountOnCart(String cartId, int itemId);
+  CartEntity getCartById(String cartId);
 }

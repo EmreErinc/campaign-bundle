@@ -10,7 +10,8 @@ public class SecurityConstants {
       "/item",
       "/item/{itemId}",
       "/item/seller/{sellerId}",
-      "/seller/{sellerId}"};
+      "/seller/{sellerId}",
+      "/h2/**"};
 
   protected static final String[] SWAGGER_URLS = {"/v2/api-docs",
       "/configuration/ui",

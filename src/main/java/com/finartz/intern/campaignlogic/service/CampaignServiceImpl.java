@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import static com.finartz.intern.campaignlogic.security.Errors.*;
 
 @Service
 public class CampaignServiceImpl extends BaseServiceImpl implements CampaignService {
@@ -33,18 +36,17 @@ public class CampaignServiceImpl extends BaseServiceImpl implements CampaignServ
 
   @Override
   public CampaignResponse addCampaign(int accountId, AddCampaignRequest request) {
-    //TODO ürüne ait başka kampanya var mı yok mu
     if (!getRoleByAccountId(accountId).equals(Role.SELLER)) {
       throw new ApplicationContextException("You do not have permission for this operation");
     }
 
-    Integer sellerId = getSellerIdByAccountId(accountId).get();
+    Integer sellerId = getSellerIdByAccountId(accountId);
     CampaignEntity campaignEntity = campaignRepository
         .save(Converters
             .addCampaignRequestToCampaignEntity(request, sellerId));
 
     return Converters
-        .campaignEntityToCampaignResponse(campaignEntity, getBadgeByCampaignId(campaignEntity.getId()).get());
+        .campaignEntityToCampaignResponse(campaignEntity, getBadgeByCampaignId(campaignEntity.getId()));
   }
 
   @Override
@@ -52,7 +54,7 @@ public class CampaignServiceImpl extends BaseServiceImpl implements CampaignServ
     CampaignResponse campaignResponse = Converters
         .campaignEntityToCampaignResponse(
             getCampaignEntity(Integer.valueOf(campaignId)),
-            getBadgeByCampaignId(Integer.valueOf(campaignId)).get());
+            getBadgeByCampaignId(Integer.valueOf(campaignId)));
 
     if (userAvailableForCampaign(accountId, Integer.valueOf(campaignId))) {
       campaignResponse.setBadge(Badge.builder().build());
@@ -66,22 +68,26 @@ public class CampaignServiceImpl extends BaseServiceImpl implements CampaignServ
       throw new ApplicationContextException("You do not have permission for this operation");
     }
 
-    CampaignEntity campaignEntity = campaignRepository.findById(Integer.valueOf(campaignId)).get();
-    campaignEntity.setStatus(CampaignStatus.valueOf(status.name()));
-    campaignRepository.save(campaignEntity);
+    Optional<CampaignEntity> optionalCampaignEntity = campaignRepository.findById(Integer.valueOf(campaignId));
+    if (!optionalCampaignEntity.isPresent()){
+      throw new ApplicationContextException(CAMPAIGN_NOT_FOUND);
+    }
+    optionalCampaignEntity.get().setStatus(CampaignStatus.valueOf(status.name()));
+    campaignRepository.save(optionalCampaignEntity.get());
     return true;
   }
 
   @Override
   public List<CampaignSummary> getCampaignList(int accountId, String sellerId) {
-    List<CampaignEntity> campaignEntities = campaignRepository
-        .findBySellerIdAndStatusEquals(Integer.valueOf(sellerId), CampaignStatus.ACTIVE).get();
+    Optional<List<CampaignEntity>> optionalCampaignEntities = campaignRepository
+        .findBySellerIdAndStatusEquals(Integer.valueOf(sellerId), CampaignStatus.ACTIVE);
 
     List<CampaignSummary> campaignSummaries = new ArrayList<>();
-    campaignEntities
-        .forEach(campaignEntity ->
-            campaignSummaries
-                .add(prepareCampaignEntityToList(accountId, campaignEntity)));
+    optionalCampaignEntities.ifPresent(campaignEntities ->
+        campaignEntities
+            .forEach(campaignEntity ->
+                campaignSummaries
+                    .add(prepareCampaignEntityToList(accountId, campaignEntity))));
 
     return campaignSummaries;
   }

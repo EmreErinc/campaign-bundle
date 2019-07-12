@@ -45,14 +45,11 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
       throw new ApplicationContextException("You do not have permission for this operation");
     }
 
-    Optional<Integer> sellerId = getSellerIdByAccountId(accountId);
-    if (!sellerId.isPresent()) {
-      throw new ApplicationContextException("You do not have permission for this operation");
-    }
+    Integer expectedSellerId = getSellerIdByAccountId(accountId);
 
     ItemEntity itemEntity = itemRepository
         .save(Converters
-            .addItemRequestToItemEntity(request, sellerId.get()));
+            .addItemRequestToItemEntity(request, expectedSellerId));
 
     return Converters
         .itemEntityToItemResponse(itemEntity);
@@ -92,7 +89,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
     itemRepository
         .findAll()
         .forEach(itemEntity -> itemSummaries
-            .add(Converters.itemEntityToItemSummary(itemEntity, getBadgeByItemId(itemEntity.getId()).get())));
+            .add(Converters.itemEntityToItemSummary(itemEntity, getBadgeByItemId(itemEntity.getId()))));
 
     accountId.ifPresent(id -> eliminateUsedCampaignItems(itemSummaries, id)
         .forEach(itemSummary ->
@@ -121,7 +118,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
     optionalItemEntities
         .get()
         .forEach(itemEntity -> itemSummaries
-            .add(Converters.itemEntityToItemSummary(itemEntity, getBadgeByItemId(itemEntity.getId()).get())));
+            .add(Converters.itemEntityToItemSummary(itemEntity, getBadgeByItemId(itemEntity.getId()))));
 
     accountId.ifPresent(id -> eliminateUsedCampaignItems(itemSummaries, id)
         .forEach(itemSummary ->

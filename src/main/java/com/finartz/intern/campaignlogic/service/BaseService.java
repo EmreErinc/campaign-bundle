@@ -13,9 +13,9 @@ import java.util.Optional;
 public interface BaseService {
   Role getRoleByAccountId(int accountId);
 
-  Optional<Integer> getSellerIdByAccountId(int accountId);
+  Integer getSellerIdByAccountId(int accountId);
 
-  Optional<Integer> getSellerIdByItemId(int itemId);
+  Integer getSellerIdByItemId(int itemId);
 
   Boolean stockIsAvailable(int itemId, int expectedSaleAndGiftCount);
 
@@ -49,9 +49,9 @@ public interface BaseService {
 
   Integer getCampaignLimit(int itemId);
 
-  Optional<Badge> getBadgeByItemId(int itemId);
+  Badge getBadgeByItemId(int itemId);
 
-  Optional<Badge> getBadgeByCampaignId(int campaignId);
+  Badge getBadgeByCampaignId(int campaignId);
 
   CampaignSummary prepareCampaignEntityToList(int accountId, CampaignEntity campaignEntity);
 

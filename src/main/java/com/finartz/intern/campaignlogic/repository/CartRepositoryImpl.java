@@ -39,6 +39,6 @@ public class CartRepositoryImpl implements CartRepository {
     update.set("cartItems", cartEntity.getCartItems());
 
     mongoTemplate.updateFirst(query, update, CartEntity.class);
-    return findCart(cartEntity.getId()).get();
+    return mongoTemplate.findById(cartEntity.getId(), CartEntity.class);
   }
 }

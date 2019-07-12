@@ -44,6 +44,7 @@ public class BaseServiceImpl implements BaseService {
     this.cartRepository = cartRepository;
   }
 
+  @Override
   public Role getRoleByAccountId(int accountId) {
     Optional<AccountEntity> optionalAccountEntity = accountRepository.findById(accountId);
     if (!optionalAccountEntity.isPresent()){
@@ -52,13 +53,14 @@ public class BaseServiceImpl implements BaseService {
     return optionalAccountEntity.get().getRole();
   }
 
-  public Optional<Integer> getSellerIdByAccountId(int accountId) {
+  @Override
+  public Integer getSellerIdByAccountId(int accountId) {
     Optional<SellerEntity> optionalSellerEntity = sellerRepository.findByAccountId(accountId);
     if (!optionalSellerEntity.isPresent()){
       throw new ApplicationContextException(SELLER_NOT_FOUND);
     }
 
-    return Optional.of(optionalSellerEntity.get().getId());
+    return optionalSellerEntity.get().getId();
   }
 
   @Override
@@ -67,12 +69,12 @@ public class BaseServiceImpl implements BaseService {
   }
 
   @Override
-  public Optional<Integer> getSellerIdByItemId(int itemId) {
+  public Integer getSellerIdByItemId(int itemId) {
     Optional<ItemEntity> optionalItemEntity = itemRepository.findById(itemId);
     if (!optionalItemEntity.isPresent()){
       throw new ApplicationContextException(CAMPAIGN_NOT_FOUND);
     }
-    return Optional.of(optionalItemEntity.get().getSellerId());
+    return optionalItemEntity.get().getSellerId();
   }
 
   @Override
@@ -235,40 +237,37 @@ public class BaseServiceImpl implements BaseService {
   }
 
   @Override
-  public Optional<Badge> getBadgeByItemId(int itemId) {
+  public Badge getBadgeByItemId(int itemId) {
     return extractCampaignEntityBadge(campaignRepository.findByItemId(itemId));
   }
 
   @Override
-  public Optional<Badge> getBadgeByCampaignId(int campaignId) {
+  public Badge getBadgeByCampaignId(int campaignId) {
     return extractCampaignEntityBadge(campaignRepository.findById(campaignId));
   }
 
-  private Optional<Badge> extractCampaignEntityBadge(Optional<CampaignEntity> optionalCampaignEntity) {
+  private Badge extractCampaignEntityBadge(Optional<CampaignEntity> optionalCampaignEntity) {
     return optionalCampaignEntity
         .map(campaignEntity ->
-            Optional.of(Badge.builder()
+            Badge.builder()
                 .requirement(campaignEntity.getRequirementCount())
                 .gift(campaignEntity.getExpectedGiftCount())
-                .build()))
+                .build())
         .orElseGet(() ->
-            Optional.of(Badge.builder().build()));
+            Badge.builder()
+                .build());
   }
 
   @Override
   public List<CampaignEntity> getUsedCampaignsByUserId(int userId) {
     Optional<List<SalesEntity>> optionalSalesEntities = salesRepository.findByOwnerId(userId);
-    //if (!optionalSalesEntities.isPresent()) {
-    //  throw new ApplicationContextException("Satış Bulunamadı.");
-    //}
     List<CampaignEntity> campaignEntities = new ArrayList<>();
 
     optionalSalesEntities.ifPresent(salesEntities ->
         salesEntities
             .forEach(salesEntity ->
                 getCampaignByItemId(salesEntity.getItemId())
-                    .map(campaignEntities::add)
-                    .orElse(false)));
+                    .ifPresent(campaignEntities::add)));
 
     return campaignEntities;
   }
@@ -285,11 +284,7 @@ public class BaseServiceImpl implements BaseService {
   public CampaignSummary prepareCampaignEntityToList(int accountId, CampaignEntity campaignEntity) {
     Badge badge = Badge.builder().build();
     if (!userAvailableForCampaign(accountId, campaignEntity.getId())) {
-      Optional<Badge> optionalBadge = getBadgeByCampaignId(campaignEntity.getId());
-      if (!optionalBadge.isPresent()){
-        throw new ApplicationContextException(CAMPAIGN_BADGE_NOT_FOUND);
-      }
-      badge = optionalBadge.get();
+      badge = getBadgeByCampaignId(campaignEntity.getId());
     }
     return Converters.campaignEntityToCampaignSummary(campaignEntity, badge);
   }

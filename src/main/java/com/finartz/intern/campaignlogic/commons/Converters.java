@@ -125,6 +125,7 @@ public class Converters {
 
   public static CampaignResponse campaignEntityToCampaignResponse(CampaignEntity campaignEntity, Badge badge) {
     return CampaignResponse.builder()
+        .id(campaignEntity.getId())
         .itemId(campaignEntity.getItemId())
         .sellerId(campaignEntity.getSellerId())
         .title(campaignEntity.getTitle())

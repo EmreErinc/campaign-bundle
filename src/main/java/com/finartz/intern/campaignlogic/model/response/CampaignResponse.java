@@ -8,6 +8,7 @@ import lombok.Data;
 @Data
 @Builder
 public class CampaignResponse {
+  private Integer id;
   private Integer itemId;
   private Integer sellerId;
   private String title;

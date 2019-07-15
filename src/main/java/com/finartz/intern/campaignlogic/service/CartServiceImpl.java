@@ -111,12 +111,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
 
     if (!itemOnCampaign(itemId)) {
       log.info("Ürüne ait kampanya bulunamadı. Normal süreç işlenecek.");
-      return false;
-    }
-
-    if (!itemOnCart(cartId, itemId)) {
-      log.info("Ürün Sepette Bulunamadı.");
-      return false;
+      return true;
     }
 
     if (!campaignLimitIsAvailableForAccount(accountId, itemId)) {

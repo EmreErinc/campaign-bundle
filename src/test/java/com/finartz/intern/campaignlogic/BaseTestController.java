@@ -46,6 +46,19 @@ public abstract class BaseTestController {
         .build());
   }
 
+  public ItemResponse generateItem(int accountId, int stock) {
+    String[] cargoList = {"MNG Kargo", "Sürat Kargo", "Yurtiçi Kargo", "PTT", "UPS"};
+
+    return itemService.addItem(accountId, AddItemRequest.builder()
+        .name("test-item-" + Instant.now().toEpochMilli())
+        .description("item-description-1")
+        .price(new Random().nextDouble() * 50D)
+        .stock(stock)
+        .cargoType(CargoType.values()[new Random().nextInt(2)])
+        .cargoCompany(cargoList[new Random().nextInt(5)])
+        .build());
+  }
+
   public CampaignResponse generateCampaign(int accountId, int itemId) {
     return campaignService.addCampaign(accountId, AddCampaignRequest.builder()
         .title("other campaign")
@@ -54,6 +67,21 @@ public abstract class BaseTestController {
         .campaignLimit(new Random().nextInt(4) + 2)
         .requirement(new Random().nextInt(6) + 2)
         .gift(new Random().nextInt(3))
+        .startAt(1562939866630L)
+        .endAt(1577653200000L)
+        .build());
+  }
+
+  public CampaignResponse generateCampaign(int accountId, int itemId, int cartLimit, int campaignLimit, int requirement, int gift) {
+    return campaignService.addCampaign(accountId, AddCampaignRequest.builder()
+        .title("other campaign")
+        .itemId(itemId)
+        .cartLimit(cartLimit)
+        .campaignLimit(campaignLimit)
+        .requirement(requirement)
+        .gift(gift)
+        .startAt(1562939866630L)
+        .endAt(1577653200000L)
         .build());
   }
 

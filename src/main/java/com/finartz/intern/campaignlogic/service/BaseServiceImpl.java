@@ -7,6 +7,7 @@ import com.finartz.intern.campaignlogic.model.value.CampaignSummary;
 import com.finartz.intern.campaignlogic.model.value.CartItem;
 import com.finartz.intern.campaignlogic.model.value.Role;
 import com.finartz.intern.campaignlogic.repository.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 
 import static com.finartz.intern.campaignlogic.security.Errors.*;
 
+@Slf4j
 @Service
 public class BaseServiceImpl implements BaseService {
   private AccountRepository accountRepository;
@@ -82,7 +84,9 @@ public class BaseServiceImpl implements BaseService {
     Optional<CampaignEntity> campaignEntity = campaignRepository.findByItemId(itemId);
     Long current = Instant.now().toEpochMilli();
     if (!campaignEntity.isPresent()) {
-      throw new ApplicationContextException(CAMPAIGN_NOT_FOUND);
+      //throw new ApplicationContextException(CAMPAIGN_NOT_FOUND);
+      log.info("Ürüne ait kampanya bulunamadı.");
+      return true;
     }
     return (current > campaignEntity.get().getStartAt() && current < campaignEntity.get().getEndAt());
   }
@@ -156,7 +160,8 @@ public class BaseServiceImpl implements BaseService {
 
     Optional<Integer> campaignItemUsageCount = getCampaignItemUsageCount(accountId, itemId);
     if (!campaignItemUsageCount.isPresent()){
-      throw new ApplicationContextException(CAMPAIGN_BADGE_NOT_FOUND);
+      return true;
+      //throw new ApplicationContextException(CAMPAIGN_BADGE_NOT_FOUND);
     }
 
     return campaignItemUsageCount.get() < getCampaignLimit(itemId);
@@ -181,6 +186,9 @@ public class BaseServiceImpl implements BaseService {
     );
 
     int cartLimit = optionalCampaignEntity.get().getCartLimit();
+    if (cartLimit == 0 || sumOfSales.intValue() == 0) {
+      return Optional.empty();
+    }
     return Optional.of(sumOfSales.get() / cartLimit);
   }
 

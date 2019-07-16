@@ -51,7 +51,8 @@ public class SalesServiceImpl extends BaseServiceImpl implements SalesService {
     salesEntities
         .forEach(salesEntity -> saleIds.add(salesEntity.getId()));
 
-    //TODO after sale clear cart
+    saveAsSoldCart(cartEntity);
+
     return SaleResponse.builder().saleIds(saleIds).build();
   }
 }

@@ -1,12 +1,10 @@
 package com.finartz.intern.campaignlogic;
 
 import com.finartz.intern.campaignlogic.model.request.AddSellerRequest;
-import com.finartz.intern.campaignlogic.model.response.CartResponse;
-import com.finartz.intern.campaignlogic.model.response.ItemResponse;
-import com.finartz.intern.campaignlogic.model.response.RegisterResponse;
-import com.finartz.intern.campaignlogic.model.response.SellerResponse;
+import com.finartz.intern.campaignlogic.model.response.*;
 import com.finartz.intern.campaignlogic.model.value.CartItem;
 import com.finartz.intern.campaignlogic.service.CartService;
+import com.finartz.intern.campaignlogic.service.SalesService;
 import com.finartz.intern.campaignlogic.service.SellerService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
@@ -31,10 +29,12 @@ public class CartControllerTest extends BaseTestController {
   private CartService cartService;
 
   @Autowired
+  private SalesService salesService;
+
+  @Autowired
   private SellerService sellerService;
 
   private RegisterResponse sellerAccountRegisterResponse;
-  private RegisterResponse userAccountRegisterResponse;
   private String cartId;
 
   private ItemResponse itemResponse1;
@@ -65,19 +65,17 @@ public class CartControllerTest extends BaseTestController {
     //generate campaign
     generateCampaign(sellerAccountRegisterResponse.getId(), itemResponse1.getItemId());
     generateCampaign(sellerAccountRegisterResponse.getId(), itemResponse3.getItemId());
-
-    //create user account
-    userAccountRegisterResponse = generateUserAccount();
-    cartId = getCartIdFromToken(userAccountRegisterResponse.getToken());
   }
 
 
   @Test
   public void test_addCampaignItemToCartByDirectly() {
+    RegisterResponse registerResponse = generateUserAccount();
+    String cartId = getCartIdFromToken(registerResponse.getToken());
     int count = 2;
 
     CartResponse<CartItem> cartResponse = cartService
-        .addToCart(userAccountRegisterResponse.getId(),
+        .addToCart(registerResponse.getId(),
             cartId,
             itemResponse1.getItemId().toString(),
             String.valueOf(count));
@@ -91,10 +89,12 @@ public class CartControllerTest extends BaseTestController {
 
   @Test
   public void test_addNonCampaignItemToCartByDirectly() {
+    RegisterResponse registerResponse = generateUserAccount();
+    String cartId = getCartIdFromToken(registerResponse.getToken());
     int count = 2;
 
     CartResponse<CartItem> cartResponse = cartService
-        .addToCart(userAccountRegisterResponse.getId(),
+        .addToCart(registerResponse.getId(),
             cartId,
             itemResponse2.getItemId().toString(),
             String.valueOf(count));
@@ -108,6 +108,9 @@ public class CartControllerTest extends BaseTestController {
 
   @Test
   public void test_addCampaignItemToCartByIncrementItemCount() {
+    RegisterResponse registerResponse = generateUserAccount();
+    String cartId = getCartIdFromToken(registerResponse.getToken());
+
     CartResponse<CartItem> cartResponseBeforeIncrement = cartService.getCart(cartId);
     assertFalse(cartResponseBeforeIncrement
         .getItemList()
@@ -116,7 +119,7 @@ public class CartControllerTest extends BaseTestController {
 
     //test
     CartResponse<CartItem> cartResponse = cartService
-        .incrementItem(userAccountRegisterResponse.getId(),
+        .incrementItem(registerResponse.getId(),
             cartId,
             itemResponse1.getItemId().toString());
 
@@ -133,6 +136,8 @@ public class CartControllerTest extends BaseTestController {
 
   @Test
   public void test_addNonCampaignItemToCartByIncrementItemCount() {
+    RegisterResponse registerResponse = generateUserAccount();
+    String cartId = getCartIdFromToken(registerResponse.getToken());
     CartResponse<CartItem> cartResponseBeforeIncrement = cartService.getCart(cartId);
     assertFalse(cartResponseBeforeIncrement
         .getItemList()
@@ -141,7 +146,7 @@ public class CartControllerTest extends BaseTestController {
 
     //test
     CartResponse<CartItem> cartResponse = cartService
-        .incrementItem(userAccountRegisterResponse.getId(),
+        .incrementItem(registerResponse.getId(),
             cartId,
             itemResponse2.getItemId().toString());
 
@@ -337,4 +342,41 @@ public class CartControllerTest extends BaseTestController {
     assertFalse(cartResponse.getItemList().stream().filter(cartItem -> cartItem.getItemId().equals(itemResponse.getItemId())).findFirst().get().getHasCampaign());
     assertEquals(10, cartResponse.getItemList().stream().filter(cartItem -> cartItem.getItemId().equals(itemResponse.getItemId())).findFirst().get().getSaleCount().intValue());
   }
+
+  /*@Test
+  public void test_addCampaignItemToCartAfterCampaignLimitExpired(){
+    RegisterResponse registerResponse = generateUserAccount();
+    int userId = registerResponse.getId();
+    String cartId = getCartIdFromToken(registerResponse.getToken());
+
+    ItemResponse itemResponse = generateItem(sellerAccountRegisterResponse.getId(), 10);
+    generateCampaign(sellerAccountRegisterResponse.getId(), itemResponse.getItemId(), 3, 1, 5, 2);
+
+    CartResponse<CartItem> cartResponseBeforeIncrement = cartService.getCart(cartId);
+    assertFalse(cartResponseBeforeIncrement
+        .getItemList()
+        .stream()
+        .anyMatch(cartItem -> cartItem.getItemId().equals(itemResponse.getItemId())));
+
+    CartResponse<CartItem> cartResponse = cartService
+        .addToCart(userId,
+            cartId,
+            itemResponse.getItemId().toString(),
+            String.valueOf(2));
+    assertNotNull(cartId);
+
+    SaleResponse firstSaleResponse = salesService.addSale(userId, cartId);
+    assertNotNull(firstSaleResponse);
+
+    CartResponse<CartItem> cartResponse = cartService
+        .addToCart(userId,
+            cartId,
+            itemResponse.getItemId().toString(),
+            String.valueOf(2));
+
+    SaleResponse secondSaleResponse = salesService.addSale(userId, cartId);
+    assertNotNull(secondSaleResponse);
+
+
+  }*/
 }

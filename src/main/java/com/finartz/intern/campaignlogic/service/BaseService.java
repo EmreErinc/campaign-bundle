@@ -31,7 +31,9 @@ public interface BaseService {
 
   Boolean userAvailableForCampaign(int accountId, int campaignId);
 
-  Boolean campaignIsAvailable(int itemId);
+  Boolean campaignIsAvailableGetByItemId(int itemId);
+
+  Boolean campaignIsAvailableGetById(int campaignId);
 
   CampaignEntity getCampaignEntity(int campaignId);
 
@@ -58,4 +60,6 @@ public interface BaseService {
   Boolean itemOnCart(String cartId, int itemId);
 
   CartEntity getCartEntityById(String cartId);
+
+  void saveAsSoldCart(CartEntity cartEntity);
 }

@@ -1,6 +1,7 @@
 package com.finartz.intern.campaignlogic.repository;
 
 import com.finartz.intern.campaignlogic.model.entity.CartEntity;
+import com.finartz.intern.campaignlogic.model.entity.SoldCartEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -40,5 +41,18 @@ public class CartRepositoryImpl implements CartRepository {
 
     mongoTemplate.updateFirst(query, update, CartEntity.class);
     return mongoTemplate.findById(cartEntity.getId(), CartEntity.class);
+  }
+
+  @Override
+  public Optional<CartEntity> findByAccountId(int accountId) {
+    Query query = new Query();
+    query.addCriteria(Criteria.where("accountId").is(accountId));
+
+    return Optional.ofNullable(mongoTemplate.findOne(query, CartEntity.class));
+  }
+
+  @Override
+  public SoldCartEntity saveAsSold(SoldCartEntity soldCartEntity) {
+    return mongoTemplate.save(soldCartEntity);
   }
 }

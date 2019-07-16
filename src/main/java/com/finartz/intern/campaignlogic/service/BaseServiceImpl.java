@@ -80,7 +80,7 @@ public class BaseServiceImpl implements BaseService {
   }
 
   @Override
-  public Boolean campaignIsAvailable(int itemId) {
+  public Boolean campaignIsAvailableGetByItemId(int itemId) {
     Optional<CampaignEntity> campaignEntity = campaignRepository.findByItemId(itemId);
     Long current = Instant.now().toEpochMilli();
     if (!campaignEntity.isPresent()) {
@@ -89,6 +89,15 @@ public class BaseServiceImpl implements BaseService {
       return true;
     }
     return (current > campaignEntity.get().getStartAt() && current < campaignEntity.get().getEndAt());
+  }
+
+  @Override
+  public Boolean campaignIsAvailableGetById(int campaignId) {
+    return campaignRepository
+        .findByIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(campaignId,
+            Instant.now().toEpochMilli(),
+            Instant.now().toEpochMilli())
+        .isPresent();
   }
 
   @Override
@@ -233,6 +242,23 @@ public class BaseServiceImpl implements BaseService {
       throw new ApplicationContextException(CART_NOT_FOUND);
     }
     return optionalCartEntity.get();
+  }
+
+  @Override
+  public void saveAsSoldCart(CartEntity cartEntity) {
+    cartRepository
+        .saveAsSold(SoldCartEntity.builder()
+            .relatedCartId(cartEntity.getId())
+            .accountId(cartEntity.getAccountId())
+            .cartItems(cartEntity.getCartItems())
+            .build());
+
+    cartRepository
+        .updateCart(CartEntity.builder()
+            .id(cartEntity.getId())
+            .accountId(cartEntity.getAccountId())
+            .cartItems(new ArrayList<>())
+            .build());
   }
 
   @Override

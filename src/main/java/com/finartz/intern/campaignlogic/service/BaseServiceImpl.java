@@ -30,6 +30,7 @@ public class BaseServiceImpl implements BaseService {
   private ItemRepository itemRepository;
   private SalesRepository salesRepository;
   private CartRepository cartRepository;
+  private VariantRepository variantRepository;
 
   @Autowired
   public BaseServiceImpl(AccountRepository accountRepository,
@@ -37,13 +38,15 @@ public class BaseServiceImpl implements BaseService {
                          CampaignRepository campaignRepository,
                          ItemRepository itemRepository,
                          SalesRepository salesRepository,
-                         CartRepository cartRepository) {
+                         CartRepository cartRepository,
+                         VariantRepository variantRepository) {
     this.accountRepository = accountRepository;
     this.sellerRepository = sellerRepository;
     this.campaignRepository = campaignRepository;
     this.itemRepository = itemRepository;
     this.salesRepository = salesRepository;
     this.cartRepository = cartRepository;
+    this.variantRepository = variantRepository;
   }
 
   @Override
@@ -345,5 +348,20 @@ public class BaseServiceImpl implements BaseService {
         .filter(cartItem -> cartItem.getItemId().equals(itemId))
         .findFirst()
         .map(CartItem::getSaleCount).orElse(0);
+  }
+
+  @Override
+  public void addVariant(VariantEntity variantEntity) {
+    variantRepository.save(variantEntity);
+  }
+
+  @Override
+  public List<VariantEntity> getItemVariants(int itemId) {
+    return null;
+  }
+
+  @Override
+  public Boolean itemHasVariant(int itemId) {
+    return null;
   }
 }

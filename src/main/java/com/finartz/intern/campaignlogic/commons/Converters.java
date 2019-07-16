@@ -10,6 +10,7 @@ import com.finartz.intern.campaignlogic.model.value.*;
 import com.finartz.intern.campaignlogic.security.Utils;
 
 import java.time.Instant;
+import java.util.List;
 
 public class Converters {
   private Converters() {
@@ -76,13 +77,14 @@ public class Converters {
         .build();
   }
 
-  public static ItemResponse itemEntityToItemResponse(ItemEntity itemEntity) {
+  public static ItemResponse itemEntityToItemResponse(ItemEntity itemEntity, List<Variant> variants) {
     return ItemResponse.builder()
         .itemId(itemEntity.getId())
         .name(itemEntity.getName())
         .price(itemEntity.getPrice())
         .cargoType(itemEntity.getCargoType())
         .description(itemEntity.getDescription())
+        .variants(variants)
         .build();
   }
 

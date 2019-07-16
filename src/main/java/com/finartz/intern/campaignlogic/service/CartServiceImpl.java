@@ -29,8 +29,9 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
                          AccountRepository accountRepository,
                          CampaignRepository campaignRepository,
                          ItemRepository itemRepository,
-                         SalesRepository salesRepository) {
-    super(accountRepository, sellerRepository, campaignRepository, itemRepository, salesRepository, cartRepository);
+                         SalesRepository salesRepository,
+                         VariantRepository variantRepository) {
+    super(accountRepository, sellerRepository, campaignRepository, itemRepository, salesRepository, cartRepository, variantRepository);
     this.cartRepository = cartRepository;
   }
 

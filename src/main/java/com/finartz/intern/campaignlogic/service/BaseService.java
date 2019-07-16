@@ -3,6 +3,7 @@ package com.finartz.intern.campaignlogic.service;
 import com.finartz.intern.campaignlogic.model.entity.CampaignEntity;
 import com.finartz.intern.campaignlogic.model.entity.CartEntity;
 import com.finartz.intern.campaignlogic.model.entity.ItemEntity;
+import com.finartz.intern.campaignlogic.model.entity.VariantEntity;
 import com.finartz.intern.campaignlogic.model.value.Badge;
 import com.finartz.intern.campaignlogic.model.value.CampaignSummary;
 import com.finartz.intern.campaignlogic.model.value.Role;
@@ -62,4 +63,10 @@ public interface BaseService {
   CartEntity getCartEntityById(String cartId);
 
   void saveAsSoldCart(CartEntity cartEntity);
+
+  void addVariant(VariantEntity variantEntity);
+
+  List<VariantEntity> getItemVariants(int itemId);
+
+  Boolean itemHasVariant(int itemId);
 }

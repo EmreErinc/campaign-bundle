@@ -22,8 +22,9 @@ public class SellerServiceImpl extends BaseServiceImpl implements SellerService 
                            CampaignRepository campaignRepository,
                            ItemRepository itemRepository,
                            SalesRepository salesRepository,
-                           CartRepository cartRepository) {
-    super(accountRepository, sellerRepository, campaignRepository, itemRepository, salesRepository, cartRepository);
+                           CartRepository cartRepository,
+                           VariantRepository variantRepository) {
+    super(accountRepository, sellerRepository, campaignRepository, itemRepository, salesRepository, cartRepository, variantRepository);
     this.sellerRepository = sellerRepository;
   }
 

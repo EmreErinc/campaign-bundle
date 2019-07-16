@@ -3,6 +3,7 @@ package com.finartz.intern.campaignlogic.service;
 import com.finartz.intern.campaignlogic.commons.Converters;
 import com.finartz.intern.campaignlogic.model.entity.CampaignEntity;
 import com.finartz.intern.campaignlogic.model.entity.ItemEntity;
+import com.finartz.intern.campaignlogic.model.entity.VariantEntity;
 import com.finartz.intern.campaignlogic.model.request.AddItemRequest;
 import com.finartz.intern.campaignlogic.model.response.ItemResponse;
 import com.finartz.intern.campaignlogic.model.value.Badge;
@@ -21,7 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.finartz.intern.campaignlogic.security.Errors.*;
+import static com.finartz.intern.campaignlogic.security.Errors.ITEM_NOT_FOUND;
 
 @Slf4j
 @Service
@@ -34,8 +35,9 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
                          SellerRepository sellerRepository,
                          CampaignRepository campaignRepository,
                          SalesRepository salesRepository,
-                         CartRepository cartRepository) {
-    super(accountRepository, sellerRepository, campaignRepository, itemRepository, salesRepository, cartRepository);
+                         CartRepository cartRepository,
+                         VariantRepository variantRepository) {
+    super(accountRepository, sellerRepository, campaignRepository, itemRepository, salesRepository, cartRepository, variantRepository);
     this.itemRepository = itemRepository;
   }
 
@@ -51,8 +53,17 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
         .save(Converters
             .addItemRequestToItemEntity(request, expectedSellerId));
 
+    request
+        .getVariants()
+        .forEach(variantRequest -> addVariant(VariantEntity.builder()
+            .itemId(itemEntity.getId())
+            .specification(variantRequest.getSpecification())
+            .specificationDetail(variantRequest.getDetail())
+            .price(variantRequest.getPrice() == null ? 0.0D : variantRequest.getPrice())
+            .build()));
+
     return Converters
-        .itemEntityToItemResponse(itemEntity);
+        .itemEntityToItemResponse(itemEntity, request.getVariants());
   }
 
   @Override
@@ -61,7 +72,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
         .itemEntityToItemDetail(getItemEntity(Integer.valueOf(itemId)), Badge.builder().build());
 
     Optional<CampaignEntity> optionalCampaignEntity = getCampaignByItemId(Integer.valueOf(itemId));
-    if (optionalCampaignEntity.isPresent()){
+    if (optionalCampaignEntity.isPresent()) {
       Badge badge = Badge.builder()
           .gift(optionalCampaignEntity.get().getExpectedGiftCount())
           .requirement(optionalCampaignEntity.get().getRequirementCount())
@@ -111,7 +122,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
     List<ItemSummary> itemSummaries = new ArrayList<>();
 
     Optional<List<ItemEntity>> optionalItemEntities = itemRepository.findBySellerId(Integer.valueOf(sellerId));
-    if (!optionalItemEntities.isPresent()){
+    if (!optionalItemEntities.isPresent()) {
       throw new ApplicationContextException(ITEM_NOT_FOUND);
     }
 

@@ -43,12 +43,12 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
   @Override
   public CartResponse getCart(String cartId) {
     return Converters
-        .cartEntityToCartResponse(findCart(cartId));
+        .cartEntityToCartResponse(getCartEntityById(cartId));
   }
 
   @Override
   public CartResponse removeFromCart(int accountId, String cartId, String itemId) {
-    CartEntity cartEntity = findCart(cartId);
+    CartEntity cartEntity = getCartEntityById(cartId);
     Optional<CartItem> optionalCartItem = cartEntity
         .getCartItems()
         .stream()
@@ -72,7 +72,8 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
 
   @Override
   public CartResponse decrementItem(int accountId, String cartId, String itemId) {
-    if (itemOnCart(cartId, Integer.valueOf(itemId)) && itemAvailability(accountId, cartId, Integer.valueOf(itemId), -1)) {
+    if (isItemOnCart(cartId, Integer.valueOf(itemId))
+        && itemAvailability(accountId, cartId, Integer.valueOf(itemId), -1)) {
       updateCart(accountId, cartId, itemId, String.valueOf(-1));
       if (getItemCountOnCart(cartId, Integer.valueOf(itemId)).equals(0)) {
         removeFromCart(accountId, cartId, itemId);
@@ -93,7 +94,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
     //checks campaign is available
     if (optionalCampaignEntity.isPresent()
         && itemAvailability(accountId, cartId, Integer.valueOf(itemId), Integer.valueOf(count))
-        && campaignIsAvailableGetById(optionalCampaignEntity.get().getId())
+        && isCampaignAvailableGetById(optionalCampaignEntity.get().getId())
         && atLeastOneAvailability(optionalCampaignEntity.get(), accountId, Integer.valueOf(count))) {
       CartEntity cartEntity = addItemToCartWithCampaign(optionalCampaignEntity.get(), cartId, Integer.valueOf(count));
       updateCartEntity(cartEntity, accountId, Integer.valueOf(itemId));
@@ -105,17 +106,17 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
   }
 
   private boolean itemAvailability(int accountId, String cartId, int itemId, int itemCount) {
-    if (!campaignIsAvailableGetByItemId(itemId)) {
+    if (!isCampaignAvailableGetByItemId(itemId)) {
       log.info("Kampanya Süresi Doldu.");
       //return false;
     }
 
-    if (!itemOnCampaign(itemId)) {
+    if (!isItemHasCampaign(itemId)) {
       log.info("Ürüne ait kampanya bulunamadı. Normal süreç işlenecek.");
       //return true;
     }
 
-    if (!campaignLimitIsAvailableForAccount(accountId, itemId)) {
+    if (!isCampaignLimitAvailableForAccount(accountId, itemId)) {
       log.info("Kampanya Limitinizi Doldurdunuz.");
       return false;
     }
@@ -129,7 +130,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
   }
 
   private boolean cartLimitAvailability(String cartId, int itemId, int itemCount) {
-    CartEntity cartEntity = findCart(cartId);
+    CartEntity cartEntity = getCartEntityById(cartId);
     Optional<CampaignEntity> optionalCampaignEntity = getCampaignByItemId(itemId);
     if (!optionalCampaignEntity.isPresent()) {
       return true;
@@ -149,7 +150,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
   }
 
   private CartEntity addItemToCartWithCampaign(CampaignEntity campaignEntity, String cartId, int desiredSaleCount) {
-    CartEntity cartEntity = findCart(cartId);
+    CartEntity cartEntity = getCartEntityById(cartId);
     int sellerId = getSellerIdByItemId(campaignEntity.getItemId());
     double itemPrice = getItemPrice(campaignEntity.getItemId());
 
@@ -168,7 +169,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
           int updatedSaleCount = desiredSaleCount + itemOnCart;
 
           int giftCount = calculateGiftCount(campaignEntity, updatedSaleCount);
-          boolean stockIsAvailable = stockIsAvailable(campaignEntity.getItemId(), giftCount + updatedSaleCount);
+          boolean stockIsAvailable = isStockAvailable(campaignEntity.getItemId(), giftCount + updatedSaleCount);
           //check stock availability
           if (stockIsAvailable && updatedSaleCount >= 0) {
             optionalCartItem
@@ -197,7 +198,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
         },
         () -> { //item not found on cart
           int giftCount = calculateGiftCount(campaignEntity, desiredSaleCount);
-          boolean stockIsAvailable = stockIsAvailable(campaignEntity.getItemId(), giftCount + desiredSaleCount);
+          boolean stockIsAvailable = isStockAvailable(campaignEntity.getItemId(), giftCount + desiredSaleCount);
 
           //check stock availability
           if (stockIsAvailable && desiredSaleCount > 0) {
@@ -309,7 +310,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
   }
 
   private CartEntity addItemToCart(String cartId, int itemId, int desiredSaleCount) {
-    CartEntity cartEntity = findCart(cartId);
+    CartEntity cartEntity = getCartEntityById(cartId);
     int sellerId = getSellerIdByItemId(itemId);
     double itemPrice = getItemPrice(itemId);
 
@@ -325,19 +326,19 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
         cartItem -> { //item found on cart
           int itemIndex = cartEntity.getCartItems().indexOf(optionalCartItem.get());
           int itemOnCart = cartItem.getSaleCount();
-          boolean stockIsAvailable = stockIsAvailable(itemId, itemOnCart + desiredSaleCount);
+          boolean stockIsAvailable = isStockAvailable(itemId, itemOnCart + desiredSaleCount);
 
           if (stockIsAvailable) {
             cartEntity.getCartItems().remove(itemIndex);
-            cartEntity.getCartItems().add(itemIndex, setCartItem(optionalCartItem.get(), desiredSaleCount, itemPrice));
+            cartEntity.getCartItems().add(itemIndex, setCountAndPriceToCartItem(optionalCartItem.get(), desiredSaleCount, itemPrice));
           } else {
             cartEntity.getCartItems().remove(itemIndex);
             int suitableSaleCount = addOneByOneToCart(itemId, itemOnCart);
-            cartEntity.getCartItems().add(itemIndex, setCartItem(optionalCartItem.get(), suitableSaleCount, itemPrice));
+            cartEntity.getCartItems().add(itemIndex, setCountAndPriceToCartItem(optionalCartItem.get(), suitableSaleCount, itemPrice));
           }
         },
         () -> { //item not found on cart
-          boolean stockIsAvailable = stockIsAvailable(itemId, desiredSaleCount);
+          boolean stockIsAvailable = isStockAvailable(itemId, desiredSaleCount);
 
           if (stockIsAvailable && desiredSaleCount > 0) {
             cartEntity
@@ -370,7 +371,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
     return cartEntity;
   }
 
-  private CartItem setCartItem(CartItem cartItem, int desiredSaleCount, double itemPrice) {
+  private CartItem setCountAndPriceToCartItem(CartItem cartItem, int desiredSaleCount, double itemPrice) {
     cartItem.setPrice((desiredSaleCount + cartItem.getSaleCount()) * itemPrice);
     cartItem.setSaleCount(desiredSaleCount + cartItem.getSaleCount());
     cartItem.setUpdatedAt(Instant.now().toEpochMilli());
@@ -410,13 +411,5 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
               .cartItems(cartEntity.getCartItems())
               .build());
     }
-  }
-
-  private CartEntity findCart(String cartId) {
-    Optional<CartEntity> optionalCartEntity = cartRepository.findCart(cartId);
-    if (!optionalCartEntity.isPresent()) {
-      throw new ApplicationContextException("Sepet Bulunamadı.");
-    }
-    return optionalCartEntity.get();
   }
 }

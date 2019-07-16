@@ -18,9 +18,9 @@ public interface BaseService {
 
   Integer getSellerIdByItemId(int itemId);
 
-  Boolean stockIsAvailable(int itemId, int expectedSaleAndGiftCount);
+  Boolean isStockAvailable(int itemId, int expectedSaleAndGiftCount);
 
-  Boolean itemOnCampaign(int itemId);
+  Boolean isItemHasCampaign(int itemId);
 
   ItemEntity getItemEntity(int itemId);
 
@@ -32,9 +32,9 @@ public interface BaseService {
 
   Boolean userAvailableForCampaign(int accountId, int campaignId);
 
-  Boolean campaignIsAvailableGetByItemId(int itemId);
+  Boolean isCampaignAvailableGetByItemId(int itemId);
 
-  Boolean campaignIsAvailableGetById(int campaignId);
+  Boolean isCampaignAvailableGetById(int campaignId);
 
   CampaignEntity getCampaignEntity(int campaignId);
 
@@ -42,13 +42,9 @@ public interface BaseService {
 
   List<CampaignEntity> getUsedCampaignsByUserId(int userId);
 
-  Boolean campaignLimitIsAvailableForAccount(int accountId, int itemId);
+  Boolean isCampaignLimitAvailableForAccount(int accountId, int itemId);
 
   Optional<Integer> getCampaignItemUsageCount(int accountId, int itemId);
-
-  Optional<Integer> getCampaignUsageCount(int accountId, int itemId);
-
-  Integer getCampaignCartLimit(int itemId);
 
   Integer getCampaignLimit(int itemId);
 
@@ -58,7 +54,7 @@ public interface BaseService {
 
   CampaignSummary prepareCampaignEntityToList(int accountId, CampaignEntity campaignEntity);
 
-  Boolean itemOnCart(String cartId, int itemId);
+  Boolean isItemOnCart(String cartId, int itemId);
 
   CartEntity getCartEntityById(String cartId);
 
@@ -68,5 +64,5 @@ public interface BaseService {
 
   List<VariantEntity> getItemVariants(int itemId);
 
-  Boolean itemHasVariant(int itemId);
+  Boolean isItemHasVariant(int itemId);
 }

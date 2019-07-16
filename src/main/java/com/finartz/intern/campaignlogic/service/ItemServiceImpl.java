@@ -3,7 +3,6 @@ package com.finartz.intern.campaignlogic.service;
 import com.finartz.intern.campaignlogic.commons.Converters;
 import com.finartz.intern.campaignlogic.model.entity.CampaignEntity;
 import com.finartz.intern.campaignlogic.model.entity.ItemEntity;
-import com.finartz.intern.campaignlogic.model.entity.VariantEntity;
 import com.finartz.intern.campaignlogic.model.request.AddItemRequest;
 import com.finartz.intern.campaignlogic.model.response.ItemResponse;
 import com.finartz.intern.campaignlogic.model.value.Badge;
@@ -55,12 +54,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
 
     request
         .getVariants()
-        .forEach(variantRequest -> addVariant(VariantEntity.builder()
-            .itemId(itemEntity.getId())
-            .specification(variantRequest.getSpecification())
-            .specificationDetail(variantRequest.getDetail())
-            .price(variantRequest.getPrice() == null ? 0.0D : variantRequest.getPrice())
-            .build()));
+        .forEach(variantRequest -> addVariant(Converters.prepareItemVariant(itemEntity.getId(), variantRequest)));
 
     return Converters
         .itemEntityToItemResponse(itemEntity, request.getVariants());
@@ -69,7 +63,9 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
   @Override
   public ItemDetail getItem(Optional<Integer> accountId, String itemId) {
     ItemDetail itemDetail = Converters
-        .itemEntityToItemDetail(getItemEntity(Integer.valueOf(itemId)), Badge.builder().build());
+        .itemEntityToItemDetail(getItemEntity(Integer.valueOf(itemId)),
+            Badge.builder().build(),
+            Converters.variantEntitiesToVariants(getItemVariants(Integer.valueOf(itemId))));
 
     Optional<CampaignEntity> optionalCampaignEntity = getCampaignByItemId(Integer.valueOf(itemId));
     if (optionalCampaignEntity.isPresent()) {
@@ -80,7 +76,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
       itemDetail.setBadge(badge);
 
       accountId.ifPresent(id -> {
-        if (!campaignLimitIsAvailableForAccount(accountId.get(), Integer.valueOf(itemId))) {
+        if (!isCampaignLimitAvailableForAccount(accountId.get(), Integer.valueOf(itemId))) {
           itemDetail.setBadge(Badge.builder().build());
         }
       });
@@ -154,7 +150,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
             usedCampaigns
                 .stream()
                 //checks campaign limit status
-                .anyMatch(campaignEntity -> !campaignLimitIsAvailableForAccount(accountId, itemSummary.getId())
+                .anyMatch(campaignEntity -> !isCampaignLimitAvailableForAccount(accountId, itemSummary.getId())
                     || campaignEntity.getItemId().equals(itemSummary.getId()))
         )
         .collect(Collectors.toList());

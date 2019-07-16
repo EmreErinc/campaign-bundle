@@ -3,6 +3,8 @@ package com.finartz.intern.campaignlogic.model.value;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class ItemDetail {
@@ -12,4 +14,5 @@ public class ItemDetail {
   private String description;
   private CargoType cargoType;
   private Badge badge;
+  private List<Variant> variants;
 }

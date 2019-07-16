@@ -13,6 +13,8 @@ public interface CampaignRepository extends BaseRepository<CampaignEntity, Strin
 
   Optional<CampaignEntity> findByIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(int campaignId, Long currentForStart, Long currentForEnd);
 
+  Optional<CampaignEntity> findByItemIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(int campaignId, Long currentForStart, Long currentForEnd);
+
   Optional<CampaignEntity> findByItemId(int itemId);
 
   Boolean existsByItemId(int itemId);

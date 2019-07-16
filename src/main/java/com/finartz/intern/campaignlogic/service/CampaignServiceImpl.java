@@ -57,7 +57,7 @@ public class CampaignServiceImpl extends BaseServiceImpl implements CampaignServ
             getCampaignEntity(Integer.valueOf(campaignId)),
             getBadgeByCampaignId(Integer.valueOf(campaignId)));
 
-    if (!userAvailableForCampaign(accountId, Integer.valueOf(campaignId)) && !campaignIsAvailableGetById(Integer.valueOf(campaignId))) {
+    if (!userAvailableForCampaign(accountId, Integer.valueOf(campaignId)) && !isCampaignAvailableGetById(Integer.valueOf(campaignId))) {
       campaignResponse.setBadge(Badge.builder().build());
     }
     return campaignResponse;

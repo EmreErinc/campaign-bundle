@@ -52,7 +52,7 @@ public class BaseServiceImpl implements BaseService {
   @Override
   public Role getRoleByAccountId(int accountId) {
     Optional<AccountEntity> optionalAccountEntity = accountRepository.findById(accountId);
-    if (!optionalAccountEntity.isPresent()){
+    if (!optionalAccountEntity.isPresent()) {
       throw new ApplicationContextException(ACCOUNT_NOT_FOUND);
     }
     return optionalAccountEntity.get().getRole();
@@ -61,10 +61,9 @@ public class BaseServiceImpl implements BaseService {
   @Override
   public Integer getSellerIdByAccountId(int accountId) {
     Optional<SellerEntity> optionalSellerEntity = sellerRepository.findByAccountId(accountId);
-    if (!optionalSellerEntity.isPresent()){
+    if (!optionalSellerEntity.isPresent()) {
       throw new ApplicationContextException(SELLER_NOT_FOUND);
     }
-
     return optionalSellerEntity.get().getId();
   }
 
@@ -76,26 +75,23 @@ public class BaseServiceImpl implements BaseService {
   @Override
   public Integer getSellerIdByItemId(int itemId) {
     Optional<ItemEntity> optionalItemEntity = itemRepository.findById(itemId);
-    if (!optionalItemEntity.isPresent()){
-      throw new ApplicationContextException(CAMPAIGN_NOT_FOUND);
+    if (!optionalItemEntity.isPresent()) {
+      throw new ApplicationContextException(ITEM_NOT_FOUND);
     }
     return optionalItemEntity.get().getSellerId();
   }
 
   @Override
-  public Boolean campaignIsAvailableGetByItemId(int itemId) {
-    Optional<CampaignEntity> campaignEntity = campaignRepository.findByItemId(itemId);
-    Long current = Instant.now().toEpochMilli();
-    if (!campaignEntity.isPresent()) {
-      //throw new ApplicationContextException(CAMPAIGN_NOT_FOUND);
-      log.info("Ürüne ait kampanya bulunamadı.");
-      return true;
-    }
-    return (current > campaignEntity.get().getStartAt() && current < campaignEntity.get().getEndAt());
+  public Boolean isCampaignAvailableGetByItemId(int itemId) {
+    return campaignRepository
+        .findByItemIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(itemId,
+            Instant.now().toEpochMilli(),
+            Instant.now().toEpochMilli())
+        .isPresent();
   }
 
   @Override
-  public Boolean campaignIsAvailableGetById(int campaignId) {
+  public Boolean isCampaignAvailableGetById(int campaignId) {
     return campaignRepository
         .findByIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(campaignId,
             Instant.now().toEpochMilli(),
@@ -106,20 +102,19 @@ public class BaseServiceImpl implements BaseService {
   @Override
   public CampaignEntity getCampaignEntity(int campaignId) {
     Optional<CampaignEntity> optionalCampaignEntity = campaignRepository.findById(campaignId);
-    if (!optionalCampaignEntity.isPresent()){
+    if (!optionalCampaignEntity.isPresent()) {
       throw new ApplicationContextException(CAMPAIGN_NOT_FOUND);
     }
     return optionalCampaignEntity.get();
   }
 
   @Override
-  public Boolean stockIsAvailable(int itemId, int expectedSaleAndGiftCount) {
-    Integer stock = getItemStock(itemId);
-    return (stock - expectedSaleAndGiftCount >= 0);
+  public Boolean isStockAvailable(int itemId, int expectedSaleAndGiftCount) {
+    return (getItemStock(itemId) - expectedSaleAndGiftCount >= 0);
   }
 
   @Override
-  public Boolean itemOnCampaign(int itemId) {
+  public Boolean isItemHasCampaign(int itemId) {
     return campaignRepository
         .findByItemId(itemId)
         .isPresent();
@@ -128,7 +123,7 @@ public class BaseServiceImpl implements BaseService {
   @Override
   public ItemEntity getItemEntity(int itemId) {
     Optional<ItemEntity> optionalItemEntity = itemRepository.findById(itemId);
-    if (!optionalItemEntity.isPresent()){
+    if (!optionalItemEntity.isPresent()) {
       throw new ApplicationContextException(ITEM_NOT_FOUND);
     }
     return optionalItemEntity.get();
@@ -140,7 +135,7 @@ public class BaseServiceImpl implements BaseService {
     int sumOfSales = 0;
     int sumOfGifts = 0;
 
-    //if no item sales
+    //if no item sold
     if (optionalSalesEntities.isPresent()) {
       sumOfSales = optionalSalesEntities
           .get()
@@ -158,22 +153,23 @@ public class BaseServiceImpl implements BaseService {
           .mapToInt(SalesEntity::getGiftCount).sum();
     }
     Optional<ItemEntity> optionalItemEntity = itemRepository.findById(itemId);
-    if (!optionalItemEntity.isPresent()){
+    if (!optionalItemEntity.isPresent()) {
       throw new ApplicationContextException(ITEM_NOT_FOUND);
     }
     return optionalItemEntity.get().getStock() - (sumOfSales + sumOfGifts);
   }
 
   @Override
-  public Boolean campaignLimitIsAvailableForAccount(int accountId, int itemId) {
+  public Boolean isCampaignLimitAvailableForAccount(int accountId, int itemId) {
+    //this means there is no campaign on item
     if (!campaignRepository.existsByItemId(itemId)) {
       return true;
     }
 
     Optional<Integer> campaignItemUsageCount = getCampaignItemUsageCount(accountId, itemId);
-    if (!campaignItemUsageCount.isPresent()){
+    //this means user did not use from campaign
+    if (!campaignItemUsageCount.isPresent()) {
       return true;
-      //throw new ApplicationContextException(CAMPAIGN_BADGE_NOT_FOUND);
     }
 
     return campaignItemUsageCount.get() < getCampaignLimit(itemId);
@@ -183,9 +179,13 @@ public class BaseServiceImpl implements BaseService {
   public Optional<Integer> getCampaignItemUsageCount(int accountId, int itemId) {
     Optional<List<SalesEntity>> optionalSalesEntities = salesRepository.findByOwnerIdAndItemId(accountId, itemId);
     Optional<CampaignEntity> optionalCampaignEntity = campaignRepository.findByItemId(itemId);
-    if (!optionalCampaignEntity.isPresent()){
+    if (!optionalCampaignEntity.isPresent()) {
       throw new ApplicationContextException(CAMPAIGN_NOT_FOUND);
     }
+
+    AtomicInteger cartLimit = new AtomicInteger();
+    optionalCampaignEntity.ifPresent(campaignEntity ->
+        cartLimit.set(campaignEntity.getCartLimit()));
 
     AtomicInteger sumOfSales = new AtomicInteger();
     optionalSalesEntities.ifPresent(salesEntities ->
@@ -197,36 +197,28 @@ public class BaseServiceImpl implements BaseService {
             .mapToInt(SalesEntity::getSaleCount).sum())
     );
 
-    int cartLimit = optionalCampaignEntity.get().getCartLimit();
-    if (cartLimit == 0 || sumOfSales.intValue() == 0) {
+    if (cartLimit.intValue() == 0 || sumOfSales.intValue() == 0) {
       return Optional.empty();
     }
-    return Optional.of(sumOfSales.get() / cartLimit);
+    return Optional.of(sumOfSales.intValue() / cartLimit.intValue());
   }
 
   @Override
-  public Optional<Integer> getCampaignUsageCount(int accountId, int campaignId) {
+  public Boolean userAvailableForCampaign(int accountId, int campaignId) {
     Optional<List<SalesEntity>> optionalSalesEntities = salesRepository.findByOwnerId(accountId);
     Optional<CampaignEntity> optionalCampaignEntity = campaignRepository.findById(campaignId);
-
-    return optionalCampaignEntity.map(campaignEntity ->
-        optionalSalesEntities.map(salesEntities ->
-            salesEntities
-                .stream()
-                .filter(salesEntity -> salesEntity.getItemId().equals(campaignEntity.getItemId()))
-                .collect(Collectors.toList())
-                .size()
-        )
-    ).orElse(Optional.of(0));
-  }
-
-  @Override
-  public Integer getCampaignCartLimit(int itemId) {
-    Optional<CampaignEntity> optionalCampaignEntity = campaignRepository.findByItemId(itemId);
-    if (!optionalCampaignEntity.isPresent()) {
-      return 0;
-    }
-    return optionalCampaignEntity.get().getCartLimit();
+    return optionalCampaignEntity
+        //map campaign entity with the compatible sale items
+        .map(campaignEntity ->
+            optionalSalesEntities.map(salesEntities ->
+                salesEntities
+                    .stream()
+                    .filter(salesEntity -> salesEntity.getItemId().equals(campaignEntity.getItemId()))
+                    .collect(Collectors.toList())
+                    .size()))
+        .orElse(Optional.of(0))
+        .map(campaignUsageCount -> optionalCampaignEntity.get().getCampaignLimit() <= campaignUsageCount)
+        .orElse(false);
   }
 
   @Override
@@ -310,14 +302,6 @@ public class BaseServiceImpl implements BaseService {
   }
 
   @Override
-  public Boolean userAvailableForCampaign(int accountId, int campaignId) {
-    return getCampaignUsageCount(accountId, campaignId)
-        .map(campaignUsageCount ->
-            campaignRepository.findById(campaignId).get().getCampaignLimit() <= campaignUsageCount)
-        .orElse(false);
-  }
-
-  @Override
   public CampaignSummary prepareCampaignEntityToList(int accountId, CampaignEntity campaignEntity) {
     Badge badge = Badge.builder().build();
     if (!userAvailableForCampaign(accountId, campaignEntity.getId())) {
@@ -327,14 +311,8 @@ public class BaseServiceImpl implements BaseService {
   }
 
   @Override
-  public Boolean itemOnCart(String cartId, int itemId) {
-    Optional<CartEntity> optionalCartEntity = cartRepository.findCart(cartId);
-    if (!optionalCartEntity.isPresent()){
-      throw new ApplicationContextException(CART_NOT_FOUND);
-    }
-
-    return optionalCartEntity
-        .get()
+  public Boolean isItemOnCart(String cartId, int itemId) {
+    return getCartEntityById(cartId)
         .getCartItems()
         .stream()
         .anyMatch(cartItem -> cartItem.getItemId().equals(itemId));
@@ -361,7 +339,7 @@ public class BaseServiceImpl implements BaseService {
   }
 
   @Override
-  public Boolean itemHasVariant(int itemId) {
+  public Boolean isItemHasVariant(int itemId) {
     return null;
   }
 }

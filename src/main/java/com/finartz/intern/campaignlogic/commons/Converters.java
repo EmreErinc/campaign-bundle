@@ -11,6 +11,7 @@ import com.finartz.intern.campaignlogic.security.Utils;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Converters {
   private Converters() {
@@ -88,7 +89,7 @@ public class Converters {
         .build();
   }
 
-  public static ItemDetail itemEntityToItemDetail(ItemEntity itemEntity, Badge badge) {
+  public static ItemDetail itemEntityToItemDetail(ItemEntity itemEntity, Badge badge, List<Variant> variants) {
     return ItemDetail.builder()
         .id(itemEntity.getId().toString())
         .name(itemEntity.getName())
@@ -96,6 +97,7 @@ public class Converters {
         .cargoType(itemEntity.getCargoType())
         .price(itemEntity.getPrice())
         .badge(badge)
+        .variants(variants)
         .build();
   }
 
@@ -157,5 +159,29 @@ public class Converters {
     return CartResponse.builder()
         .itemList(cartEntity.getCartItems())
         .build();
+  }
+
+  public static VariantEntity prepareItemVariant(int itemId,Variant variant){
+    return VariantEntity.builder()
+        .itemId(itemId)
+        .specification(variant.getSpecification())
+        .specificationDetail(variant.getDetail())
+        .price(variant.getPrice() == null ? 0.0D : variant.getPrice())
+        .build();
+  }
+
+  public static Variant variantEntityToVariant(VariantEntity variantEntity){
+    return Variant.builder()
+        .specification(variantEntity.getSpecification())
+        .detail(variantEntity.getSpecificationDetail())
+        .price(variantEntity.getPrice())
+        .build();
+  }
+
+  public static List<Variant> variantEntitiesToVariants(List<VariantEntity> variantEntities){
+    return variantEntities
+        .stream()
+        .map(Converters::variantEntityToVariant)
+        .collect(Collectors.toList());
   }
 }

@@ -60,7 +60,6 @@ public class SalesServiceImpl extends BaseServiceImpl implements SalesService {
           }
           if (cartItem.getHasVariant()) {
             sale.setVariantId(cartItem.getVariant().getId());
-            //sale.setVariantDetail(cartItem.getVariant().getSpedDetailId() + "_" + cartItem.getVariant().getSpecDataId());
           }
           salesEntities.add(salesRepository.save(sale));
         });

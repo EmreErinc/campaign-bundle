@@ -24,4 +24,6 @@ public class CartItem {
   private Long updatedAt;
   private Boolean hasCampaign;
   private CampaignParams campaignParams;
+  private Boolean hasVariant;
+  private Variant variant;
 }

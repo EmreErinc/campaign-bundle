@@ -5,10 +5,7 @@ import com.finartz.intern.campaignlogic.model.entity.CampaignEntity;
 import com.finartz.intern.campaignlogic.model.entity.ItemEntity;
 import com.finartz.intern.campaignlogic.model.request.AddItemRequest;
 import com.finartz.intern.campaignlogic.model.response.ItemResponse;
-import com.finartz.intern.campaignlogic.model.value.Badge;
-import com.finartz.intern.campaignlogic.model.value.ItemDetail;
-import com.finartz.intern.campaignlogic.model.value.ItemSummary;
-import com.finartz.intern.campaignlogic.model.value.Role;
+import com.finartz.intern.campaignlogic.model.value.*;
 import com.finartz.intern.campaignlogic.repository.*;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +32,20 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
                          CampaignRepository campaignRepository,
                          SalesRepository salesRepository,
                          CartRepository cartRepository,
-                         VariantRepository variantRepository) {
-    super(accountRepository, sellerRepository, campaignRepository, itemRepository, salesRepository, cartRepository, variantRepository);
+                         VariantRepository variantRepository,
+                         VariantSpecRepository variantSpecRepository,
+                         SpecDataRepository specDataRepository,
+                         SpecDetailRepository specDetailRepository) {
+    super(accountRepository,
+        sellerRepository,
+        campaignRepository,
+        itemRepository,
+        salesRepository,
+        cartRepository,
+        variantRepository,
+        variantSpecRepository,
+        specDataRepository,
+        specDetailRepository);
     this.itemRepository = itemRepository;
   }
 
@@ -52,12 +61,17 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
         .save(Converters
             .addItemRequestToItemEntity(request, expectedSellerId));
 
+    List<Variant> variants = new ArrayList<>();
+
     request
         .getVariants()
-        .forEach(variantRequest -> addVariant(Converters.prepareItemVariant(itemEntity.getId(), variantRequest)));
+        .forEach(variantRequest -> {
+          Variant variant = addVariant(Converters.prepareItemVariant(itemEntity.getId(), variantRequest));
+          variants.add(variant);
+        });
 
     return Converters
-        .itemEntityToItemResponse(itemEntity, request.getVariants());
+        .itemEntityToItemResponse(itemEntity, variants);
   }
 
   @Override
@@ -65,12 +79,12 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
     ItemDetail itemDetail = Converters
         .itemEntityToItemDetail(getItemEntity(Integer.valueOf(itemId)),
             Badge.builder().build(),
-            Converters.variantEntitiesToVariants(getItemVariants(Integer.valueOf(itemId))));
+            getItemVariants(Integer.valueOf(itemId)).orElse(new ArrayList<>()));
 
     Optional<CampaignEntity> optionalCampaignEntity = getCampaignByItemId(Integer.valueOf(itemId));
     if (optionalCampaignEntity.isPresent()) {
       Badge badge = Badge.builder()
-          .gift(optionalCampaignEntity.get().getExpectedGiftCount())
+          .gift(optionalCampaignEntity.get().getGiftCount())
           .requirement(optionalCampaignEntity.get().getRequirementCount())
           .build();
       itemDetail.setBadge(badge);

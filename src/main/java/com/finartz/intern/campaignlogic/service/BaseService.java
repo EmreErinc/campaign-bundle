@@ -4,9 +4,7 @@ import com.finartz.intern.campaignlogic.model.entity.CampaignEntity;
 import com.finartz.intern.campaignlogic.model.entity.CartEntity;
 import com.finartz.intern.campaignlogic.model.entity.ItemEntity;
 import com.finartz.intern.campaignlogic.model.entity.VariantEntity;
-import com.finartz.intern.campaignlogic.model.value.Badge;
-import com.finartz.intern.campaignlogic.model.value.CampaignSummary;
-import com.finartz.intern.campaignlogic.model.value.Role;
+import com.finartz.intern.campaignlogic.model.value.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -60,9 +58,15 @@ public interface BaseService {
 
   void saveAsSoldCart(CartEntity cartEntity);
 
-  void addVariant(VariantEntity variantEntity);
+  Variant addVariant(VariantEntity variantEntity);
 
-  List<VariantEntity> getItemVariants(int itemId);
+  Optional<List<Variant>> getItemVariants(int itemId);
+
+  Optional<Variant> getItemVariant(int itemId, int variantId);
 
   Boolean isItemHasVariant(int itemId);
+
+  List<VariantSpec> getItemVariantSpecs(int itemId, int variantId);
+
+  Integer getItemVariantStock(int variantId);
 }

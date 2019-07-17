@@ -1,17 +1,13 @@
 package com.finartz.intern.campaignlogic.commons;
 
 import com.finartz.intern.campaignlogic.model.entity.*;
-import com.finartz.intern.campaignlogic.model.request.AddCampaignRequest;
-import com.finartz.intern.campaignlogic.model.request.AddItemRequest;
-import com.finartz.intern.campaignlogic.model.request.AddSellerRequest;
-import com.finartz.intern.campaignlogic.model.request.RegisterRequest;
+import com.finartz.intern.campaignlogic.model.request.*;
 import com.finartz.intern.campaignlogic.model.response.*;
 import com.finartz.intern.campaignlogic.model.value.*;
 import com.finartz.intern.campaignlogic.security.Utils;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Converters {
   private Converters() {
@@ -120,7 +116,7 @@ public class Converters {
         .cartLimit(request.getCartLimit())
         .createdAt(Instant.now().toEpochMilli())
         .requirementCount(request.getRequirement())
-        .expectedGiftCount(request.getGift())
+        .giftCount(request.getGift())
         .status(CampaignStatus.ACTIVE)
         .itemId(request.getItemId())
         .sellerId(sellerId)
@@ -161,27 +157,20 @@ public class Converters {
         .build();
   }
 
-  public static VariantEntity prepareItemVariant(int itemId,Variant variant){
+  public static VariantEntity prepareItemVariant(int itemId, AddVariantRequest request){
     return VariantEntity.builder()
         .itemId(itemId)
-        .specification(variant.getSpecification())
-        .specificationDetail(variant.getDetail())
-        .price(variant.getPrice() == null ? 0.0D : variant.getPrice())
+        .price(request.getPrice() == null ? 0.0D : request.getPrice())
+        .stock(request.getStock())
         .build();
   }
 
-  public static Variant variantEntityToVariant(VariantEntity variantEntity){
+  public static Variant variantEntityToVariant(VariantEntity variantEntity,List<VariantSpec> variantSpecs){
     return Variant.builder()
-        .specification(variantEntity.getSpecification())
-        .detail(variantEntity.getSpecificationDetail())
+        .id(variantEntity.getId())
+        .stock(variantEntity.getStock())
         .price(variantEntity.getPrice())
+        .variantSpecs(variantSpecs)
         .build();
-  }
-
-  public static List<Variant> variantEntitiesToVariants(List<VariantEntity> variantEntities){
-    return variantEntities
-        .stream()
-        .map(Converters::variantEntityToVariant)
-        .collect(Collectors.toList());
   }
 }

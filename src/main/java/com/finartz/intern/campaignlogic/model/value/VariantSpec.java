@@ -5,15 +5,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Variant {
+public class VariantSpec {
   private Integer id;
-  private Double price;
-  private Integer stock;
-  private List<VariantSpec> variantSpecs;
+  private String specDetail;
+  private String specData;
 }

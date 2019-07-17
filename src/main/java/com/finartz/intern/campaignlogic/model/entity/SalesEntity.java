@@ -41,4 +41,8 @@ public class SalesEntity {
   @Column(name = "price")
   @NotNull
   private Double price;
+
+  @Column(name = "variant_id")
+  @NotNull
+  private Integer variantId;
 }

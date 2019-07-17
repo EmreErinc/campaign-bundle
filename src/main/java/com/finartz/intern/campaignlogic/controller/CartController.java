@@ -1,5 +1,9 @@
 package com.finartz.intern.campaignlogic.controller;
 
+import com.finartz.intern.campaignlogic.model.request.AddItemToCartRequest;
+import com.finartz.intern.campaignlogic.model.request.CartItemDecrementRequest;
+import com.finartz.intern.campaignlogic.model.request.CartItemIncrementRequest;
+import com.finartz.intern.campaignlogic.model.request.CartItemRemoveRequest;
 import com.finartz.intern.campaignlogic.model.response.CartResponse;
 import com.finartz.intern.campaignlogic.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,24 +20,24 @@ public class CartController extends BaseController {
     this.cartService = cartService;
   }
 
-  @GetMapping("/add/{itemId}/{count}")
-  public CartResponse addToCart(@RequestHeader HttpHeaders headers, @PathVariable String itemId, @PathVariable String count) {
-    return cartService.addToCart(getAccountIdFromHeader(headers).get(), getCartIdFromHeader(headers), itemId, count);
+  @PostMapping("/add")
+  public CartResponse addToCart(@RequestHeader HttpHeaders headers, @RequestBody AddItemToCartRequest request) {
+    return cartService.addToCart(getAccountIdFromHeader(headers).get(), getCartIdFromHeader(headers), request);
   }
 
-  @GetMapping("/{itemId}/remove")
-  public CartResponse removeFromCart(@RequestHeader HttpHeaders headers, @PathVariable String itemId) {
-    return cartService.removeFromCart(getAccountIdFromHeader(headers).get(), getCartIdFromHeader(headers), itemId);
+  @PostMapping("/remove")
+  public CartResponse removeFromCart(@RequestHeader HttpHeaders headers, @RequestBody CartItemRemoveRequest request) {
+    return cartService.removeFromCart(getAccountIdFromHeader(headers).get(), getCartIdFromHeader(headers), request);
   }
 
-  @GetMapping("/{itemId}/inc")
-  public CartResponse incrementItem(@RequestHeader HttpHeaders headers, @PathVariable String itemId) {
-    return cartService.incrementItem(getAccountIdFromHeader(headers).get(), getCartIdFromHeader(headers), itemId);
+  @PostMapping("/inc")
+  public CartResponse incrementItem(@RequestHeader HttpHeaders headers, @RequestBody CartItemIncrementRequest request) {
+    return cartService.incrementItem(getAccountIdFromHeader(headers).get(), getCartIdFromHeader(headers), request);
   }
 
-  @GetMapping("/{itemId}/dec")
-  public CartResponse decrementItem(@RequestHeader HttpHeaders headers, @PathVariable String itemId) {
-    return cartService.decrementItem(getAccountIdFromHeader(headers).get(), getCartIdFromHeader(headers), itemId);
+  @PostMapping("/dec")
+  public CartResponse decrementItem(@RequestHeader HttpHeaders headers, @RequestBody CartItemDecrementRequest request) {
+    return cartService.decrementItem(getAccountIdFromHeader(headers).get(), getCartIdFromHeader(headers), request);
   }
 
   @GetMapping

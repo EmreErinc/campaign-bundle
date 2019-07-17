@@ -1,7 +1,6 @@
 package com.finartz.intern.campaignlogic.model.request;
 
 import com.finartz.intern.campaignlogic.model.value.CargoType;
-import com.finartz.intern.campaignlogic.model.value.Variant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -38,5 +37,5 @@ public class AddItemRequest {
   @NotNull(message = "stock should not be empty")
   private Integer stock;
 
-  private List<Variant> variants;
+  private List<AddVariantRequest> variants;
 }

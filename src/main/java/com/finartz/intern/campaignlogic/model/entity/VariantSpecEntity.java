@@ -9,12 +9,12 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "variants")
+@Table(name = "variant_spec")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class VariantEntity {
+public class VariantSpecEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
@@ -23,11 +23,11 @@ public class VariantEntity {
   @NotNull
   private Integer itemId;
 
-  @Column(name = "price")
+  @Column(name = "variant_id")
   @NotNull
-  private Double price;
+  private Integer variantId;
 
-  @Column(name = "stock")
+  @Column(name = "spec_data_id")
   @NotNull
-  private Integer stock;
+  private Integer specDataId;
 }

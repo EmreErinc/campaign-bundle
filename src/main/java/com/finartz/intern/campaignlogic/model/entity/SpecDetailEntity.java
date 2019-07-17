@@ -9,25 +9,18 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "variants")
+@Table(name = "spec_detail")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class VariantEntity {
+public class SpecDetailEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "id")
   private Integer id;
 
-  @Column(name = "item_id")
+  @Column(name = "detail")
   @NotNull
-  private Integer itemId;
-
-  @Column(name = "price")
-  @NotNull
-  private Double price;
-
-  @Column(name = "stock")
-  @NotNull
-  private Integer stock;
+  private String detail;
 }

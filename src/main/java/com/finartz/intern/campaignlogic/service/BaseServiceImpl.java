@@ -2,10 +2,7 @@ package com.finartz.intern.campaignlogic.service;
 
 import com.finartz.intern.campaignlogic.commons.Converters;
 import com.finartz.intern.campaignlogic.model.entity.*;
-import com.finartz.intern.campaignlogic.model.value.Badge;
-import com.finartz.intern.campaignlogic.model.value.CampaignSummary;
-import com.finartz.intern.campaignlogic.model.value.CartItem;
-import com.finartz.intern.campaignlogic.model.value.Role;
+import com.finartz.intern.campaignlogic.model.value.*;
 import com.finartz.intern.campaignlogic.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +28,9 @@ public class BaseServiceImpl implements BaseService {
   private SalesRepository salesRepository;
   private CartRepository cartRepository;
   private VariantRepository variantRepository;
+  private VariantSpecRepository variantSpecRepository;
+  private SpecDataRepository specDataRepository;
+  private SpecDetailRepository specDetailRepository;
 
   @Autowired
   public BaseServiceImpl(AccountRepository accountRepository,
@@ -39,7 +39,10 @@ public class BaseServiceImpl implements BaseService {
                          ItemRepository itemRepository,
                          SalesRepository salesRepository,
                          CartRepository cartRepository,
-                         VariantRepository variantRepository) {
+                         VariantRepository variantRepository,
+                         VariantSpecRepository variantSpecRepository,
+                         SpecDataRepository specDataRepository,
+                         SpecDetailRepository specDetailRepository) {
     this.accountRepository = accountRepository;
     this.sellerRepository = sellerRepository;
     this.campaignRepository = campaignRepository;
@@ -47,6 +50,9 @@ public class BaseServiceImpl implements BaseService {
     this.salesRepository = salesRepository;
     this.cartRepository = cartRepository;
     this.variantRepository = variantRepository;
+    this.variantSpecRepository = variantSpecRepository;
+    this.specDataRepository = specDataRepository;
+    this.specDetailRepository = specDetailRepository;
   }
 
   @Override
@@ -280,7 +286,7 @@ public class BaseServiceImpl implements BaseService {
         .map(campaignEntity ->
             Badge.builder()
                 .requirement(campaignEntity.getRequirementCount())
-                .gift(campaignEntity.getExpectedGiftCount())
+                .gift(campaignEntity.getGiftCount())
                 .build())
         .orElseGet(() ->
             Badge.builder()
@@ -329,17 +335,84 @@ public class BaseServiceImpl implements BaseService {
   }
 
   @Override
-  public void addVariant(VariantEntity variantEntity) {
-    variantRepository.save(variantEntity);
+  public Variant addVariant(VariantEntity variantEntity) {
+    return Converters
+        .variantEntityToVariant(variantRepository.save(variantEntity),
+            getItemVariantSpecs(variantEntity.getItemId(), variantEntity.getId()));
   }
 
   @Override
-  public List<VariantEntity> getItemVariants(int itemId) {
-    return null;
+  public Optional<List<Variant>> getItemVariants(int itemId) {
+    Optional<List<VariantEntity>> optionalVariantEntities = variantRepository.findByItemId(itemId);
+    if (!optionalVariantEntities.isPresent()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(optionalVariantEntities
+        .get()
+        .stream()
+        .map(variantEntity -> Variant.builder()
+            .id(variantEntity.getId())
+            .price(variantEntity.getPrice())
+            .stock(variantEntity.getStock())
+            .variantSpecs(getItemVariantSpecs(variantEntity.getItemId(), variantEntity.getId()))
+            .build())
+        .collect(Collectors.toList()));
+  }
+
+  @Override
+  public Optional<Variant> getItemVariant(int itemId, int variantId) {
+    Optional<VariantEntity> optionalVariantEntity = variantRepository.findById(variantId);
+    if (!optionalVariantEntity.isPresent() || !optionalVariantEntity.get().getItemId().equals(itemId)) {
+      return Optional.empty();
+    }
+
+    return Optional.of(Variant.builder()
+        .id(optionalVariantEntity.get().getId())
+        .price(optionalVariantEntity.get().getPrice())
+        .stock(optionalVariantEntity.get().getStock())
+        .variantSpecs(getItemVariantSpecs(itemId, variantId))
+        .build());
   }
 
   @Override
   public Boolean isItemHasVariant(int itemId) {
-    return null;
+    return variantRepository.existsByItemId(itemId);
+  }
+
+  @Override
+  public List<VariantSpec> getItemVariantSpecs(int itemId, int variantId) {
+    Optional<List<VariantSpecEntity>> optionalVariantEntities = variantSpecRepository.findByItemIdAndVariantId(itemId, variantId);
+    if (!optionalVariantEntities.isPresent()) {
+      return new ArrayList<>();
+    }
+    return optionalVariantEntities
+        .get()
+        .stream()
+        .map(variantSpecEntity -> {
+          VariantSpec variantSpec = VariantSpec.builder().build();
+
+          variantSpec.setId(variantSpecEntity.getId());
+
+          //find and set spec data
+          Optional<SpecDataEntity> optionalSpecDataEntity = specDataRepository.findById(variantSpecEntity.getSpecDataId());
+          variantSpec.setSpecData(optionalSpecDataEntity.get().getData());
+
+          //find and set spec detail
+          Optional<SpecDetailEntity> optionalSpecDetailEntity = specDetailRepository.findById(optionalSpecDataEntity.get().getSpecDetailId());
+          variantSpec.setSpecDetail(optionalSpecDetailEntity.get().getDetail());
+
+          return variantSpec;
+        })
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public Integer getItemVariantStock(int variantId) {
+    Optional<VariantEntity> optionalVariantEntity = variantRepository.findById(variantId);
+    if (!optionalVariantEntity.isPresent()){
+      throw new ApplicationContextException("Variant Not Found");
+    }
+    return optionalVariantEntity.get().getStock();
   }
 }

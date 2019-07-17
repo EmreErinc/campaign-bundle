@@ -17,8 +17,20 @@ public class StockServiceImpl extends BaseServiceImpl implements StockService {
                           AccountRepository accountRepository,
                           CampaignRepository campaignRepository,
                           SalesRepository salesRepository,
-                          VariantRepository variantRepository) {
-    super(accountRepository, sellerRepository, campaignRepository, itemRepository, salesRepository, cartRepository, variantRepository);
+                          VariantRepository variantRepository,
+                          VariantSpecRepository variantSpecRepository,
+                          SpecDataRepository specDataRepository,
+                          SpecDetailRepository specDetailRepository) {
+    super(accountRepository,
+        sellerRepository,
+        campaignRepository,
+        itemRepository,
+        salesRepository,
+        cartRepository,
+        variantRepository,
+        variantSpecRepository,
+        specDataRepository,
+        specDetailRepository);
     this.itemRepository = itemRepository;
   }
 

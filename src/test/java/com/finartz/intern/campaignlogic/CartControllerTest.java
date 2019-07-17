@@ -1,6 +1,6 @@
 package com.finartz.intern.campaignlogic;
 
-import com.finartz.intern.campaignlogic.model.request.AddSellerRequest;
+import com.finartz.intern.campaignlogic.model.request.*;
 import com.finartz.intern.campaignlogic.model.response.*;
 import com.finartz.intern.campaignlogic.model.value.CartItem;
 import com.finartz.intern.campaignlogic.service.CartService;
@@ -74,11 +74,15 @@ public class CartControllerTest extends BaseTestController {
     String cartId = getCartIdFromToken(registerResponse.getToken());
     int count = 2;
 
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .itemId(itemResponse1.getItemId())
+        .count(count)
+        .build();
+
     CartResponse<CartItem> cartResponse = cartService
         .addToCart(registerResponse.getId(),
             cartId,
-            itemResponse1.getItemId().toString(),
-            String.valueOf(count));
+            request);
 
     assertNotNull(cartResponse);
     assertTrue(cartResponse
@@ -93,11 +97,15 @@ public class CartControllerTest extends BaseTestController {
     String cartId = getCartIdFromToken(registerResponse.getToken());
     int count = 2;
 
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .itemId(itemResponse1.getItemId())
+        .count(count)
+        .build();
+
     CartResponse<CartItem> cartResponse = cartService
         .addToCart(registerResponse.getId(),
             cartId,
-            itemResponse2.getItemId().toString(),
-            String.valueOf(count));
+            request);
 
     assertNotNull(cartResponse);
     assertTrue(cartResponse
@@ -118,10 +126,14 @@ public class CartControllerTest extends BaseTestController {
         .anyMatch(cartItem -> cartItem.getItemId().equals(itemResponse1.getItemId())));
 
     //test
+    CartItemIncrementRequest request = CartItemIncrementRequest.builder()
+        .itemId(itemResponse1.getItemId())
+        .build();
+
     CartResponse<CartItem> cartResponse = cartService
         .incrementItem(registerResponse.getId(),
             cartId,
-            itemResponse1.getItemId().toString());
+            request);
 
     assertNotNull(cartResponse);
     int saleCountAfterIncrement = cartResponse
@@ -145,10 +157,14 @@ public class CartControllerTest extends BaseTestController {
         .anyMatch(cartItem -> cartItem.getItemId().equals(itemResponse2.getItemId())));
 
     //test
+    CartItemIncrementRequest request = CartItemIncrementRequest.builder()
+        .itemId(itemResponse1.getItemId())
+        .build();
+
     CartResponse<CartItem> cartResponse = cartService
         .incrementItem(registerResponse.getId(),
             cartId,
-            itemResponse2.getItemId().toString());
+            request);
 
     assertNotNull(cartResponse);
     int saleCountAfterIncrement = cartResponse
@@ -173,10 +189,14 @@ public class CartControllerTest extends BaseTestController {
         .stream()
         .anyMatch(cartItem -> cartItem.getItemId().equals(itemResponse1.getItemId())));
 
+    CartItemIncrementRequest request = CartItemIncrementRequest.builder()
+        .itemId(itemResponse1.getItemId())
+        .build();
+
     CartResponse<CartItem> cartResponse = cartService
         .incrementItem(userId,
             cartId,
-            String.valueOf(itemResponse1.getItemId()));
+            request);
 
     assertTrue(cartResponse
         .getItemList()
@@ -184,10 +204,14 @@ public class CartControllerTest extends BaseTestController {
         .anyMatch(cartItem -> cartItem.getItemId().equals(itemResponse1.getItemId())));
 
     //test
+    CartItemRemoveRequest removeRequest = CartItemRemoveRequest.builder()
+        .itemId(itemResponse1.getItemId())
+        .build();
+
     CartResponse<CartItem> cartResponseBeforeDecrement = cartService
         .removeFromCart(userId,
             cartId,
-            itemResponse1.getItemId().toString());
+            removeRequest);
     assertFalse(cartResponseBeforeDecrement
         .getItemList()
         .stream()
@@ -206,20 +230,28 @@ public class CartControllerTest extends BaseTestController {
         .stream()
         .anyMatch(cartItem -> cartItem.getItemId().equals(itemResponse2.getItemId())));
 
+    CartItemIncrementRequest request = CartItemIncrementRequest.builder()
+        .itemId(itemResponse2.getItemId())
+        .build();
+
     CartResponse<CartItem> cartResponse = cartService
         .incrementItem(userId,
             cartId,
-            String.valueOf(itemResponse2.getItemId()));
+            request);
     assertTrue(cartResponse
         .getItemList()
         .stream()
         .anyMatch(cartItem -> cartItem.getItemId().equals(itemResponse2.getItemId())));
 
     //test
+    CartItemRemoveRequest removeRequest = CartItemRemoveRequest.builder()
+        .itemId(itemResponse2.getItemId())
+        .build();
+
     CartResponse<CartItem> cartResponseBeforeDecrement = cartService
         .removeFromCart(userId,
             cartId,
-            itemResponse2.getItemId().toString());
+            removeRequest);
     assertFalse(cartResponseBeforeDecrement
         .getItemList()
         .stream()
@@ -238,10 +270,14 @@ public class CartControllerTest extends BaseTestController {
         .stream()
         .anyMatch(cartItem -> cartItem.getItemId().equals(itemResponse1.getItemId())));
 
+    CartItemIncrementRequest request = CartItemIncrementRequest.builder()
+        .itemId(itemResponse1.getItemId())
+        .build();
+
     CartResponse<CartItem> cartResponse = cartService
         .incrementItem(userId,
             cartId,
-            String.valueOf(itemResponse1.getItemId()));
+            request);
 
     assertTrue(cartResponse
         .getItemList()
@@ -249,10 +285,14 @@ public class CartControllerTest extends BaseTestController {
         .anyMatch(cartItem -> cartItem.getItemId().equals(itemResponse1.getItemId())));
 
     //test
+    CartItemDecrementRequest decrementRequest = CartItemDecrementRequest.builder()
+        .itemId(itemResponse1.getItemId())
+        .build();
+
     CartResponse<CartItem> cartResponseBeforeDecrement = cartService
         .decrementItem(userId,
             cartId,
-            itemResponse1.getItemId().toString());
+            decrementRequest);
     assertFalse(cartResponseBeforeDecrement
         .getItemList()
         .stream()
@@ -271,20 +311,28 @@ public class CartControllerTest extends BaseTestController {
         .stream()
         .anyMatch(cartItem -> cartItem.getItemId().equals(itemResponse2.getItemId())));
 
+    CartItemIncrementRequest request = CartItemIncrementRequest.builder()
+        .itemId(itemResponse2.getItemId())
+        .build();
+
     CartResponse<CartItem> cartResponse = cartService
         .incrementItem(userId,
             cartId,
-            String.valueOf(itemResponse2.getItemId()));
+            request);
     assertTrue(cartResponse
         .getItemList()
         .stream()
         .anyMatch(cartItem -> cartItem.getItemId().equals(itemResponse2.getItemId())));
 
     //test
+    CartItemDecrementRequest decrementRequest = CartItemDecrementRequest.builder()
+        .itemId(itemResponse1.getItemId())
+        .build();
+
     CartResponse<CartItem> cartResponseBeforeDecrement = cartService
         .decrementItem(userId,
             cartId,
-            itemResponse2.getItemId().toString());
+            decrementRequest);
     assertFalse(cartResponseBeforeDecrement
         .getItemList()
         .stream()
@@ -306,11 +354,15 @@ public class CartControllerTest extends BaseTestController {
         .stream()
         .anyMatch(cartItem -> cartItem.getItemId().equals(itemResponse.getItemId())));
 
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .itemId(itemResponse.getItemId())
+        .count(10)
+        .build();
+
     CartResponse<CartItem> cartResponse = cartService
         .addToCart(userId,
             cartId,
-            itemResponse.getItemId().toString(),
-            String.valueOf(10));
+            request);
 
     assertNotNull(cartResponse);
     assertEquals(2, cartResponse.getItemList().stream().filter(cartItem -> cartItem.getItemId().equals(itemResponse.getItemId())).findFirst().get().getCampaignParams().getExpectedGiftCount().intValue());
@@ -331,11 +383,16 @@ public class CartControllerTest extends BaseTestController {
         .stream()
         .anyMatch(cartItem -> cartItem.getItemId().equals(itemResponse.getItemId())));
 
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .itemId(itemResponse.getItemId())
+        .count(10)
+        .build();
+
+
     CartResponse<CartItem> cartResponse = cartService
         .addToCart(userId,
             cartId,
-            itemResponse.getItemId().toString(),
-            String.valueOf(10));
+            request);
 
     assertNotNull(cartResponse);
     assertNull(cartResponse.getItemList().stream().filter(cartItem -> cartItem.getItemId().equals(itemResponse.getItemId())).findFirst().get().getCampaignParams());

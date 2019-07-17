@@ -22,8 +22,20 @@ public class SalesServiceImpl extends BaseServiceImpl implements SalesService {
                           CampaignRepository campaignRepository,
                           ItemRepository itemRepository,
                           SalesRepository salesRepository,
-                          VariantRepository variantRepository) {
-    super(accountRepository, sellerRepository, campaignRepository, itemRepository, salesRepository, cartRepository, variantRepository);
+                          VariantRepository variantRepository,
+                          VariantSpecRepository variantSpecRepository,
+                          SpecDataRepository specDataRepository,
+                          SpecDetailRepository specDetailRepository) {
+    super(accountRepository,
+        sellerRepository,
+        campaignRepository,
+        itemRepository,
+        salesRepository,
+        cartRepository,
+        variantRepository,
+        variantSpecRepository,
+        specDataRepository,
+        specDetailRepository);
     this.salesRepository = salesRepository;
   }
 
@@ -45,6 +57,10 @@ public class SalesServiceImpl extends BaseServiceImpl implements SalesService {
               .build();
           if (cartItem.getHasCampaign()) {
             sale.setGiftCount(cartItem.getCampaignParams().getExpectedGiftCount());
+          }
+          if (cartItem.getHasVariant()) {
+            sale.setVariantId(cartItem.getVariant().getId());
+            //sale.setVariantDetail(cartItem.getVariant().getSpedDetailId() + "_" + cartItem.getVariant().getSpecDataId());
           }
           salesEntities.add(salesRepository.save(sale));
         });

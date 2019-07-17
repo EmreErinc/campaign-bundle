@@ -30,8 +30,20 @@ public class CampaignServiceImpl extends BaseServiceImpl implements CampaignServ
                              ItemRepository itemRepository,
                              SalesRepository salesRepository,
                              CartRepository cartRepository,
-                             VariantRepository variantRepository) {
-    super(accountRepository, sellerRepository, campaignRepository, itemRepository, salesRepository, cartRepository, variantRepository);
+                             VariantRepository variantRepository,
+                             VariantSpecRepository variantSpecRepository,
+                             SpecDataRepository specDataRepository,
+                             SpecDetailRepository specDetailRepository) {
+    super(accountRepository,
+        sellerRepository,
+        campaignRepository,
+        itemRepository,
+        salesRepository,
+        cartRepository,
+        variantRepository,
+        variantSpecRepository,
+        specDataRepository,
+        specDetailRepository);
     this.campaignRepository = campaignRepository;
   }
 

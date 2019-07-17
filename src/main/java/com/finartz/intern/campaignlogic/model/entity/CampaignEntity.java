@@ -66,7 +66,7 @@ public class CampaignEntity {
   @NotNull
   private Integer requirementCount;
 
-  @Column(name = "expected_gift_count")
+  @Column(name = "gift_count")
   @NotNull
-  private Integer expectedGiftCount;
+  private Integer giftCount;
 }

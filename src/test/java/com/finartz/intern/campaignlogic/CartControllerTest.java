@@ -365,7 +365,7 @@ public class CartControllerTest extends BaseTestController {
             request);
 
     assertNotNull(cartResponse);
-    assertEquals(2, cartResponse.getItemList().stream().filter(cartItem -> cartItem.getItemId().equals(itemResponse.getItemId())).findFirst().get().getCampaignParams().getExpectedGiftCount().intValue());
+    assertEquals(2, cartResponse.getItemList().stream().filter(cartItem -> cartItem.getItemId().equals(itemResponse.getItemId())).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
     assertEquals(8, cartResponse.getItemList().stream().filter(cartItem -> cartItem.getItemId().equals(itemResponse.getItemId())).findFirst().get().getCampaignParams().getTotalItemCount().intValue());
   }
 

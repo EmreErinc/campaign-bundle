@@ -56,7 +56,7 @@ public class SalesServiceImpl extends BaseServiceImpl implements SalesService {
               .soldAt(Instant.now().toEpochMilli())
               .build();
           if (cartItem.getHasCampaign()) {
-            sale.setGiftCount(cartItem.getCampaignParams().getExpectedGiftCount());
+            sale.setGiftCount(cartItem.getCampaignParams().getActualGiftCount());
           }
           if (cartItem.getHasVariant()) {
             sale.setVariantId(cartItem.getVariant().getId());

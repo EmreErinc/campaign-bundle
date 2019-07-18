@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 @Builder
 public class CampaignParams {
-  private Integer expectedGiftCount;
+  private Integer actualGiftCount;
   private Integer totalItemCount;
   private Badge badge;
 }

@@ -67,4 +67,6 @@ public interface BaseService {
   List<VariantSpec> getItemVariantSpecs(int itemId, int variantId);
 
   Integer getItemVariantStock(int variantId);
+
+  boolean isItemHasVariant(int itemId, int variantId);
 }

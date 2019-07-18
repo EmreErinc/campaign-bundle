@@ -179,14 +179,13 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
       int itemIndex = cartEntity.getCartItems().indexOf(optionalCartItem.get());
       int itemOnCart = optionalCartItem.get().getSaleCount();
       int updatedSaleCount = desiredSaleCount + itemOnCart;
-
       int giftCount = calculateGiftCount(campaignEntity, updatedSaleCount);
       boolean isStockAvailable = isStockAvailable(campaignEntity.getItemId(), giftCount + updatedSaleCount);
 
-      //checks item's variant status
-      if (optionalCartItem.get().getHasVariant()) {
+      //check item variant status and stock availability
+      if (optionalVariant.isPresent()) {
         itemStock = optionalCartItem.get().getVariant().getStock();
-        isStockAvailable = isStockAvailable && (itemStock >= optionalCartItem.get().getSaleCount() + desiredSaleCount);
+        isStockAvailable = isStockAvailable && (itemStock >= optionalCartItem.get().getSaleCount() + desiredSaleCount + giftCount);
       }
 
       SuitableSaleAndGiftCount suitableSaleAndGiftCount = SuitableSaleAndGiftCount.builder()
@@ -207,10 +206,15 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
 
       cartEntity.getCartItems().remove(itemIndex);
       cartEntity.getCartItems().add(itemIndex, optionalCartItem.get());
-    } else {
+    } else { //item not found on cart
       int giftCount = calculateGiftCount(campaignEntity, desiredSaleCount);
-      boolean isStockAvailable = isStockAvailable(campaignEntity.getItemId(), giftCount + desiredSaleCount)
-          && getItemVariantStock(variantId) >= desiredSaleCount + giftCount;
+      boolean isStockAvailable = isStockAvailable(campaignEntity.getItemId(), giftCount + desiredSaleCount);
+
+      //check item variant status and stock availability
+      if (optionalVariant.isPresent()) {
+        itemStock = optionalVariant.get().getStock();
+        isStockAvailable = isStockAvailable && (itemStock >= desiredSaleCount + giftCount);
+      }
 
       SuitableSaleAndGiftCount suitableSaleAndGiftCount = SuitableSaleAndGiftCount.builder()
           .saleCount(desiredSaleCount)
@@ -218,8 +222,8 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
           .build();
 
       //check stock availability
-      if (!isStockAvailable && desiredSaleCount <= 0) {
-        //if desired item count exceeds campaign cart limit
+      if (!isStockAvailable || desiredSaleCount <= 0) {
+        //stock not available, try one by one
         suitableSaleAndGiftCount = addOneByOneToCart(campaignEntity, 0, desiredSaleCount, itemStock);
       }
 
@@ -281,29 +285,27 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
   private SuitableSaleAndGiftCount addOneByOneToCart(CampaignEntity campaignEntity, int itemOnCart, int desiredSaleCount, int itemStock) {
     int suitableSaleCount = 0;
     int suitableGiftCount = 0;
-    int availableForGift = 0;
 
-    while (true) {
+    for (suitableSaleCount = 0; suitableSaleCount < itemStock; suitableSaleCount++) {
       suitableGiftCount = calculateGiftCount(campaignEntity, itemOnCart + suitableSaleCount);
+      //stock exactly fit to give suitable sale count and gift count
       if (itemStock - (itemOnCart + suitableGiftCount + suitableSaleCount) == 0) {
         break;
-      } else if (itemStock - (itemOnCart + suitableGiftCount + suitableSaleCount) < 0) {
-        suitableGiftCount = calculateGiftCount(campaignEntity, itemOnCart + suitableSaleCount - 1);
+      } else if (itemStock - (itemOnCart + suitableGiftCount + suitableSaleCount) < 0) { //suitable values exceeds stock
+        //decrease for find max available value
+        suitableSaleCount -= 1;
+
+        //calculate available gift count
+        suitableGiftCount = calculateGiftCount(campaignEntity, itemOnCart + suitableSaleCount);
 
         int remainingStock = itemStock - (itemOnCart + suitableSaleCount + suitableGiftCount);
-        int remainingSaleCount = desiredSaleCount - (itemOnCart + suitableSaleCount);
-        if (remainingStock > 0 && remainingStock < campaignEntity.getRequirementCount() + campaignEntity.getGiftCount()) {
-          if (remainingSaleCount < 0) {
-            availableForGift = desiredSaleCount;
-          } else {
-            availableForGift = remainingStock - remainingSaleCount;
-          }
-          suitableGiftCount += availableForGift;
+        if (remainingStock > 0 && remainingStock <= campaignEntity.getGiftCount() && suitableSaleCount + remainingStock <= desiredSaleCount) {
+          suitableSaleCount += remainingStock;
         }
         break;
       }
-      suitableSaleCount += 1;
     }
+
     return SuitableSaleAndGiftCount.builder()
         .saleCount(suitableSaleCount + itemOnCart)
         .giftCount(suitableGiftCount)
@@ -349,8 +351,8 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
       int itemOnCart = optionalCartItem.get().getSaleCount();
       boolean isStockAvailable = isStockAvailable(itemId, itemOnCart + desiredSaleCount);
 
-      //checks item's variant status
-      if (optionalCartItem.get().getHasVariant()) {
+      //check item variant status and stock availability
+      if (optionalVariant.isPresent()) {
         itemStock = optionalCartItem.get().getVariant().getStock();
         isStockAvailable = isStockAvailable && itemStock >= optionalCartItem.get().getSaleCount() + desiredSaleCount;
       }
@@ -363,16 +365,18 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
       cartEntity.getCartItems().remove(itemIndex);
       cartEntity.getCartItems().add(itemIndex, setCountAndPriceToCartItem(optionalCartItem.get(), desiredSaleCount, itemPrice));
     } else {
-      boolean isStockAvailable = isStockAvailable(itemId, desiredSaleCount)
-          && getItemVariantStock(variantId) >= desiredSaleCount;
+      boolean isStockAvailable = isStockAvailable(itemId, desiredSaleCount);
+
+      //check item variant status and stock availability
+      if (optionalVariant.isPresent()) {
+        itemStock = optionalVariant.get().getStock();
+        isStockAvailable = isStockAvailable && getItemVariantStock(variantId) >= desiredSaleCount;
+      }
 
       //checks stock availability
-      if (!isStockAvailable && desiredSaleCount <= 0) {
+      if (!isStockAvailable || desiredSaleCount <= 0) {
         //stock is not available, try one by one
-        int suitableSaleCount = addOneByOneToCart(0, itemStock);
-        if (suitableSaleCount != 0) {
-          desiredSaleCount = suitableSaleCount;
-        }
+        desiredSaleCount = addOneByOneToCart(0, itemStock);
       }
 
       cartEntity

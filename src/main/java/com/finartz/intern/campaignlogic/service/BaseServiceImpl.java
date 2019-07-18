@@ -376,11 +376,6 @@ public class BaseServiceImpl implements BaseService {
   }
 
   @Override
-  public Boolean isItemHasVariant(int itemId) {
-    return variantRepository.existsByItemId(itemId);
-  }
-
-  @Override
   public List<VariantSpec> getItemVariantSpecs(int itemId, int variantId) {
     Optional<List<VariantSpecEntity>> optionalVariantEntities = variantSpecRepository.findByItemIdAndVariantId(itemId, variantId);
     if (!optionalVariantEntities.isPresent()) {
@@ -410,7 +405,7 @@ public class BaseServiceImpl implements BaseService {
   @Override
   public Integer getItemVariantStock(int variantId) {
     Optional<VariantEntity> optionalVariantEntity = variantRepository.findById(variantId);
-    if (!optionalVariantEntity.isPresent()){
+    if (!optionalVariantEntity.isPresent()) {
       throw new ApplicationContextException("Variant Not Found");
     }
     return optionalVariantEntity.get().getStock();

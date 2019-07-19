@@ -116,9 +116,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
         .forEach(itemSummary ->
             itemSummaries
                 .stream()
-                .filter(itemSum ->
-                    itemSum.getId()
-                        .equals(itemSummary.getId()))
+                .filter(itemSum -> itemSum.getId().equals(itemSummary.getId()))
                 .findFirst()
                 .get()
                 //set as null badge
@@ -164,8 +162,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
             usedCampaigns
                 .stream()
                 //checks campaign limit status
-                .anyMatch(campaignEntity -> !isCampaignLimitAvailableForAccount(accountId, itemSummary.getId())
-                    || campaignEntity.getItemId().equals(itemSummary.getId()))
+                .anyMatch(campaignEntity -> !isCampaignLimitAvailableForAccount(accountId, itemSummary.getId()))
         )
         .collect(Collectors.toList());
   }

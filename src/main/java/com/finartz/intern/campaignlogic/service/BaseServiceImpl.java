@@ -410,9 +410,4 @@ public class BaseServiceImpl implements BaseService {
     }
     return optionalVariantEntity.get().getStock();
   }
-
-  @Override
-  public boolean isItemHasVariant(int itemId, int variantId) {
-    return getItemVariant(itemId, variantId).isPresent();
-  }
 }

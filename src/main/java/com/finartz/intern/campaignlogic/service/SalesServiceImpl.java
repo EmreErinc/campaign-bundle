@@ -49,7 +49,7 @@ public class SalesServiceImpl extends BaseServiceImpl implements SalesService {
         .getCartItems()
         .forEach(cartItem -> {
           SalesEntity sale = SalesEntity.builder()
-              .itemId(cartItem.getItemId())
+              .productId(cartItem.getProductId())
               .ownerId(accountId)
               .saleCount(cartItem.getSaleCount())
               .price(cartItem.getPrice())

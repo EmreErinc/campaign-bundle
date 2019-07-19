@@ -9,7 +9,7 @@ import lombok.Data;
 @Builder
 public class CampaignResponse {
   private Integer id;
-  private Integer itemId;
+  private Integer productId;
   private Integer sellerId;
   private String title;
   private Long startAt;

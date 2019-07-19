@@ -6,5 +6,5 @@ import java.util.List;
 import java.util.Optional;
 
 public interface VariantSpecRepository extends BaseRepository<VariantSpecEntity, String> {
-  Optional<List<VariantSpecEntity>> findByItemIdAndVariantId(int itemId, int variantId);
+  Optional<List<VariantSpecEntity>> findByProductIdAndVariantId(int itemId, int variantId);
 }

@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CartItemDecrementRequest {
-  @NotNull(message = "itemId should not be empty")
+  @NotNull(message = "productId should not be empty")
   private Integer itemId;
 
   private Integer variantId;

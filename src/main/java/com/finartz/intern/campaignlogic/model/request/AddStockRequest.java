@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 public class AddStockRequest {
 
-  @NotNull(message = "itemId should not be empty")
+  @NotNull(message = "productId should not be empty")
   private Integer itemId;
 
   @NotNull(message = "stock count should not be empty")

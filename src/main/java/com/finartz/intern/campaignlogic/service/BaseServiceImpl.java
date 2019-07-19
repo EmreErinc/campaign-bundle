@@ -75,7 +75,7 @@ public class BaseServiceImpl implements BaseService {
 
   @Override
   public Optional<CampaignEntity> getCampaignByItemId(int itemId) {
-    return campaignRepository.findByItemId(itemId);
+    return campaignRepository.findByProductId(itemId);
   }
 
   @Override
@@ -90,7 +90,7 @@ public class BaseServiceImpl implements BaseService {
   @Override
   public Boolean isCampaignAvailableGetByItemId(int itemId) {
     return campaignRepository
-        .findByItemIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(itemId,
+        .findByProductIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(itemId,
             Instant.now().toEpochMilli(),
             Instant.now().toEpochMilli())
         .isPresent();
@@ -122,7 +122,7 @@ public class BaseServiceImpl implements BaseService {
   @Override
   public Boolean isItemHasCampaign(int itemId) {
     return campaignRepository
-        .findByItemId(itemId)
+        .findByProductId(itemId)
         .isPresent();
   }
 
@@ -137,7 +137,7 @@ public class BaseServiceImpl implements BaseService {
 
   @Override
   public Integer getItemStock(int itemId) {
-    Optional<List<SalesEntity>> optionalSalesEntities = salesRepository.findByItemId(itemId);
+    Optional<List<SalesEntity>> optionalSalesEntities = salesRepository.findByProductId(itemId);
     int sumOfSales = 0;
     int sumOfGifts = 0;
 
@@ -168,7 +168,7 @@ public class BaseServiceImpl implements BaseService {
   @Override
   public Boolean isCampaignLimitAvailableForAccount(int accountId, int itemId) {
     //this means there is no campaign on item
-    if (!campaignRepository.existsByItemId(itemId)) {
+    if (!campaignRepository.existsByProductId(itemId)) {
       return true;
     }
 
@@ -183,8 +183,8 @@ public class BaseServiceImpl implements BaseService {
 
   @Override
   public Optional<Integer> getCampaignItemUsageCount(int accountId, int itemId) {
-    Optional<List<SalesEntity>> optionalSalesEntities = salesRepository.findByOwnerIdAndItemId(accountId, itemId);
-    Optional<CampaignEntity> optionalCampaignEntity = campaignRepository.findByItemId(itemId);
+    Optional<List<SalesEntity>> optionalSalesEntities = salesRepository.findByOwnerIdAndProductId(accountId, itemId);
+    Optional<CampaignEntity> optionalCampaignEntity = campaignRepository.findByProductId(itemId);
     if (!optionalCampaignEntity.isPresent()) {
       throw new ApplicationContextException(CAMPAIGN_NOT_FOUND);
     }
@@ -219,7 +219,7 @@ public class BaseServiceImpl implements BaseService {
             optionalSalesEntities.map(salesEntities ->
                 salesEntities
                     .stream()
-                    .filter(salesEntity -> salesEntity.getItemId().equals(campaignEntity.getItemId()))
+                    .filter(salesEntity -> salesEntity.getProductId().equals(campaignEntity.getProductId()))
                     .collect(Collectors.toList())
                     .size()))
         .orElse(Optional.of(0))
@@ -229,7 +229,7 @@ public class BaseServiceImpl implements BaseService {
 
   @Override
   public Integer getCampaignLimit(int itemId) {
-    Optional<CampaignEntity> optionalCampaignEntity = campaignRepository.findByItemId(itemId);
+    Optional<CampaignEntity> optionalCampaignEntity = campaignRepository.findByProductId(itemId);
     if (!optionalCampaignEntity.isPresent()) {
       return 0;
     }
@@ -273,7 +273,7 @@ public class BaseServiceImpl implements BaseService {
 
   @Override
   public Badge getBadgeByItemId(int itemId) {
-    return extractCampaignEntityBadge(campaignRepository.findByItemId(itemId));
+    return extractCampaignEntityBadge(campaignRepository.findByProductId(itemId));
   }
 
   @Override
@@ -301,7 +301,7 @@ public class BaseServiceImpl implements BaseService {
     optionalSalesEntities.ifPresent(salesEntities ->
         salesEntities
             .forEach(salesEntity ->
-                getCampaignByItemId(salesEntity.getItemId())
+                getCampaignByItemId(salesEntity.getProductId())
                     .ifPresent(campaignEntities::add)));
 
     return campaignEntities;
@@ -321,7 +321,7 @@ public class BaseServiceImpl implements BaseService {
     return getCartEntityById(cartId)
         .getCartItems()
         .stream()
-        .anyMatch(cartItem -> cartItem.getItemId().equals(itemId));
+        .anyMatch(cartItem -> cartItem.getProductId().equals(itemId));
   }
 
   @Override
@@ -329,7 +329,7 @@ public class BaseServiceImpl implements BaseService {
     return getCartEntityById(cartId)
         .getCartItems()
         .stream()
-        .filter(cartItem -> cartItem.getItemId().equals(itemId))
+        .filter(cartItem -> cartItem.getProductId().equals(itemId))
         .findFirst()
         .map(CartItem::getSaleCount).orElse(0);
   }
@@ -338,12 +338,12 @@ public class BaseServiceImpl implements BaseService {
   public Variant addVariant(VariantEntity variantEntity) {
     return Converters
         .variantEntityToVariant(variantRepository.save(variantEntity),
-            getItemVariantSpecs(variantEntity.getItemId(), variantEntity.getId()));
+            getItemVariantSpecs(variantEntity.getProductId(), variantEntity.getId()));
   }
 
   @Override
   public Optional<List<Variant>> getItemVariants(int itemId) {
-    Optional<List<VariantEntity>> optionalVariantEntities = variantRepository.findByItemId(itemId);
+    Optional<List<VariantEntity>> optionalVariantEntities = variantRepository.findByProductId(itemId);
     if (!optionalVariantEntities.isPresent()) {
       return Optional.empty();
     }
@@ -355,7 +355,7 @@ public class BaseServiceImpl implements BaseService {
             .id(variantEntity.getId())
             .price(variantEntity.getPrice())
             .stock(variantEntity.getStock())
-            .variantSpecs(getItemVariantSpecs(variantEntity.getItemId(), variantEntity.getId()))
+            .variantSpecs(getItemVariantSpecs(variantEntity.getProductId(), variantEntity.getId()))
             .build())
         .collect(Collectors.toList()));
   }
@@ -363,7 +363,7 @@ public class BaseServiceImpl implements BaseService {
   @Override
   public Optional<Variant> getItemVariant(int itemId, int variantId) {
     Optional<VariantEntity> optionalVariantEntity = variantRepository.findById(variantId);
-    if (!optionalVariantEntity.isPresent() || !optionalVariantEntity.get().getItemId().equals(itemId)) {
+    if (!optionalVariantEntity.isPresent() || !optionalVariantEntity.get().getProductId().equals(itemId)) {
       return Optional.empty();
     }
 
@@ -377,7 +377,7 @@ public class BaseServiceImpl implements BaseService {
 
   @Override
   public List<VariantSpec> getItemVariantSpecs(int itemId, int variantId) {
-    Optional<List<VariantSpecEntity>> optionalVariantEntities = variantSpecRepository.findByItemIdAndVariantId(itemId, variantId);
+    Optional<List<VariantSpecEntity>> optionalVariantEntities = variantSpecRepository.findByProductIdAndVariantId(itemId, variantId);
     if (!optionalVariantEntities.isPresent()) {
       return new ArrayList<>();
     }

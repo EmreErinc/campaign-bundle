@@ -8,7 +8,7 @@ public class SecurityConstants {
       "/seller/register",
       "/login",
       "/item",
-      "/item/{itemId}",
+      "/item/{productId}",
       "/item/seller/{sellerId}",
       "/seller/{sellerId}",
       "/h2/**"};
@@ -28,7 +28,7 @@ public class SecurityConstants {
   public static final String TOKEN_PREFIX = "Bearer ";
   public static final String HEADER_STRING = "Authorization";
   public static final String AUTHORITIES = "Scopes";
-  public static final String USER_ID = "itemId";
+  public static final String USER_ID = "userId";
   public static final String CART_ID = "cartId";
 
 }

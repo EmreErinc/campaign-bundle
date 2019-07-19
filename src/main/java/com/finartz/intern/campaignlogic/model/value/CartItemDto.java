@@ -7,7 +7,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
-public class CartItem {
+public class CartItemDto {
   @NotNull(message = "productId should not be empty")
   private Integer productId;
 
@@ -20,11 +20,10 @@ public class CartItem {
   @NotNull(message = "price should not be empty")
   private Double price;
 
-  private Long addedAt;
-  private Long updatedAt;
   private Boolean hasCampaign;
   private CampaignParams campaignParams;
   private Boolean hasVariant;
   private Variant variant;
-  private Integer messageKey;
+
+  private String message;
 }

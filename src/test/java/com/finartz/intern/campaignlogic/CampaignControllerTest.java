@@ -8,7 +8,6 @@ import com.finartz.intern.campaignlogic.model.response.RegisterResponse;
 import com.finartz.intern.campaignlogic.model.response.SellerResponse;
 import com.finartz.intern.campaignlogic.model.value.CampaignStatus;
 import com.finartz.intern.campaignlogic.model.value.CampaignSummary;
-import com.finartz.intern.campaignlogic.service.AccountService;
 import com.finartz.intern.campaignlogic.service.CampaignService;
 import com.finartz.intern.campaignlogic.service.SellerService;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +71,7 @@ public class CampaignControllerTest extends BaseTestController {
   public void test_addCampaign() {
     addCampaignRequest = AddCampaignRequest.builder()
         .title("sample campaign")
-        .itemId(itemResponse1.getItemId())
+        .itemId(itemResponse1.getProductId())
         .cartLimit(3)
         .campaignLimit(4)
         .requirement(5)
@@ -90,13 +89,13 @@ public class CampaignControllerTest extends BaseTestController {
     assertEquals(addCampaignRequest.getCartLimit(), campaignResponse.getCartLimit());
     assertEquals(addCampaignRequest.getCampaignLimit(), campaignResponse.getCampaignLimit());
     assertEquals(addCampaignRequest.getEndAt(), campaignResponse.getEndAt());
-    assertEquals(addCampaignRequest.getItemId(), campaignResponse.getItemId());
+    assertEquals(addCampaignRequest.getItemId(), campaignResponse.getProductId());
     assertEquals(addCampaignRequest.getTitle(), campaignResponse.getTitle());
   }
 
   @Test
   public void test_deactivateCampaign(){
-    CampaignResponse campaignResponse = generateCampaign(sellerAccountRegisterResponse.getId(), itemResponse2.getItemId());
+    CampaignResponse campaignResponse = generateCampaign(sellerAccountRegisterResponse.getId(), itemResponse2.getProductId());
 
     boolean result = campaignService.updateCampaignStatus(sellerAccountRegisterResponse.getId(), campaignResponse.getId().toString(), CampaignStatus.CANCELED);
     assertTrue(result);
@@ -107,7 +106,7 @@ public class CampaignControllerTest extends BaseTestController {
 
   @Test
   public void test_activateCampaign(){
-    CampaignResponse campaignResponse = generateCampaign(sellerAccountRegisterResponse.getId(), itemResponse3.getItemId());
+    CampaignResponse campaignResponse = generateCampaign(sellerAccountRegisterResponse.getId(), itemResponse3.getProductId());
 
     boolean result = campaignService.updateCampaignStatus(sellerAccountRegisterResponse.getId(), campaignResponse.getId().toString(), CampaignStatus.ACTIVE);
     assertTrue(result);

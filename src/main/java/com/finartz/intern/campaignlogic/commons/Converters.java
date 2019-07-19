@@ -8,6 +8,7 @@ import com.finartz.intern.campaignlogic.security.Utils;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Converters {
   private Converters() {
@@ -76,7 +77,7 @@ public class Converters {
 
   public static ItemResponse itemEntityToItemResponse(ItemEntity itemEntity, List<Variant> variants) {
     return ItemResponse.builder()
-        .itemId(itemEntity.getId())
+        .productId(itemEntity.getId())
         .name(itemEntity.getName())
         .price(itemEntity.getPrice())
         .cargoType(itemEntity.getCargoType())
@@ -118,7 +119,7 @@ public class Converters {
         .requirementCount(request.getRequirement())
         .giftCount(request.getGift())
         .status(CampaignStatus.ACTIVE)
-        .itemId(request.getItemId())
+        .productId(request.getItemId())
         .sellerId(sellerId)
         .build();
   }
@@ -126,7 +127,7 @@ public class Converters {
   public static CampaignResponse campaignEntityToCampaignResponse(CampaignEntity campaignEntity, Badge badge) {
     return CampaignResponse.builder()
         .id(campaignEntity.getId())
-        .itemId(campaignEntity.getItemId())
+        .productId(campaignEntity.getProductId())
         .sellerId(campaignEntity.getSellerId())
         .title(campaignEntity.getTitle())
         .campaignLimit(campaignEntity.getCampaignLimit())
@@ -151,21 +152,39 @@ public class Converters {
         .build();
   }
 
-  public static CartResponse cartEntityToCartResponse(CartEntity cartEntity){
+  public static CartResponse cartEntityToCartResponse(CartEntity cartEntity) {
     return CartResponse.builder()
-        .itemList(cartEntity.getCartItems())
+        .itemList(cartItemToCartItemDto(cartEntity.getCartItems()))
         .build();
   }
 
-  public static VariantEntity prepareItemVariant(int itemId, AddVariantRequest request){
+  public static List<CartItemDto> cartItemToCartItemDto(List<CartItem> cartItems) {
+    return cartItems
+        .stream()
+        .map(cartItem -> CartItemDto.builder()
+            .productId(cartItem.getProductId())
+            .saleCount(cartItem.getSaleCount())
+            .sellerId(cartItem.getSellerId())
+            .hasCampaign(cartItem.getHasCampaign())
+            .campaignParams(cartItem.getCampaignParams())
+            .hasVariant(cartItem.getHasVariant())
+            .variant(cartItem.getVariant())
+            .price(cartItem.getPrice())
+            .message(cartItem.getMessageKey() == null ? Messages.EMPTY.getValue() : Messages.values()[cartItem.getMessageKey()].getValue())
+            .build())
+        .collect(Collectors.toList());
+
+  }
+
+  public static VariantEntity prepareItemVariant(int itemId, AddVariantRequest request) {
     return VariantEntity.builder()
-        .itemId(itemId)
+        .productId(itemId)
         .price(request.getPrice() == null ? 0.0D : request.getPrice())
         .stock(request.getStock())
         .build();
   }
 
-  public static Variant variantEntityToVariant(VariantEntity variantEntity,List<VariantSpec> variantSpecs){
+  public static Variant variantEntityToVariant(VariantEntity variantEntity, List<VariantSpec> variantSpecs) {
     return Variant.builder()
         .id(variantEntity.getId())
         .stock(variantEntity.getStock())

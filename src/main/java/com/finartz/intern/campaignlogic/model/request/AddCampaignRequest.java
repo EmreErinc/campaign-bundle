@@ -14,7 +14,7 @@ import javax.validation.constraints.Size;
 @NoArgsConstructor
 public class AddCampaignRequest {
 
-  @NotNull(message = "itemId should not be empty")
+  @NotNull(message = "productId should not be empty")
   private Integer itemId;
 
   @NotNull(message = "title should not be empty")

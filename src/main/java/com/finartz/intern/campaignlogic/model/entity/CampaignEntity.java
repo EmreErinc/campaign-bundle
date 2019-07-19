@@ -21,9 +21,9 @@ public class CampaignEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
 
-  @Column(name = "item_id")
+  @Column(name = "product_id")
   @NotNull
-  private Integer itemId;
+  private Integer productId;
 
   @Column(name = "seller_id")
   @NotNull

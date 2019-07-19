@@ -11,7 +11,7 @@ import java.util.List;
 @Data
 @Builder
 public class ItemResponse {
-  private Integer itemId;
+  private Integer productId;
   private Double price;
   private String name;
   private String description;

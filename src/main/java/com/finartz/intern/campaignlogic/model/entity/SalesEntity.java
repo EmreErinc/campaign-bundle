@@ -23,9 +23,9 @@ public class SalesEntity {
   @NotNull
   private Integer ownerId;
 
-  @Column(name = "item_id")
+  @Column(name = "product_id")
   @NotNull
-  private Integer itemId;
+  private Integer productId;
 
   @Column(name = "sale_count")
   @NotNull

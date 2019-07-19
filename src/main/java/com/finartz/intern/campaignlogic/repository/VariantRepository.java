@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface VariantRepository extends BaseRepository<VariantEntity, String>{
-  Optional<List<VariantEntity>> findByItemId(int itemId);
+  Optional<List<VariantEntity>> findByProductId(int itemId);
 
-  boolean existsByItemId(int itemId);
+  boolean existsByProductId(int itemId);
 }

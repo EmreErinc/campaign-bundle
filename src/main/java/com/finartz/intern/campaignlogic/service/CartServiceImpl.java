@@ -243,23 +243,32 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
         cartEntity.getCartItems().add(itemIndex, optionalCartItem.get());
       } else { //item variant not found cart
         SuitableSaleAndGiftCount suitableSaleAndGiftCount = defineSuitableSaleAndGiftCount(campaignEntity, desiredSaleCount, itemStock, optionalVariant, actualTotalGiftCount);
-        int messageKey = describeMessageKey(desiredSaleCount, suitableSaleAndGiftCount, itemStock);
+        int messageKey = describeMessageKey(cartEntity.getAccountId(), campaignEntity, desiredSaleCount, suitableSaleAndGiftCount, itemStock);
         addItem(cartEntity, campaignEntity, campaignEntity.getProductId(), variantId, suitableSaleAndGiftCount, messageKey);
       }
     } else { //item not found cart
       SuitableSaleAndGiftCount suitableSaleAndGiftCount = defineSuitableSaleAndGiftCount(campaignEntity, desiredSaleCount, itemStock, optionalVariant, 0);
-      int messageKey = describeMessageKey(desiredSaleCount, suitableSaleAndGiftCount, itemStock);
+      int messageKey = describeMessageKey(cartEntity.getAccountId(), campaignEntity, desiredSaleCount, suitableSaleAndGiftCount, itemStock);
       addItem(cartEntity, campaignEntity, campaignEntity.getProductId(), variantId, suitableSaleAndGiftCount, messageKey);
     }
     return cartEntity;
   }
 
-  private Integer describeMessageKey(int desiredSaleCount, SuitableSaleAndGiftCount suitableSaleAndGiftCount, int stock){
+  private Integer describeMessageKey(int accountId, CampaignEntity campaignEntity, int desiredSaleCount, SuitableSaleAndGiftCount suitableSaleAndGiftCount, int stock){
+    //TODO add complete logic
     if (desiredSaleCount != suitableSaleAndGiftCount.getSaleCount()){
       return Messages.CART_UPDATED.getKey();
     }
-    //TODO add complete logic
-    return Messages.CART_UPDATED.getKey();
+    if (suitableSaleAndGiftCount.getSaleCount() > stock){
+      return Messages.CART_UPDATED.getKey();
+    }
+    if (suitableSaleAndGiftCount.getSaleCount() > (campaignEntity.getRequirementCount() * campaignEntity.getCartLimit())){
+      return Messages.CART_LIMIT_EXCEED.getKey();
+    }
+    if (userAvailableForCampaign(accountId, campaignEntity.getId())){
+      return Messages.CAMPAIGN_LIMIT_EXCEED.getKey();
+    }
+    return Messages.EMPTY.getKey();
   }
 
   private CartEntity addItem(CartEntity cartEntity, CampaignEntity campaignEntity, int itemId, int variantId, SuitableSaleAndGiftCount suitableSaleAndGiftCount, int messageKey) {

@@ -79,9 +79,9 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
     ItemDetail itemDetail = Converters
         .itemEntityToItemDetail(getItemEntity(Integer.valueOf(itemId)),
             Badge.builder().build(),
-            getItemVariants(Integer.valueOf(itemId)).orElse(new ArrayList<>()));
+            getProductVariants(Integer.valueOf(itemId)).orElse(new ArrayList<>()));
 
-    Optional<CampaignEntity> optionalCampaignEntity = getCampaignByItemId(Integer.valueOf(itemId));
+    Optional<CampaignEntity> optionalCampaignEntity = getCampaignByProductId(Integer.valueOf(itemId));
     if (optionalCampaignEntity.isPresent()) {
       Badge badge = Badge.builder()
           .gift(optionalCampaignEntity.get().getGiftCount())
@@ -110,7 +110,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
     itemRepository
         .findAll()
         .forEach(itemEntity -> itemSummaries
-            .add(Converters.itemEntityToItemSummary(itemEntity, getBadgeByItemId(itemEntity.getId()))));
+            .add(Converters.itemEntityToItemSummary(itemEntity, getBadgeByProductId(itemEntity.getId()))));
 
     accountId.ifPresent(id -> eliminateUsedCampaignItems(itemSummaries, id)
         .forEach(itemSummary ->
@@ -137,7 +137,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
     optionalItemEntities
         .get()
         .forEach(itemEntity -> itemSummaries
-            .add(Converters.itemEntityToItemSummary(itemEntity, getBadgeByItemId(itemEntity.getId()))));
+            .add(Converters.itemEntityToItemSummary(itemEntity, getBadgeByProductId(itemEntity.getId()))));
 
     accountId.ifPresent(id -> eliminateUsedCampaignItems(itemSummaries, id)
         .forEach(itemSummary ->

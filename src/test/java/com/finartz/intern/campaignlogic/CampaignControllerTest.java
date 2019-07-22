@@ -71,7 +71,7 @@ public class CampaignControllerTest extends BaseTestController {
   public void test_addCampaign() {
     addCampaignRequest = AddCampaignRequest.builder()
         .title("sample campaign")
-        .itemId(itemResponse1.getProductId())
+        .productId(itemResponse1.getProductId())
         .cartLimit(3)
         .campaignLimit(4)
         .requirement(5)
@@ -89,7 +89,7 @@ public class CampaignControllerTest extends BaseTestController {
     assertEquals(addCampaignRequest.getCartLimit(), campaignResponse.getCartLimit());
     assertEquals(addCampaignRequest.getCampaignLimit(), campaignResponse.getCampaignLimit());
     assertEquals(addCampaignRequest.getEndAt(), campaignResponse.getEndAt());
-    assertEquals(addCampaignRequest.getItemId(), campaignResponse.getProductId());
+    assertEquals(addCampaignRequest.getProductId(), campaignResponse.getProductId());
     assertEquals(addCampaignRequest.getTitle(), campaignResponse.getTitle());
   }
 

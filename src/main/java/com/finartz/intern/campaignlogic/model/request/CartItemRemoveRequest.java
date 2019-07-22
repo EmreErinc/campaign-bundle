@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 public class CartItemRemoveRequest {
   @NotNull(message = "productId should not be empty")
-  private Integer itemId;
+  private Integer productId;
 
   @NotNull(message = "count should not be empty")
   private Integer count;

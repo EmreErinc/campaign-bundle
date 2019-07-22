@@ -62,7 +62,7 @@ public abstract class BaseTestController {
   public CampaignResponse generateCampaign(int accountId, int itemId) {
     return campaignService.addCampaign(accountId, AddCampaignRequest.builder()
         .title("other campaign")
-        .itemId(itemId)
+        .productId(itemId)
         .cartLimit(new Random().nextInt(3))
         .campaignLimit(new Random().nextInt(4) + 2)
         .requirement(new Random().nextInt(6) + 2)
@@ -75,7 +75,7 @@ public abstract class BaseTestController {
   public CampaignResponse generateCampaign(int accountId, int itemId, int cartLimit, int campaignLimit, int requirement, int gift) {
     return campaignService.addCampaign(accountId, AddCampaignRequest.builder()
         .title("other campaign")
-        .itemId(itemId)
+        .productId(itemId)
         .cartLimit(cartLimit)
         .campaignLimit(campaignLimit)
         .requirement(requirement)

@@ -15,7 +15,7 @@ import javax.validation.constraints.Size;
 public class AddCampaignRequest {
 
   @NotNull(message = "productId should not be empty")
-  private Integer itemId;
+  private Integer productId;
 
   @NotNull(message = "title should not be empty")
   @Size(min = 3, max = 255)

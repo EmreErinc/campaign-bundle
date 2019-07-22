@@ -14,7 +14,7 @@ public interface BaseService {
 
   Integer getSellerIdByAccountId(int accountId);
 
-  Integer getSellerIdByItemId(int itemId);
+  Integer getSellerIdByProductId(int itemId);
 
   Boolean isStockAvailable(int itemId, int expectedSaleAndGiftCount);
 
@@ -22,11 +22,13 @@ public interface BaseService {
 
   ItemEntity getItemEntity(int itemId);
 
-  Integer getItemStock(int itemId);
+  Integer getProductStock(int itemId);
 
-  Double getItemPrice(int itemId);
+  Double getProductPrice(int itemId);
 
-  Integer getItemCountOnCart(String cartId, int itemId);
+  Integer getProductCountOnCart(String cartId, int itemId, Optional<Integer> optionalVariantId);
+
+  Integer getTotalProductCountOnCart(String cartId, int itemId);
 
   Boolean userAvailableForCampaign(int accountId, int campaignId);
 
@@ -36,23 +38,23 @@ public interface BaseService {
 
   CampaignEntity getCampaignEntity(int campaignId);
 
-  Optional<CampaignEntity> getCampaignByItemId(int itemId);
+  Optional<CampaignEntity> getCampaignByProductId(int itemId);
 
   List<CampaignEntity> getUsedCampaignsByUserId(int userId);
 
   Boolean isCampaignLimitAvailableForAccount(int accountId, int itemId);
 
-  Optional<Integer> getCampaignItemUsageCount(int accountId, int itemId);
+  Optional<Integer> getCampaignProductUsageCount(int accountId, int itemId);
 
   Integer getCampaignLimit(int itemId);
 
-  Badge getBadgeByItemId(int itemId);
+  Badge getBadgeByProductId(int itemId);
 
   Badge getBadgeByCampaignId(int campaignId);
 
   CampaignSummary prepareCampaignEntityToList(int accountId, CampaignEntity campaignEntity);
 
-  Boolean isItemOnCart(String cartId, int itemId);
+  Boolean isProductOnCart(String cartId, int itemId);
 
   CartEntity getCartEntityById(String cartId);
 
@@ -60,11 +62,11 @@ public interface BaseService {
 
   Variant addVariant(VariantEntity variantEntity);
 
-  Optional<List<Variant>> getItemVariants(int itemId);
+  Optional<List<Variant>> getProductVariants(int itemId);
 
-  Optional<Variant> getItemVariant(int itemId, int variantId);
+  Optional<Variant> getProductVariant(int itemId, int variantId);
 
-  List<VariantSpec> getItemVariantSpecs(int itemId, int variantId);
+  List<VariantSpec> getProductVariantSpecs(int itemId, int variantId);
 
-  Integer getItemVariantStock(int variantId);
+  Integer getProductVariantStock(int variantId);
 }

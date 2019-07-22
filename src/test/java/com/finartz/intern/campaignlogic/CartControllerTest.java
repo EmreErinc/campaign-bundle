@@ -78,7 +78,7 @@ public class CartControllerTest extends BaseTestController {
     int count = 2;
 
     AddItemToCartRequest request = AddItemToCartRequest.builder()
-        .itemId(itemResponse1.getProductId())
+        .productId(itemResponse1.getProductId())
         .count(count)
         .build();
 
@@ -101,7 +101,7 @@ public class CartControllerTest extends BaseTestController {
     int count = 2;
 
     AddItemToCartRequest request = AddItemToCartRequest.builder()
-        .itemId(itemResponse1.getProductId())
+        .productId(itemResponse1.getProductId())
         .count(count)
         .build();
 
@@ -130,7 +130,7 @@ public class CartControllerTest extends BaseTestController {
 
     //test
     CartItemIncrementRequest request = CartItemIncrementRequest.builder()
-        .itemId(itemResponse1.getProductId())
+        .productId(itemResponse1.getProductId())
         .build();
 
     CartResponse<CartItemDto> cartResponse = cartService
@@ -161,7 +161,7 @@ public class CartControllerTest extends BaseTestController {
 
     //test
     CartItemIncrementRequest request = CartItemIncrementRequest.builder()
-        .itemId(itemResponse1.getProductId())
+        .productId(itemResponse1.getProductId())
         .build();
 
     CartResponse<CartItemDto> cartResponse = cartService
@@ -193,7 +193,7 @@ public class CartControllerTest extends BaseTestController {
         .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse1.getProductId())));
 
     CartItemIncrementRequest request = CartItemIncrementRequest.builder()
-        .itemId(itemResponse1.getProductId())
+        .productId(itemResponse1.getProductId())
         .build();
 
     CartResponse<CartItemDto> cartResponse = cartService
@@ -208,7 +208,7 @@ public class CartControllerTest extends BaseTestController {
 
     //test
     CartItemRemoveRequest removeRequest = CartItemRemoveRequest.builder()
-        .itemId(itemResponse1.getProductId())
+        .productId(itemResponse1.getProductId())
         .build();
 
     CartResponse<CartItemDto> cartResponseBeforeDecrement = cartService
@@ -234,7 +234,7 @@ public class CartControllerTest extends BaseTestController {
         .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse2.getProductId())));
 
     CartItemIncrementRequest request = CartItemIncrementRequest.builder()
-        .itemId(itemResponse2.getProductId())
+        .productId(itemResponse2.getProductId())
         .build();
 
     CartResponse<CartItemDto> cartResponse = cartService
@@ -248,7 +248,7 @@ public class CartControllerTest extends BaseTestController {
 
     //test
     CartItemRemoveRequest removeRequest = CartItemRemoveRequest.builder()
-        .itemId(itemResponse2.getProductId())
+        .productId(itemResponse2.getProductId())
         .build();
 
     CartResponse<CartItemDto> cartResponseBeforeDecrement = cartService
@@ -274,7 +274,7 @@ public class CartControllerTest extends BaseTestController {
         .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse1.getProductId())));
 
     CartItemIncrementRequest request = CartItemIncrementRequest.builder()
-        .itemId(itemResponse1.getProductId())
+        .productId(itemResponse1.getProductId())
         .build();
 
     CartResponse<CartItemDto> cartResponse = cartService
@@ -289,7 +289,7 @@ public class CartControllerTest extends BaseTestController {
 
     //test
     CartItemDecrementRequest decrementRequest = CartItemDecrementRequest.builder()
-        .itemId(itemResponse1.getProductId())
+        .productId(itemResponse1.getProductId())
         .build();
 
     CartResponse<CartItemDto> cartResponseBeforeDecrement = cartService
@@ -315,7 +315,7 @@ public class CartControllerTest extends BaseTestController {
         .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse2.getProductId())));
 
     CartItemIncrementRequest request = CartItemIncrementRequest.builder()
-        .itemId(itemResponse2.getProductId())
+        .productId(itemResponse2.getProductId())
         .build();
 
     CartResponse<CartItemDto> cartResponse = cartService
@@ -329,7 +329,7 @@ public class CartControllerTest extends BaseTestController {
 
     //test
     CartItemDecrementRequest decrementRequest = CartItemDecrementRequest.builder()
-        .itemId(itemResponse1.getProductId())
+        .productId(itemResponse1.getProductId())
         .build();
 
     CartResponse<CartItemDto> cartResponseBeforeDecrement = cartService
@@ -358,7 +358,7 @@ public class CartControllerTest extends BaseTestController {
         .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse.getProductId())));
 
     AddItemToCartRequest request = AddItemToCartRequest.builder()
-        .itemId(itemResponse.getProductId())
+        .productId(itemResponse.getProductId())
         .count(10)
         .build();
 
@@ -387,7 +387,7 @@ public class CartControllerTest extends BaseTestController {
         .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse.getProductId())));
 
     AddItemToCartRequest request = AddItemToCartRequest.builder()
-        .itemId(itemResponse.getProductId())
+        .productId(itemResponse.getProductId())
         .count(10)
         .build();
 

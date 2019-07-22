@@ -119,7 +119,7 @@ public class Converters {
         .requirementCount(request.getRequirement())
         .giftCount(request.getGift())
         .status(CampaignStatus.ACTIVE)
-        .productId(request.getItemId())
+        .productId(request.getProductId())
         .sellerId(sellerId)
         .build();
   }

@@ -14,7 +14,7 @@ import javax.validation.constraints.NotNull;
 public class AddStockRequest {
 
   @NotNull(message = "productId should not be empty")
-  private Integer itemId;
+  private Integer productId;
 
   @NotNull(message = "stock count should not be empty")
   private Integer stock;

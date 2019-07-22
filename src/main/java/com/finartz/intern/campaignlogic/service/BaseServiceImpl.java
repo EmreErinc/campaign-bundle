@@ -74,12 +74,12 @@ public class BaseServiceImpl implements BaseService {
   }
 
   @Override
-  public Optional<CampaignEntity> getCampaignByItemId(int itemId) {
+  public Optional<CampaignEntity> getCampaignByProductId(int itemId) {
     return campaignRepository.findByProductId(itemId);
   }
 
   @Override
-  public Integer getSellerIdByItemId(int itemId) {
+  public Integer getSellerIdByProductId(int itemId) {
     Optional<ItemEntity> optionalItemEntity = itemRepository.findById(itemId);
     if (!optionalItemEntity.isPresent()) {
       throw new ApplicationContextException(ITEM_NOT_FOUND);
@@ -116,7 +116,7 @@ public class BaseServiceImpl implements BaseService {
 
   @Override
   public Boolean isStockAvailable(int itemId, int expectedSaleAndGiftCount) {
-    return (getItemStock(itemId) - expectedSaleAndGiftCount >= 0);
+    return (getProductStock(itemId) - expectedSaleAndGiftCount >= 0);
   }
 
   @Override
@@ -136,7 +136,7 @@ public class BaseServiceImpl implements BaseService {
   }
 
   @Override
-  public Integer getItemStock(int itemId) {
+  public Integer getProductStock(int itemId) {
     Optional<List<SalesEntity>> optionalSalesEntities = salesRepository.findByProductId(itemId);
     int sumOfSales = 0;
     int sumOfGifts = 0;
@@ -172,7 +172,7 @@ public class BaseServiceImpl implements BaseService {
       return true;
     }
 
-    Optional<Integer> campaignItemUsageCount = getCampaignItemUsageCount(accountId, itemId);
+    Optional<Integer> campaignItemUsageCount = getCampaignProductUsageCount(accountId, itemId);
     //this means user did not use from campaign
     if (!campaignItemUsageCount.isPresent()) {
       return true;
@@ -182,7 +182,7 @@ public class BaseServiceImpl implements BaseService {
   }
 
   @Override
-  public Optional<Integer> getCampaignItemUsageCount(int accountId, int itemId) {
+  public Optional<Integer> getCampaignProductUsageCount(int accountId, int itemId) {
     Optional<List<SalesEntity>> optionalSalesEntities = salesRepository.findByOwnerIdAndProductId(accountId, itemId);
     Optional<CampaignEntity> optionalCampaignEntity = campaignRepository.findByProductId(itemId);
     if (!optionalCampaignEntity.isPresent()) {
@@ -263,7 +263,7 @@ public class BaseServiceImpl implements BaseService {
   }
 
   @Override
-  public Double getItemPrice(int itemId) {
+  public Double getProductPrice(int itemId) {
     Optional<ItemEntity> optionalItemEntity = itemRepository.findById(itemId);
     if (!optionalItemEntity.isPresent()) {
       throw new ApplicationContextException(ITEM_NOT_FOUND);
@@ -272,7 +272,7 @@ public class BaseServiceImpl implements BaseService {
   }
 
   @Override
-  public Badge getBadgeByItemId(int itemId) {
+  public Badge getBadgeByProductId(int itemId) {
     return extractCampaignEntityBadge(campaignRepository.findByProductId(itemId));
   }
 
@@ -301,7 +301,7 @@ public class BaseServiceImpl implements BaseService {
     optionalSalesEntities.ifPresent(salesEntities ->
         salesEntities
             .forEach(salesEntity ->
-                getCampaignByItemId(salesEntity.getProductId())
+                getCampaignByProductId(salesEntity.getProductId())
                     .ifPresent(campaignEntities::add)));
 
     return campaignEntities;
@@ -317,7 +317,7 @@ public class BaseServiceImpl implements BaseService {
   }
 
   @Override
-  public Boolean isItemOnCart(String cartId, int itemId) {
+  public Boolean isProductOnCart(String cartId, int itemId) {
     return getCartEntityById(cartId)
         .getCartItems()
         .stream()
@@ -325,24 +325,45 @@ public class BaseServiceImpl implements BaseService {
   }
 
   @Override
-  public Integer getItemCountOnCart(String cartId, int itemId) {
+  public Integer getProductCountOnCart(String cartId, int itemId, Optional<Integer> optionalVariantId) {
+    Optional<Variant> optionalVariant = Optional.empty();
+
+    if (optionalVariantId.isPresent()){
+      optionalVariant = getProductVariant(itemId, optionalVariantId.get());
+    }
+
+    List<CartItem> collect = getCartEntityById(cartId)
+        .getCartItems()
+        .stream()
+        .filter(cartItem -> cartItem.getProductId().equals(itemId))
+        .collect(Collectors.toList());
+
+    if (optionalVariant.isPresent()){
+      return collect.stream().filter(cartItem -> cartItem.getVariant().getId().equals(optionalVariantId)).mapToInt(CartItem::getSaleCount).sum();
+    }
+
+    return collect.get(0).getSaleCount();
+  }
+
+  @Override
+  public Integer getTotalProductCountOnCart(String cartId, int itemId) {
     return getCartEntityById(cartId)
         .getCartItems()
         .stream()
         .filter(cartItem -> cartItem.getProductId().equals(itemId))
-        .findFirst()
-        .map(CartItem::getSaleCount).orElse(0);
+        .mapToInt(CartItem::getSaleCount)
+        .sum();
   }
 
   @Override
   public Variant addVariant(VariantEntity variantEntity) {
     return Converters
         .variantEntityToVariant(variantRepository.save(variantEntity),
-            getItemVariantSpecs(variantEntity.getProductId(), variantEntity.getId()));
+            getProductVariantSpecs(variantEntity.getProductId(), variantEntity.getId()));
   }
 
   @Override
-  public Optional<List<Variant>> getItemVariants(int itemId) {
+  public Optional<List<Variant>> getProductVariants(int itemId) {
     Optional<List<VariantEntity>> optionalVariantEntities = variantRepository.findByProductId(itemId);
     if (!optionalVariantEntities.isPresent()) {
       return Optional.empty();
@@ -355,13 +376,13 @@ public class BaseServiceImpl implements BaseService {
             .id(variantEntity.getId())
             .price(variantEntity.getPrice())
             .stock(variantEntity.getStock())
-            .variantSpecs(getItemVariantSpecs(variantEntity.getProductId(), variantEntity.getId()))
+            .variantSpecs(getProductVariantSpecs(variantEntity.getProductId(), variantEntity.getId()))
             .build())
         .collect(Collectors.toList()));
   }
 
   @Override
-  public Optional<Variant> getItemVariant(int itemId, int variantId) {
+  public Optional<Variant> getProductVariant(int itemId, int variantId) {
     Optional<VariantEntity> optionalVariantEntity = variantRepository.findById(variantId);
     if (!optionalVariantEntity.isPresent() || !optionalVariantEntity.get().getProductId().equals(itemId)) {
       return Optional.empty();
@@ -371,12 +392,12 @@ public class BaseServiceImpl implements BaseService {
         .id(optionalVariantEntity.get().getId())
         .price(optionalVariantEntity.get().getPrice())
         .stock(optionalVariantEntity.get().getStock())
-        .variantSpecs(getItemVariantSpecs(itemId, variantId))
+        .variantSpecs(getProductVariantSpecs(itemId, variantId))
         .build());
   }
 
   @Override
-  public List<VariantSpec> getItemVariantSpecs(int itemId, int variantId) {
+  public List<VariantSpec> getProductVariantSpecs(int itemId, int variantId) {
     Optional<List<VariantSpecEntity>> optionalVariantEntities = variantSpecRepository.findByProductIdAndVariantId(itemId, variantId);
     if (!optionalVariantEntities.isPresent()) {
       return new ArrayList<>();
@@ -403,7 +424,7 @@ public class BaseServiceImpl implements BaseService {
   }
 
   @Override
-  public Integer getItemVariantStock(int variantId) {
+  public Integer getProductVariantStock(int variantId) {
     Optional<VariantEntity> optionalVariantEntity = variantRepository.findById(variantId);
     if (!optionalVariantEntity.isPresent()) {
       throw new ApplicationContextException("Variant Not Found");

@@ -89,13 +89,15 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
           .build();
       itemDetail.setBadge(badge);
 
-      accountId.ifPresent(id -> {
-        if (!isCampaignLimitAvailableForAccount(accountId.get(), Integer.valueOf(itemId))) {
-          itemDetail.setBadge(Badge.builder().build());
-        }
-      });
+      accountId.ifPresent(id -> checkCampaignAvailabilityAndSetBadge(accountId, itemId, itemDetail));
     }
     return itemDetail;
+  }
+
+  private void checkCampaignAvailabilityAndSetBadge(Optional<Integer> accountId, String itemId, ItemDetail itemDetail) {
+    if (!isCampaignLimitAvailableForAccount(accountId.get(), Integer.valueOf(itemId))) {
+      itemDetail.setBadge(Badge.builder().build());
+    }
   }
 
   @Override

@@ -15,8 +15,5 @@ public class CartItemRemoveRequest {
   @NotNull(message = "productId should not be empty")
   private Integer productId;
 
-  @NotNull(message = "count should not be empty")
-  private Integer count;
-
   private Integer variantId;
 }

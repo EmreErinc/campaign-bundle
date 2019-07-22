@@ -7,6 +7,7 @@ import com.finartz.intern.campaignlogic.model.request.AddItemToCartRequest;
 import com.finartz.intern.campaignlogic.model.request.CartItemDecrementRequest;
 import com.finartz.intern.campaignlogic.model.request.CartItemIncrementRequest;
 import com.finartz.intern.campaignlogic.model.request.CartItemRemoveRequest;
+import com.finartz.intern.campaignlogic.model.response.CartControlResponse;
 import com.finartz.intern.campaignlogic.model.response.CartResponse;
 import com.finartz.intern.campaignlogic.model.value.*;
 import com.finartz.intern.campaignlogic.repository.*;
@@ -51,7 +52,8 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
 
   @Override
   public CartResponse addToCart(int accountId, String cartId, AddItemToCartRequest request) {
-    return updateCart(accountId, cartId, request.getProductId(), request.getCount(), Optional.ofNullable(request.getVariantId()));
+
+    return updateCart(Converters.convertToCartDto(accountId, cartId, request));
   }
 
   @Override
@@ -79,7 +81,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
       optionalCartItem = collect.stream().findFirst();
     }
     if (!optionalCartItem.isPresent()) {
-      throw new ApplicationContextException("Ürün sepette bulunamadı.");
+      throw new ApplicationContextException(Messages.ITEM_NOT_FOUND_ON_CART.getValue());
     }
     cartEntity.getCartItems().remove(optionalCartItem.get());
     cartRepository.updateCart(cartEntity);
@@ -88,8 +90,8 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
 
   @Override
   public CartResponse incrementItem(int accountId, String cartId, CartItemIncrementRequest request) {
-    if (isItemAvailable(accountId, cartId, request.getProductId(), 1)) {
-      updateCart(accountId, cartId, request.getProductId(), 1, Optional.ofNullable(request.getVariantId()));
+    if (isItemAvailable(Converters.convertToCartDto(accountId, cartId, request))) {
+      updateCart(Converters.convertToCartDto(accountId, cartId, request));
     }
     return getCart(cartId);
   }
@@ -97,14 +99,10 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
   @Override
   public CartResponse decrementItem(int accountId, String cartId, CartItemDecrementRequest request) {
     if (isProductOnCart(cartId, request.getProductId())
-        && isItemAvailable(accountId, cartId, request.getProductId(), -1)) {
-      updateCart(accountId, cartId, request.getProductId(), -1, Optional.ofNullable(request.getVariantId()));
+        && isItemAvailable(Converters.convertToCartDto(accountId, cartId, request))) {
+      updateCart(Converters.convertToCartDto(accountId, cartId, request));
       if (getProductCountOnCart(cartId, request.getProductId(), Optional.ofNullable(request.getVariantId())).equals(0)) {
-        removeFromCart(accountId, cartId, CartItemRemoveRequest.builder()
-            .productId(request.getProductId())
-            .count(-1)
-            .variantId(request.getVariantId())
-            .build());
+        removeFromCart(accountId, cartId, CartItemRemoveRequest.builder().productId(request.getProductId()).variantId(request.getVariantId()).build());
       }
     }
     return getCart(cartId);
@@ -116,146 +114,129 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
         .createCart(accountId).getId();
   }
 
-  private CartResponse updateCart(int accountId, String cartId, int itemId, int count, Optional<Integer> variantId) {
-    Optional<CampaignEntity> optionalCampaignEntity = getCampaignByProductId(itemId);
+  private CartResponse updateCart(CartDto cartDto) {
+    Optional<CampaignEntity> optionalCampaignEntity = getCampaignByProductId(cartDto.getProductId());
 
     //checks campaign is available
     if (optionalCampaignEntity.isPresent()
-        && isItemAvailable(accountId, cartId, itemId, count)
+        && isItemAvailable(cartDto)
         && isCampaignAvailableGetById(optionalCampaignEntity.get().getId())
-        && atLeastOneAvailability(optionalCampaignEntity.get(), count, cartId)) {
-      CartEntity cartEntity = addItemToCartWithCampaign(optionalCampaignEntity.get(), cartId, count, variantId.orElse(0));
-      updateCartEntity(cartEntity, accountId, itemId);
+        && atLeastOneAvailability(optionalCampaignEntity.get(), cartDto.getDesiredCount(), cartDto.getCartId())) {
+      CartEntity cartEntity = addItemToCartWithCampaign(optionalCampaignEntity.get(), cartDto);
+      updateCartEntity(cartEntity, cartDto.getAccountId(), cartDto.getProductId());
     } else {
-      CartEntity cartEntity = addItemToCartOrdinary(cartId, itemId, count, variantId.orElse(0));
-      updateCartEntity(cartEntity, accountId, itemId);
+      CartEntity cartEntity = addItemToCartOrdinary(cartDto);
+      updateCartEntity(cartEntity, cartDto.getAccountId(), cartDto.getProductId());
     }
-    return getCart(cartId);
+    return getCart(cartDto.getCartId());
   }
 
-  private boolean isItemAvailable(int accountId, String cartId, int itemId, int itemCount) {
-    if (!isCampaignLimitAvailableForAccount(accountId, itemId)) {
-      return false;
-    }
-
-    if (!cartLimitAvailability(cartId, itemId, itemCount)) {
-      return false;
-    }
-    return true;
-  }
-
-  private boolean cartLimitAvailability(String cartId, int itemId, int itemCount) {
-    CartEntity cartEntity = getCartEntityById(cartId);
-    Optional<CampaignEntity> optionalCampaignEntity = getCampaignByProductId(itemId);
-    if (!optionalCampaignEntity.isPresent()) {
-      return true;
-    }
-
-    Optional<CartItem> optionalCartItem = cartEntity
-        .getCartItems()
-        .stream()
-        .filter(cartItem -> cartItem.getProductId().equals(itemId))
-        .findFirst();
-
-    int saleCount = 0;
-    if (optionalCartItem.isPresent()) {
-      saleCount = optionalCartItem.get().getSaleCount();
-    }
-    return calculateGiftCount(optionalCampaignEntity.get(), saleCount + itemCount)
-        <= (optionalCampaignEntity.get().getCartLimit() * optionalCampaignEntity.get().getGiftCount());
-  }
-
-  private CartEntity addItemToCartWithCampaign(CampaignEntity campaignEntity, String cartId, int desiredSaleCount, int variantId) {
-    CartEntity cartEntity = getCartEntityById(cartId);
+  private CartEntity addItemToCartWithCampaign(CampaignEntity campaignEntity, CartDto cartDto) {
+    CartEntity cartEntity = getCartEntityById(cartDto.getCartId());
     double itemPrice = getProductPrice(campaignEntity.getProductId());
     int itemStock = getProductStock(campaignEntity.getProductId());
 
-    Optional<Variant> optionalVariant = getProductVariant(campaignEntity.getProductId(), variantId);
+    Optional<Variant> optionalVariant = getProductVariant(campaignEntity.getProductId(), cartDto.getVariantId().orElse(0));
     Optional<List<CartItem>> optionalCartItems = getCartItems(cartEntity, campaignEntity.getProductId());
 
     //checks item on cart
     if (optionalCartItems.isPresent()) {
-      Optional<CartItem> optionalCartItem = extractItemVariant(optionalCartItems, optionalVariant);
-
-      int actualTotalGiftCount = optionalCartItems
-          .get()
-          .stream()
-          .mapToInt(cartItem -> cartItem.getCampaignParams().getActualGiftCount())
-          .sum();
-
-      //checks item variant on cart
-      if (optionalCartItem.isPresent()) {
-        int itemIndex = cartEntity.getCartItems().indexOf(optionalCartItem.get());
-        int itemOnCart = optionalCartItem.get().getSaleCount();
-        int updatedSaleCount = desiredSaleCount + itemOnCart;
-        int expectedGiftCount = calculateGiftCount(campaignEntity, updatedSaleCount);
-        int actualGiftCount = optionalCartItem.get().getCampaignParams().getActualGiftCount();
-        boolean isStockAvailable = isStockAvailable(campaignEntity.getProductId(), expectedGiftCount + updatedSaleCount);
-
-        //check item variant status and stock availability
-        if (optionalVariant.isPresent()) {
-          itemStock = optionalCartItem.get().getVariant().getStock();
-          isStockAvailable = isStockAvailable && (itemStock >= updatedSaleCount + expectedGiftCount);
-        }
-
-        SuitableSaleAndGiftCount suitableSaleAndGiftCount = SuitableSaleAndGiftCount.builder()
-            .saleCount(updatedSaleCount)
-            .giftCount(expectedGiftCount)
-            .build();
-
-        //check stock availability
-        if (!isStockAvailable || updatedSaleCount < 0) {
-          //stock is not available for direct addition, try one by one
-          suitableSaleAndGiftCount = addOneByOneToCart(campaignEntity, itemOnCart, desiredSaleCount, itemStock);
-          optionalCartItem.get().setMessageKey(Messages.CART_UPDATED.getKey());
-        }
-
-        //checks exceed cart limit
-        if ((actualTotalGiftCount + suitableSaleAndGiftCount.getGiftCount() - actualGiftCount) / campaignEntity.getGiftCount() > campaignEntity.getCartLimit()) {
-          //decrease updatedSaleCount for fit to itemStock
-          while (updatedSaleCount + actualGiftCount > itemStock) {
-            updatedSaleCount = updatedSaleCount - actualGiftCount;
-          }
-          int remainingGiftCount = (campaignEntity.getCartLimit() - (actualTotalGiftCount / campaignEntity.getGiftCount())) * campaignEntity.getGiftCount();
-
-          //if addOneByOne method gives last items on stock as gift and sale, merge them and set to sale count
-          if (suitableSaleAndGiftCount.getSaleCount() + suitableSaleAndGiftCount.getGiftCount() >= itemStock) {
-            suitableSaleAndGiftCount.setSaleCount(updatedSaleCount - remainingGiftCount);
-            optionalCartItem.get().setMessageKey(Messages.CART_UPDATED.getKey());
-          }
-
-          //save actual gift count or give possible gift count
-          if (remainingGiftCount == 0) {
-            suitableSaleAndGiftCount.setGiftCount(actualGiftCount);
-            optionalCartItem.get().setMessageKey(Messages.CART_LIMIT_EXCEED.getKey());
-          } else {
-            suitableSaleAndGiftCount.setGiftCount(remainingGiftCount);
-            optionalCartItem.get().setMessageKey(Messages.CART_LIMIT_EXCEED.getKey());
-          }
-
-          if (optionalVariant.isPresent() && getTotalProductCountOnCart(cartId, campaignEntity.getProductId()) > (campaignEntity.getGiftCount() * campaignEntity.getRequirementCount())) {
-            optionalCartItem.get().setMessageKey(Messages.CART_LIMIT_EXCEED.getKey());
-          }
-        }
-
-        optionalCartItem.get().setPrice(suitableSaleAndGiftCount.getSaleCount() * itemPrice);
-        optionalCartItem.get().setSaleCount(suitableSaleAndGiftCount.getSaleCount());
-        optionalCartItem.get().setUpdatedAt(Instant.now().toEpochMilli());
-        optionalCartItem.get().setCampaignParams(prepareCampaignParams(campaignEntity, suitableSaleAndGiftCount.getGiftCount(), suitableSaleAndGiftCount.getSaleCount()));
-
-        cartEntity.getCartItems().remove(itemIndex);
-        cartEntity.getCartItems().add(itemIndex, optionalCartItem.get());
-      } else { //item variant not found cart
-        SuitableSaleAndGiftCount suitableSaleAndGiftCount = defineSuitableSaleAndGiftCount(campaignEntity, desiredSaleCount, itemStock, optionalVariant, actualTotalGiftCount);
-        int messageKey = describeMessageKey(cartEntity.getAccountId(), campaignEntity, desiredSaleCount, suitableSaleAndGiftCount, itemStock, cartId, optionalVariant);
-        addItem(cartEntity, campaignEntity, campaignEntity.getProductId(), variantId, suitableSaleAndGiftCount, messageKey);
-      }
+      updateOptionalCartItem(campaignEntity, cartDto, cartEntity, itemPrice, itemStock, optionalVariant, optionalCartItems);
     } else { //item not found cart
-      SuitableSaleAndGiftCount suitableSaleAndGiftCount = defineSuitableSaleAndGiftCount(campaignEntity, desiredSaleCount, itemStock, optionalVariant, 0);
-      int messageKey = describeMessageKey(cartEntity.getAccountId(), campaignEntity, desiredSaleCount, suitableSaleAndGiftCount, itemStock, cartId, optionalVariant);
-      addItem(cartEntity, campaignEntity, campaignEntity.getProductId(), variantId, suitableSaleAndGiftCount, messageKey);
+      SuitableSaleAndGiftCount suitableSaleAndGiftCount = calculateSuitableSaleAndGiftCount(campaignEntity, cartDto.getDesiredCount(), itemStock, optionalVariant, 0);
+      int messageKey = describeMessageKey(cartEntity.getAccountId(), campaignEntity, cartDto.getDesiredCount(), suitableSaleAndGiftCount, itemStock, cartDto.getCartId(), optionalVariant);
+      addItemToCartEntity(cartEntity, campaignEntity, campaignEntity.getProductId(), cartDto.getVariantId().orElse(0), cartDto.getDesiredCount(), suitableSaleAndGiftCount, messageKey);
     }
     return cartEntity;
+  }
+
+  private void updateOptionalCartItem(CampaignEntity campaignEntity, CartDto cartDto, CartEntity cartEntity, double itemPrice, int itemStock, Optional<Variant> optionalVariant, Optional<List<CartItem>> optionalCartItems) {
+    Optional<CartItem> optionalCartItem = extractItemVariant(optionalCartItems, optionalVariant);
+
+    int actualTotalGiftCount = optionalCartItems
+        .get()
+        .stream()
+        .mapToInt(cartItem -> cartItem.getCampaignParams().getActualGiftCount())
+        .sum();
+
+    //checks item variant on cart
+    if (optionalCartItem.isPresent()) {
+      checkItemVariantOnCartAndAddToCartEntity(campaignEntity, cartDto.getDesiredCount(), cartEntity, itemPrice, itemStock, optionalVariant, optionalCartItem, actualTotalGiftCount);
+    } else { //item variant not found cart
+      SuitableSaleAndGiftCount suitableSaleAndGiftCount = calculateSuitableSaleAndGiftCount(campaignEntity, cartDto.getDesiredCount(), itemStock, optionalVariant, actualTotalGiftCount);
+      int messageKey = describeMessageKey(cartEntity.getAccountId(), campaignEntity, cartDto.getDesiredCount(), suitableSaleAndGiftCount, itemStock, cartDto.getCartId(), optionalVariant);
+      addItemToCartEntity(cartEntity, campaignEntity, campaignEntity.getProductId(), cartDto.getVariantId().orElse(0), cartDto.getDesiredCount(), suitableSaleAndGiftCount, messageKey);
+    }
+  }
+
+  private void checkItemVariantOnCartAndAddToCartEntity(CampaignEntity campaignEntity, int desiredSaleCount, CartEntity cartEntity, double itemPrice, int itemStock, Optional<Variant> optionalVariant, Optional<CartItem> optionalCartItem, int actualTotalGiftCount) {
+    int itemIndex = cartEntity.getCartItems().indexOf(optionalCartItem.get());
+    int itemOnCart = optionalCartItem.get().getSaleCount();
+    int updatedSaleCount = desiredSaleCount + itemOnCart;
+    int expectedGiftCount = calculateGiftCount(campaignEntity, updatedSaleCount);
+    int actualGiftCount = optionalCartItem.get().getCampaignParams().getActualGiftCount();
+    boolean isStockAvailable = isStockAvailable(campaignEntity.getProductId(), expectedGiftCount + updatedSaleCount);
+
+    //check item variant status and stock availability
+    if (optionalVariant.isPresent()) {
+      itemStock = optionalCartItem.get().getVariant().getStock();
+      isStockAvailable = isStockAvailable && (itemStock >= updatedSaleCount + expectedGiftCount);
+    }
+
+    SuitableSaleAndGiftCount suitableSaleAndGiftCount = SuitableSaleAndGiftCount.builder()
+        .saleCount(updatedSaleCount)
+        .giftCount(expectedGiftCount)
+        .build();
+
+    //check stock availability
+    if (!isStockAvailable || updatedSaleCount < 0) {
+      //stock is not available for direct addition, try one by one
+      suitableSaleAndGiftCount = addOneByOneToCart(campaignEntity, itemOnCart, desiredSaleCount, itemStock);
+      optionalCartItem.get().setMessageKey(Messages.CART_UPDATED.getKey());
+    }
+
+    //checks exceed cart limit
+    if ((actualTotalGiftCount + suitableSaleAndGiftCount.getGiftCount() - actualGiftCount) / campaignEntity.getGiftCount() > campaignEntity.getCartLimit()) {
+      calculateGiftsAccordingToLimit(campaignEntity, cartEntity.getId(), itemStock, optionalVariant, optionalCartItem, actualTotalGiftCount, updatedSaleCount, suitableSaleAndGiftCount);
+    }
+
+    optionalCartItem.get().setDesiredSaleCount(desiredSaleCount);
+    optionalCartItem.get().setPrice(suitableSaleAndGiftCount.getSaleCount() * itemPrice);
+    optionalCartItem.get().setSaleCount(suitableSaleAndGiftCount.getSaleCount());
+    optionalCartItem.get().setUpdatedAt(Instant.now().toEpochMilli());
+    optionalCartItem.get().setCampaignParams(prepareCampaignParams(campaignEntity, suitableSaleAndGiftCount.getGiftCount(), suitableSaleAndGiftCount.getSaleCount()));
+
+    cartEntity.getCartItems().remove(itemIndex);
+    cartEntity.getCartItems().add(itemIndex, optionalCartItem.get());
+  }
+
+  private void calculateGiftsAccordingToLimit(CampaignEntity campaignEntity, String cartId, int itemStock, Optional<Variant> optionalVariant, Optional<CartItem> optionalCartItem, int actualTotalGiftCount, int updatedSaleCount, SuitableSaleAndGiftCount suitableSaleAndGiftCount) {
+    int actualGiftCount = optionalCartItem.get().getCampaignParams().getActualGiftCount();
+
+    //decrease updatedSaleCount for fit to itemStock
+    while (updatedSaleCount + actualGiftCount > itemStock) {
+      updatedSaleCount = updatedSaleCount - actualGiftCount;
+    }
+    int remainingGiftCount = (campaignEntity.getCartLimit() - (actualTotalGiftCount / campaignEntity.getGiftCount())) * campaignEntity.getGiftCount();
+
+    //if addOneByOne method gives last items on stock as gift and sale, merge them and set to sale desiredCount
+    if (suitableSaleAndGiftCount.getSaleCount() + suitableSaleAndGiftCount.getGiftCount() >= itemStock) {
+      suitableSaleAndGiftCount.setSaleCount(updatedSaleCount - remainingGiftCount);
+      optionalCartItem.get().setMessageKey(Messages.CART_UPDATED.getKey());
+    }
+
+    //save actual gift desiredCount or give possible gift desiredCount
+    if (remainingGiftCount == 0) {
+      suitableSaleAndGiftCount.setGiftCount(actualGiftCount);
+      optionalCartItem.get().setMessageKey(Messages.CART_LIMIT_EXCEED.getKey());
+    } else {
+      suitableSaleAndGiftCount.setGiftCount(remainingGiftCount);
+      optionalCartItem.get().setMessageKey(Messages.CART_LIMIT_EXCEED.getKey());
+    }
+
+    if (optionalVariant.isPresent() && getTotalProductCountOnCart(cartId, campaignEntity.getProductId()) > (campaignEntity.getGiftCount() * campaignEntity.getRequirementCount())) {
+      optionalCartItem.get().setMessageKey(Messages.CART_LIMIT_EXCEED.getKey());
+    }
   }
 
   private Integer describeMessageKey(int accountId, CampaignEntity campaignEntity, int desiredSaleCount, SuitableSaleAndGiftCount suitableSaleAndGiftCount, int stock, String cartId, Optional<Variant> optionalVariant) {
@@ -274,7 +255,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
     return Messages.EMPTY.getKey();
   }
 
-  private CartEntity addItem(CartEntity cartEntity, CampaignEntity campaignEntity, int itemId, int variantId, SuitableSaleAndGiftCount suitableSaleAndGiftCount, int messageKey) {
+  private CartEntity addItemToCartEntity(CartEntity cartEntity, CampaignEntity campaignEntity, int itemId, int variantId, int desiredSaleCount, SuitableSaleAndGiftCount suitableSaleAndGiftCount, int messageKey) {
     int sellerId = getSellerIdByProductId(itemId);
     double itemPrice = getProductPrice(itemId);
     Optional<Variant> optionalVariant = getProductVariant(itemId, variantId);
@@ -284,6 +265,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
         .add(CartItem.builder()
             .productId(campaignEntity.getProductId())
             .sellerId(sellerId)
+            .desiredSaleCount(desiredSaleCount)
             .saleCount(suitableSaleAndGiftCount.getSaleCount())
             .addedAt(Instant.now().toEpochMilli())
             .hasCampaign(true)
@@ -297,7 +279,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
     return cartEntity;
   }
 
-  private SuitableSaleAndGiftCount defineSuitableSaleAndGiftCount(CampaignEntity campaignEntity, int desiredSaleCount, int itemStock, Optional<Variant> optionalVariant, int actualTotalGiftCount) {
+  private SuitableSaleAndGiftCount calculateSuitableSaleAndGiftCount(CampaignEntity campaignEntity, int desiredSaleCount, int itemStock, Optional<Variant> optionalVariant, int actualTotalGiftCount) {
     int giftCount = calculateGiftCount(campaignEntity, desiredSaleCount);
     boolean isStockAvailable = isStockAvailable(campaignEntity.getProductId(), giftCount + desiredSaleCount);
 
@@ -319,17 +301,21 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
     }
 
     if ((actualTotalGiftCount + suitableSaleAndGiftCount.getGiftCount()) / campaignEntity.getGiftCount() > campaignEntity.getCartLimit()) {
-      int remainingGiftCount = (campaignEntity.getCartLimit() - (actualTotalGiftCount / campaignEntity.getGiftCount())) * campaignEntity.getGiftCount();
-
-      //if addOneByOne method gives last items on stock as gift and sale, merge them and set to sale count
-      if (suitableSaleAndGiftCount.getSaleCount() + suitableSaleAndGiftCount.getGiftCount() >= itemStock) {
-        suitableSaleAndGiftCount.setSaleCount(suitableSaleAndGiftCount.getSaleCount() + suitableSaleAndGiftCount.getGiftCount() - remainingGiftCount);
-      }
-
-      suitableSaleAndGiftCount.setGiftCount(remainingGiftCount);
+      calculateGiftsAccordingToLimit(campaignEntity, itemStock, actualTotalGiftCount, suitableSaleAndGiftCount);
     }
 
     return suitableSaleAndGiftCount;
+  }
+
+  private void calculateGiftsAccordingToLimit(CampaignEntity campaignEntity, int itemStock, int actualTotalGiftCount, SuitableSaleAndGiftCount suitableSaleAndGiftCount) {
+    int remainingGiftCount = (campaignEntity.getCartLimit() - (actualTotalGiftCount / campaignEntity.getGiftCount())) * campaignEntity.getGiftCount();
+
+    //if addOneByOne method gives last items on stock as gift and sale, merge them and set to sale desiredCount
+    if (suitableSaleAndGiftCount.getSaleCount() + suitableSaleAndGiftCount.getGiftCount() >= itemStock) {
+      suitableSaleAndGiftCount.setSaleCount(suitableSaleAndGiftCount.getSaleCount() + suitableSaleAndGiftCount.getGiftCount() - remainingGiftCount);
+    }
+
+    suitableSaleAndGiftCount.setGiftCount(remainingGiftCount);
   }
 
   private SuitableSaleAndGiftCount addOneByOneToCart(CampaignEntity campaignEntity, int itemOnCart, int desiredSaleCount, int itemStock) {
@@ -338,20 +324,12 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
 
     for (suitableSaleCount = 0; suitableSaleCount < desiredSaleCount; suitableSaleCount++) {
       suitableGiftCount = calculateGiftCount(campaignEntity, itemOnCart + suitableSaleCount);
-      //stock exactly fit to give suitable sale count and gift count
+      //stock exactly fit to give suitable sale desiredCount and gift desiredCount
       if (itemStock - (itemOnCart + suitableGiftCount + suitableSaleCount) == 0) {
         break;
       } else if (itemStock - (itemOnCart + suitableGiftCount + suitableSaleCount) < 0) { //suitable values exceeds stock
         //decrease for find max available value
-        suitableSaleCount -= 1;
-
-        //calculate available gift count
-        suitableGiftCount = calculateGiftCount(campaignEntity, itemOnCart + suitableSaleCount);
-
-        int remainingStock = itemStock - (itemOnCart + suitableSaleCount + suitableGiftCount);
-        if (remainingStock > 0 && remainingStock <= campaignEntity.getGiftCount() && suitableSaleCount + remainingStock <= desiredSaleCount) {
-          suitableSaleCount += remainingStock;
-        }
+        decreaseAndCalculateSuitableCount(suitableSaleCount, suitableGiftCount, campaignEntity, itemOnCart, itemStock, desiredSaleCount);
         break;
       }
     }
@@ -362,15 +340,17 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
         .build();
   }
 
-  private int calculateGiftCount(CampaignEntity campaignEntity, int saleCount) {
-    int requirementCount = campaignEntity.getRequirementCount();
-    int quotient = saleCount / requirementCount;
-    int possibleGiftCount = quotient * campaignEntity.getGiftCount();
+  private void decreaseAndCalculateSuitableCount(int suitableSaleCount, int suitableGiftCount, CampaignEntity campaignEntity, int itemOnCart, int itemStock, int desiredSaleCount) {
+    //decrease for find max available value
+    suitableSaleCount -= 1;
 
-    if (possibleGiftCount > (campaignEntity.getGiftCount() * campaignEntity.getCartLimit())) {
-      return (campaignEntity.getGiftCount() * campaignEntity.getCartLimit());
+    //calculate available gift desiredCount
+    suitableGiftCount = calculateGiftCount(campaignEntity, itemOnCart + suitableSaleCount);
+
+    int remainingStock = itemStock - (itemOnCart + suitableSaleCount + suitableGiftCount);
+    if (remainingStock > 0 && remainingStock <= campaignEntity.getGiftCount() && suitableSaleCount + remainingStock <= desiredSaleCount) {
+      suitableSaleCount += remainingStock;
     }
-    return possibleGiftCount;
   }
 
   private boolean atLeastOneAvailability(CampaignEntity campaignEntity, int itemCount, String cartId) {
@@ -379,25 +359,28 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
 
     Optional<CartEntity> optionalCartEntity = cartRepository.findCart(cartId);
     if (optionalCartEntity.isPresent()) {
-      Optional<CartItem> optionalCartItem = optionalCartEntity
-          .get()
-          .getCartItems()
-          .stream()
-          .filter(cartItem -> cartItem.getProductId().equals(campaignEntity.getProductId()))
-          .findFirst();
-      if (optionalCartItem.isPresent()) {
-        itemOnCart = optionalCartItem.get().getSaleCount();
-        giftOnCart = optionalCartItem.get().getCampaignParams().getActualGiftCount();
-      }
+      getItemSaleAndGiftCountOnCart(optionalCartEntity, campaignEntity, itemOnCart, giftOnCart);
     }
 
     int itemStock = getProductStock(campaignEntity.getProductId());
-
     if (itemCount + itemOnCart + giftOnCart > itemStock) {
       SuitableSaleAndGiftCount suitableSaleAndGiftCount = addOneByOneToCart(campaignEntity, itemOnCart, itemCount, getProductStock(campaignEntity.getProductId()));
       return suitableSaleAndGiftCount.getGiftCount() >= campaignEntity.getGiftCount();
     }
     return true;
+  }
+
+  private void getItemSaleAndGiftCountOnCart(Optional<CartEntity> optionalCartEntity, CampaignEntity campaignEntity, int itemOnCart, int giftOnCart) {
+    Optional<CartItem> optionalCartItem = optionalCartEntity
+        .get()
+        .getCartItems()
+        .stream()
+        .filter(cartItem -> cartItem.getProductId().equals(campaignEntity.getProductId()))
+        .findFirst();
+    if (optionalCartItem.isPresent()) {
+      itemOnCart = optionalCartItem.get().getSaleCount();
+      giftOnCart = optionalCartItem.get().getCampaignParams().getActualGiftCount();
+    }
   }
 
   private CampaignParams prepareCampaignParams(CampaignEntity campaignEntity, int giftCount, int itemCount) {
@@ -431,61 +414,70 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
     return Optional.ofNullable(cartItems);
   }
 
-  private CartEntity addItemToCartOrdinary(String cartId, int itemId, int desiredSaleCount, int variantId) {
-    CartEntity cartEntity = getCartEntityById(cartId);
-    double itemPrice = getProductPrice(itemId);
-    int itemStock = getProductStock(itemId);
-    Optional<Variant> optionalVariant = getProductVariant(itemId, variantId);
+  private CartEntity addItemToCartOrdinary(CartDto cartDto) {
+    CartEntity cartEntity = getCartEntityById(cartDto.getCartId());
+    int itemStock = getProductStock(cartDto.getProductId());
+    Optional<Variant> optionalVariant = getProductVariant(cartDto.getProductId(), cartDto.getVariantId().orElse(0));
 
-    Optional<List<CartItem>> optionalCartItems = getCartItems(cartEntity, itemId);
+    Optional<List<CartItem>> optionalCartItems = getCartItems(cartEntity, cartDto.getProductId());
     //checks item on cart
     if (optionalCartItems.isPresent()) {
-      Optional<CartItem> optionalCartItem = extractItemVariant(optionalCartItems, optionalVariant);
-
-      //checks item variant on cart
-      if (optionalCartItem.isPresent()) {
-        int itemIndex = cartEntity.getCartItems().indexOf(optionalCartItem.get());
-        int itemOnCart = optionalCartItem.get().getSaleCount();
-        boolean isStockAvailable = isStockAvailable(itemId, itemOnCart + desiredSaleCount);
-
-        //check item variant status and stock availability
-        if (optionalVariant.isPresent()) {
-          itemStock = optionalCartItem.get().getVariant().getStock();
-          isStockAvailable = isStockAvailable && itemStock >= optionalCartItem.get().getSaleCount() + desiredSaleCount;
-        }
-
-        //check stock availability
-        if (!isStockAvailable) {
-          //stock is not available for direct addition, try one by one
-          desiredSaleCount = addOneByOneToCart(itemOnCart, itemStock);
-          optionalCartItem.get().setMessageKey(Messages.CART_UPDATED.getKey());
-        }
-        cartEntity.getCartItems().remove(itemIndex);
-        cartEntity.getCartItems().add(itemIndex, setCountAndPriceToCartItem(optionalCartItem.get(), desiredSaleCount, itemPrice));
-      } else {
-        addItem(cartEntity, itemId, variantId, desiredSaleCount);
-      }
+      updateItemQuantity(cartDto, cartEntity, itemStock, optionalVariant, optionalCartItems);
     } else {
-      addItem(cartEntity, itemId, variantId, desiredSaleCount);
+      addItemToCartEntity(cartEntity, cartDto);
     }
     return cartEntity;
   }
 
-  private CartEntity addItem(CartEntity cartEntity, int itemId, int variantId, int desiredSaleCount) {
-    int sellerId = getSellerIdByProductId(itemId);
-    double itemPrice = getProductPrice(itemId);
-    int itemStock = getProductStock(itemId);
-    Optional<Variant> optionalVariant = getProductVariant(itemId, variantId);
-    boolean isStockAvailable = isStockAvailable(itemId, desiredSaleCount);
+  private void updateItemQuantity(CartDto cartDto, CartEntity cartEntity, int itemStock, Optional<Variant> optionalVariant, Optional<List<CartItem>> optionalCartItems) {
+    double itemPrice = getProductPrice(cartDto.getProductId());
+    Optional<CartItem> optionalCartItem = extractItemVariant(optionalCartItems, optionalVariant);
+
+    //checks item variant on cart
+    if (optionalCartItem.isPresent()) {
+      updateIndexOfItemVariant(cartDto.getProductId(), cartDto.getDesiredCount(), cartEntity, itemPrice, itemStock, optionalVariant, optionalCartItem);
+    } else {
+      addItemToCartEntity(cartEntity, cartDto);
+    }
+  }
+
+  private void updateIndexOfItemVariant(int itemId, int desiredSaleCount, CartEntity cartEntity, double itemPrice, int itemStock, Optional<Variant> optionalVariant, Optional<CartItem> optionalCartItem) {
+    int itemIndex = cartEntity.getCartItems().indexOf(optionalCartItem.get());
+    int itemOnCart = optionalCartItem.get().getSaleCount();
+    boolean isStockAvailable = isStockAvailable(itemId, itemOnCart + desiredSaleCount);
+
+    //check item variant status and stock availability
+    if (optionalVariant.isPresent()) {
+      itemStock = optionalCartItem.get().getVariant().getStock();
+      isStockAvailable = isStockAvailable && itemStock >= optionalCartItem.get().getSaleCount() + desiredSaleCount;
+    }
+
+    //check stock availability
+    if (!isStockAvailable) {
+      //stock is not available for direct addition, try one by one
+      desiredSaleCount = addOneByOneToCart(itemOnCart, itemStock);
+      optionalCartItem.get().setMessageKey(Messages.CART_UPDATED.getKey());
+    }
+    cartEntity.getCartItems().remove(itemIndex);
+    cartEntity.getCartItems().add(itemIndex, setCountAndPriceToCartItem(optionalCartItem.get(), desiredSaleCount, itemPrice));
+  }
+
+  private CartEntity addItemToCartEntity(CartEntity cartEntity, CartDto cartDto) {
+    int sellerId = getSellerIdByProductId(cartDto.getProductId());
+    double itemPrice = getProductPrice(cartDto.getProductId());
+    int itemStock = getProductStock(cartDto.getProductId());
+    Optional<Variant> optionalVariant = getProductVariant(cartDto.getProductId(), cartDto.getVariantId().orElse(0));
+    boolean isStockAvailable = isStockAvailable(cartDto.getProductId(), cartDto.getDesiredCount());
+    int desiredSaleCount = cartDto.getDesiredCount();
 
     //check item variant status and stock availability
     if (optionalVariant.isPresent()) {
       itemStock = optionalVariant.get().getStock();
-      isStockAvailable = isStockAvailable && getProductVariantStock(variantId) >= desiredSaleCount;
+      isStockAvailable = isStockAvailable && getProductVariantStock(cartDto.getVariantId().get()) >= desiredSaleCount;
     }
 
     //checks stock availability
-    if (!isStockAvailable || desiredSaleCount <= 0) {
+    if (!isStockAvailable || cartDto.getDesiredCount() <= 0) {
       //stock is not available, try one by one
       desiredSaleCount = addOneByOneToCart(0, itemStock);
     }
@@ -493,8 +485,9 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
     cartEntity
         .getCartItems()
         .add(CartItem.builder()
-            .productId(itemId)
+            .productId(cartDto.getProductId())
             .sellerId(sellerId)
+            .desiredSaleCount(cartDto.getDesiredCount())
             .saleCount(desiredSaleCount)
             .addedAt(Instant.now().toEpochMilli())
             .hasCampaign(false)
@@ -545,5 +538,17 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
               .cartItems(cartEntity.getCartItems())
               .build());
     }
+  }
+
+  public CartResponse recalculateCartItems(int accountId, String cartId, CartControlResponse cartControlResponse){
+    CartDto cartDto = CartDto.builder()
+        .accountId(accountId)
+        .cartId(cartId)
+        .productId(cartControlResponse.getProductId())
+        .variantId(Optional.ofNullable(cartControlResponse.getVariantId()))
+        .desiredCount(cartControlResponse.getDesiredSaleCount())
+        .build();
+
+    return updateCart(cartDto);
   }
 }

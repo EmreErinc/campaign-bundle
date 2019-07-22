@@ -2,9 +2,12 @@ package com.finartz.intern.campaignlogic.service;
 
 import com.finartz.intern.campaignlogic.model.entity.CartEntity;
 import com.finartz.intern.campaignlogic.model.entity.SalesEntity;
+import com.finartz.intern.campaignlogic.model.response.ControlResponse;
 import com.finartz.intern.campaignlogic.model.response.SaleResponse;
+import com.finartz.intern.campaignlogic.model.value.Messages;
 import com.finartz.intern.campaignlogic.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContextException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -14,6 +17,7 @@ import java.util.List;
 @Service
 public class SalesServiceImpl extends BaseServiceImpl implements SalesService {
   private SalesRepository salesRepository;
+  private CartServiceImpl cartServiceImpl;
 
   @Autowired
   public SalesServiceImpl(CartRepository cartRepository,
@@ -25,7 +29,8 @@ public class SalesServiceImpl extends BaseServiceImpl implements SalesService {
                           VariantRepository variantRepository,
                           VariantSpecRepository variantSpecRepository,
                           SpecDataRepository specDataRepository,
-                          SpecDetailRepository specDetailRepository) {
+                          SpecDetailRepository specDetailRepository,
+                          CartServiceImpl cartServiceImpl) {
     super(accountRepository,
         sellerRepository,
         campaignRepository,
@@ -36,6 +41,7 @@ public class SalesServiceImpl extends BaseServiceImpl implements SalesService {
         variantSpecRepository,
         specDataRepository,
         specDetailRepository);
+    this.cartServiceImpl = cartServiceImpl;
     this.salesRepository = salesRepository;
   }
 
@@ -44,6 +50,15 @@ public class SalesServiceImpl extends BaseServiceImpl implements SalesService {
     List<Integer> saleIds = new ArrayList<>();
     List<SalesEntity> salesEntities = new ArrayList<>();
     CartEntity cartEntity = getCartEntityById(cartId);
+
+    ControlResponse unfitCartItems = getUnfitCartItems(cartEntity);
+    if (!unfitCartItems.getCartControlResponses().isEmpty()) {
+      unfitCartItems
+          .getCartControlResponses()
+          .forEach(cartControlResponse -> cartServiceImpl.recalculateCartItems(accountId, cartId, cartControlResponse));
+
+      throw new ApplicationContextException(Messages.ONE_OR_MORE_PRODUCT_ITEM_UNFIT.getValue());
+    }
 
     cartEntity
         .getCartItems()
@@ -61,6 +76,7 @@ public class SalesServiceImpl extends BaseServiceImpl implements SalesService {
           if (cartItem.getHasVariant()) {
             sale.setVariantId(cartItem.getVariant().getId());
           }
+          sale.setVariantId(cartItem.getHasVariant() ? cartItem.getVariant().getId() : 0);
           salesEntities.add(salesRepository.save(sale));
         });
 

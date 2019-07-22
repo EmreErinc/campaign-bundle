@@ -14,7 +14,10 @@ public class CartItem {
   @NotNull(message = "sellerId should not be empty")
   private Integer sellerId;
 
-  @NotNull(message = "count should not be empty")
+  @NotNull(message = "desiredSaleCount should not be empty")
+  private Integer desiredSaleCount;
+
+  @NotNull(message = "desiredCount should not be empty")
   private Integer saleCount;
 
   @NotNull(message = "price should not be empty")

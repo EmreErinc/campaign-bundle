@@ -4,6 +4,8 @@ import com.finartz.intern.campaignlogic.model.entity.CampaignEntity;
 import com.finartz.intern.campaignlogic.model.entity.CartEntity;
 import com.finartz.intern.campaignlogic.model.entity.ItemEntity;
 import com.finartz.intern.campaignlogic.model.entity.VariantEntity;
+import com.finartz.intern.campaignlogic.model.response.CartControlResponse;
+import com.finartz.intern.campaignlogic.model.response.ControlResponse;
 import com.finartz.intern.campaignlogic.model.value.*;
 
 import java.util.List;
@@ -18,7 +20,13 @@ public interface BaseService {
 
   Boolean isStockAvailable(int itemId, int expectedSaleAndGiftCount);
 
+  Boolean cartLimitAvailability(String cartId, int itemId, int itemCount);
+
+  Integer calculateGiftCount(CampaignEntity campaignEntity, int saleCount);
+
   Boolean isItemHasCampaign(int itemId);
+
+  Boolean isItemAvailable(CartDto cartDto);
 
   ItemEntity getItemEntity(int itemId);
 
@@ -69,4 +77,8 @@ public interface BaseService {
   List<VariantSpec> getProductVariantSpecs(int itemId, int variantId);
 
   Integer getProductVariantStock(int variantId);
+
+  ControlResponse getUnfitCartItems(CartEntity cartEntity);
+
+  List<CartControlResponse> controlCartItems(CartEntity cartEntity);
 }

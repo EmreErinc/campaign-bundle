@@ -8,6 +8,7 @@ import com.finartz.intern.campaignlogic.security.Utils;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class Converters {
@@ -170,6 +171,7 @@ public class Converters {
             .hasVariant(cartItem.getHasVariant())
             .variant(cartItem.getVariant())
             .price(cartItem.getPrice())
+            .desiredSaleCount(cartItem.getDesiredSaleCount())
             .message(cartItem.getMessageKey() == null ? Messages.EMPTY.getValue() : Messages.values()[cartItem.getMessageKey()].getValue())
             .build())
         .collect(Collectors.toList());
@@ -190,6 +192,36 @@ public class Converters {
         .stock(variantEntity.getStock())
         .price(variantEntity.getPrice())
         .variantSpecs(variantSpecs)
+        .build();
+  }
+
+  public static CartDto convertToCartDto(int accountId, String cartId, AddItemToCartRequest request){
+    return CartDto.builder()
+        .accountId(accountId)
+        .cartId(cartId)
+        .productId(request.getProductId())
+        .desiredCount(request.getCount())
+        .variantId(Optional.ofNullable(request.getVariantId()))
+        .build();
+  }
+
+  public static CartDto convertToCartDto(int accountId, String cartId, CartItemIncrementRequest request){
+    return CartDto.builder()
+        .accountId(accountId)
+        .cartId(cartId)
+        .productId(request.getProductId())
+        .desiredCount(1)
+        .variantId(Optional.ofNullable(request.getVariantId()))
+        .build();
+  }
+
+  public static CartDto convertToCartDto(int accountId, String cartId, CartItemDecrementRequest request){
+    return CartDto.builder()
+        .accountId(accountId)
+        .cartId(cartId)
+        .productId(request.getProductId())
+        .desiredCount(-1)
+        .variantId(Optional.ofNullable(request.getVariantId()))
         .build();
   }
 }

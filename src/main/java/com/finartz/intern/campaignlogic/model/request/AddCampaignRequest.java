@@ -33,9 +33,9 @@ public class AddCampaignRequest {
   @NotNull(message = "campaignLimit should not be empty")
   private Integer campaignLimit;
 
-  @NotNull(message = "requirement count should not be empty")
+  @NotNull(message = "requirement desiredCount should not be empty")
   private Integer requirement;
 
-  @NotNull(message = "gift count should not be empty")
+  @NotNull(message = "gift desiredCount should not be empty")
   private Integer gift;
 }

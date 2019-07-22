@@ -16,6 +16,6 @@ public class AddStockRequest {
   @NotNull(message = "productId should not be empty")
   private Integer productId;
 
-  @NotNull(message = "stock count should not be empty")
+  @NotNull(message = "stock desiredCount should not be empty")
   private Integer stock;
 }

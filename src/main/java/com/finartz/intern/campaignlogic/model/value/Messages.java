@@ -9,6 +9,8 @@ public enum Messages {
   CART_AVAILABLE(100, "Sepet satış için yeterli."),
   PRODUCT_STOCK_NOT_AVAILABLE(101, "Ürün stoğu yetersiz olduğu için satış iptal edildi."),
   PRODUCT_STOCK_VARIANT_NOT_AVAILABLE(102, "Ürün seçenek stoğu yetersiz olduğu için satış iptal edildi."),
+  PRODUCT_STOCK_INCREASE(103,"Ürün stoğunda artış olduğu için sepetiniz güncellendi."),
+  PRODUCT_STOCK_VARIANT_INCREASE(104, "Ürün seçenek stoğunda artış olduğu için sepet güncellendi."),
 
   ONE_OR_MORE_PRODUCT_ITEM_UNFIT(200, "Bir veya daha fazla ürünle ilgili bir sorun oluştu."),
 

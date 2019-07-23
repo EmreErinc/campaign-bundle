@@ -185,32 +185,11 @@ public class BaseServiceImpl implements BaseService {
 
   @Override
   public Integer getProductStock(int itemId) {
-    Optional<List<SalesEntity>> optionalSalesEntities = salesRepository.findByProductId(itemId);
-    int sumOfSales = 0;
-    int sumOfGifts = 0;
-
-    //if no item sold
-    if (optionalSalesEntities.isPresent()) {
-      sumOfSales = optionalSalesEntities
-          .get()
-          .stream()
-          .filter(salesEntity -> salesEntity.getSaleCount() != null)
-          .collect(Collectors.toList())
-          .stream()
-          .mapToInt(SalesEntity::getSaleCount).sum();
-      sumOfGifts = optionalSalesEntities
-          .get()
-          .stream()
-          .filter(salesEntity -> salesEntity.getGiftCount() != null)
-          .collect(Collectors.toList())
-          .stream()
-          .mapToInt(SalesEntity::getGiftCount).sum();
-    }
     Optional<ItemEntity> optionalItemEntity = itemRepository.findById(itemId);
     if (!optionalItemEntity.isPresent()) {
       throw new ApplicationContextException(ITEM_NOT_FOUND);
     }
-    return optionalItemEntity.get().getStock() - (sumOfSales + sumOfGifts);
+    return optionalItemEntity.get().getStock();
   }
 
   @Override
@@ -520,39 +499,6 @@ public class BaseServiceImpl implements BaseService {
           if (cartItem.getHasCampaign()) {
             checkCampaignItemStock(cartItem, cartControlResponse);
           }
-
-          //check general item stock
-          /*if (!isStockAvailable(cartItem.getProductId(), cartItem.getSaleCount())) {
-            cartControlResponse.setIsAvailableForContinue(false);
-            cartControlResponse.setCauseMessage(Messages.PRODUCT_STOCK_NOT_AVAILABLE.getValue());
-            return cartControlResponse;
-          }
-
-          //check item variant stock
-          if (cartItem.getHasVariant()) {
-            //check campaign status
-            if (cartItem.getHasCampaign()) { //campaign exists for item
-              if ((cartItem.getCampaignParams().getTotalItemCount() + cartItem.getCampaignParams().getActualGiftCount()) > getProductVariantStock(cartItem.getVariant().getId())) {
-                cartControlResponse.setIsAvailableForContinue(false);
-                cartControlResponse.setCauseMessage(Messages.PRODUCT_STOCK_VARIANT_NOT_AVAILABLE.getValue());
-                return cartControlResponse;
-              }
-            } else if (cartItem.getSaleCount() > getProductVariantStock(cartItem.getVariant().getId())) { //campaign not exists for item
-              cartControlResponse.setIsAvailableForContinue(false);
-              cartControlResponse.setCauseMessage(Messages.PRODUCT_STOCK_VARIANT_NOT_AVAILABLE.getValue());
-              return cartControlResponse;
-            }
-          }
-
-          //check item campaign params
-          if (cartItem.getHasCampaign()) {
-            if ((cartItem.getCampaignParams().getTotalItemCount() + cartItem.getCampaignParams().getActualGiftCount()) > getProductStock(cartItem.getProductId())) {
-              cartControlResponse.setIsAvailableForContinue(false);
-              cartControlResponse.setCauseMessage(Messages.PRODUCT_STOCK_NOT_AVAILABLE.getValue());
-              return cartControlResponse;
-            }
-          }*/
-
           return cartControlResponse;
         }).collect(Collectors.toList());
   }
@@ -560,6 +506,8 @@ public class BaseServiceImpl implements BaseService {
   private void checkCampaignItemStock(CartItem cartItem, CartControlResponse cartControlResponse) {
     if ((cartItem.getCampaignParams().getTotalItemCount() + cartItem.getCampaignParams().getActualGiftCount()) > getProductStock(cartItem.getProductId())) {
       setMessageAsNotAvailable(cartControlResponse, Messages.PRODUCT_STOCK_NOT_AVAILABLE);
+    } else if (cartItem.getDesiredSaleCount() > cartItem.getCampaignParams().getTotalItemCount() && (cartItem.getDesiredSaleCount() <= getProductStock(cartItem.getProductId()))) {
+      setMessageAsNotAvailable(cartControlResponse, Messages.PRODUCT_STOCK_INCREASE);
     }
   }
 
@@ -568,17 +516,27 @@ public class BaseServiceImpl implements BaseService {
       checkCampaignItemVariantStock(cartItem, cartControlResponse);
     } else if (cartItem.getSaleCount() > getProductVariantStock(cartItem.getVariant().getId())) { //campaign not exists for item
       setMessageAsNotAvailable(cartControlResponse, Messages.PRODUCT_STOCK_VARIANT_NOT_AVAILABLE);
+    } else if (cartItem.getDesiredSaleCount() > cartItem.getSaleCount() && cartItem.getDesiredSaleCount() <= getProductVariantStock(cartItem.getVariant().getId())) {
+      setMessageAsNotAvailable(cartControlResponse, Messages.PRODUCT_STOCK_VARIANT_INCREASE);
     }
   }
 
   private void checkCampaignItemVariantStock(CartItem cartItem, CartControlResponse cartControlResponse) {
     if ((cartItem.getCampaignParams().getTotalItemCount() + cartItem.getCampaignParams().getActualGiftCount()) > getProductVariantStock(cartItem.getVariant().getId())) {
       setMessageAsNotAvailable(cartControlResponse, Messages.PRODUCT_STOCK_VARIANT_NOT_AVAILABLE);
+    } else if (cartItem.getDesiredSaleCount() > cartItem.getCampaignParams().getTotalItemCount() && cartControlResponse.getDesiredSaleCount() < getProductVariantStock(cartItem.getVariant().getId())) {
+      setMessageAsNotAvailable(cartControlResponse, Messages.PRODUCT_STOCK_VARIANT_INCREASE);
     }
   }
 
   private void setMessageAsNotAvailable(CartControlResponse cartControlResponse, Messages message) {
     cartControlResponse.setIsAvailableForContinue(false);
     cartControlResponse.setCauseMessage(message.getValue());
+  }
+
+  @Override
+  public void decreaseItemStock(int itemId, Optional<Integer> variantId, int soldCount) {
+    itemRepository.addStock(-soldCount, itemId);
+    variantId.ifPresent(id -> variantRepository.addStock(-soldCount, id));
   }
 }

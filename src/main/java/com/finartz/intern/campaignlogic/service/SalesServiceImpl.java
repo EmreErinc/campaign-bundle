@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class SalesServiceImpl extends BaseServiceImpl implements SalesService {
@@ -77,7 +78,11 @@ public class SalesServiceImpl extends BaseServiceImpl implements SalesService {
             sale.setVariantId(cartItem.getVariant().getId());
           }
           sale.setVariantId(cartItem.getHasVariant() ? cartItem.getVariant().getId() : 0);
-          salesEntities.add(salesRepository.save(sale));
+          boolean addition = salesEntities.add(salesRepository.save(sale));
+          if (addition) {
+            int soldCount = sale.getSaleCount() + (sale.getGiftCount() == null ? 0 : sale.getGiftCount());
+            decreaseItemStock(cartItem.getProductId(), cartItem.getVariant() == null ? Optional.empty() : Optional.of(cartItem.getVariant().getId()), soldCount);
+          }
         });
 
     salesEntities

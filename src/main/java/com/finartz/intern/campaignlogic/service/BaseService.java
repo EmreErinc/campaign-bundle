@@ -81,4 +81,6 @@ public interface BaseService {
   ControlResponse getUnfitCartItems(CartEntity cartEntity);
 
   List<CartControlResponse> controlCartItems(CartEntity cartEntity);
+
+  void decreaseItemStock(int itemId, Optional<Integer> variantId, int soldCount);
 }

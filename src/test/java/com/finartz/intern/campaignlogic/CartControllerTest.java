@@ -1,25 +1,22 @@
 package com.finartz.intern.campaignlogic;
 
-import com.finartz.intern.campaignlogic.model.request.*;
-import com.finartz.intern.campaignlogic.model.response.CartResponse;
+import com.finartz.intern.campaignlogic.model.entity.CampaignEntity;
 import com.finartz.intern.campaignlogic.model.response.ItemResponse;
 import com.finartz.intern.campaignlogic.model.response.RegisterResponse;
-import com.finartz.intern.campaignlogic.model.response.SellerResponse;
-import com.finartz.intern.campaignlogic.model.value.CartItemDto;
-import com.finartz.intern.campaignlogic.service.CartService;
-import com.finartz.intern.campaignlogic.service.SalesService;
-import com.finartz.intern.campaignlogic.service.SellerService;
+import com.finartz.intern.campaignlogic.model.value.CampaignStatus;
+import com.finartz.intern.campaignlogic.repository.CampaignRepository;
+import com.finartz.intern.campaignlogic.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import static org.junit.Assert.*;
 
 @Slf4j
 @TestPropertySource(locations = {"classpath:application-test.properties"})
@@ -28,7 +25,10 @@ import static org.junit.Assert.*;
 @ActiveProfiles(value = "test")
 public class CartControllerTest extends BaseTestController {
 
-  @Autowired
+  //@Autowired
+  //private MockMvc mockMvc;
+
+  @MockBean
   private CartService cartService;
 
   @Autowired
@@ -37,6 +37,15 @@ public class CartControllerTest extends BaseTestController {
   @Autowired
   private SellerService sellerService;
 
+  @Mock
+  private CartServiceImpl cartServiceImpl;
+
+  @Mock
+  private CampaignRepository campaignRepository;
+
+  @Mock
+  private BaseService baseService;
+
   private RegisterResponse sellerAccountRegisterResponse;
   private String cartId;
 
@@ -44,34 +53,126 @@ public class CartControllerTest extends BaseTestController {
   private ItemResponse itemResponse2;
   private ItemResponse itemResponse3;
 
+  private CampaignEntity campaignEntity;
+
   @Before
   public void initialize() {
+    MockitoAnnotations.initMocks(this);
+
+    campaignEntity = CampaignEntity.builder()
+        .id(1)
+        .productId(5)
+        .requirementCount(3)
+        .giftCount(1)
+        .cartLimit(2)
+        .campaignLimit(2)
+        .status(CampaignStatus.ACTIVE)
+        .sellerId(1)
+        .startAt(1562939866630L)
+        .endAt(1577653200000L)
+        .createdAt(1563862109909L)
+        .title("3 Alana 1 Bedava")
+        .build();
+
     //create seller account
-    sellerAccountRegisterResponse = generateSellerAccount();
-    log.info("SELLER ACCOUNT CREATED : " + sellerAccountRegisterResponse.toString());
-
-    //create seller
-    SellerResponse sellerResponse = sellerService.addSeller(sellerAccountRegisterResponse.getId(), AddSellerRequest.builder()
-        .name("Test Seller")
-        .address("Test Mahallesi, Seller Sokak, No: 1, Daire: 1")
-        .build());
-    log.info("SELLER CREATED : " + sellerResponse.toString());
-
-    //add item
-    itemResponse1 = generateItem(sellerAccountRegisterResponse.getId());
-    log.info("ITEM CREATED : " + itemResponse1.toString());
-    itemResponse2 = generateItem(sellerAccountRegisterResponse.getId());
-    log.info("ITEM CREATED : " + itemResponse2.toString());
-    itemResponse3 = generateItem(sellerAccountRegisterResponse.getId());
-    log.info("ITEM CREATED : " + itemResponse2.toString());
-
-    //generate campaign
-    generateCampaign(sellerAccountRegisterResponse.getId(), itemResponse1.getProductId());
-    generateCampaign(sellerAccountRegisterResponse.getId(), itemResponse3.getProductId());
+//    sellerAccountRegisterResponse = generateSellerAccount();
+//    log.info("SELLER ACCOUNT CREATED : " + sellerAccountRegisterResponse.toString());
+//
+//    //create seller
+//    SellerResponse sellerResponse = sellerService.addSeller(sellerAccountRegisterResponse.getId(), AddSellerRequest.builder()
+//        .name("Test Seller")
+//        .address("Test Mahallesi, Seller Sokak, No: 1, Daire: 1")
+//        .build());
+//    log.info("SELLER CREATED : " + sellerResponse.toString());
+//
+//    //add item
+//    itemResponse1 = generateItem(sellerAccountRegisterResponse.getId());
+//    log.info("ITEM CREATED : " + itemResponse1.toString());
+//    itemResponse2 = generateItem(sellerAccountRegisterResponse.getId());
+//    log.info("ITEM CREATED : " + itemResponse2.toString());
+//    itemResponse3 = generateItem(sellerAccountRegisterResponse.getId());
+//    log.info("ITEM CREATED : " + itemResponse2.toString());
+//
+//    //generate campaign
+//    generateCampaign(sellerAccountRegisterResponse.getId(), itemResponse1.getProductId());
+//    generateCampaign(sellerAccountRegisterResponse.getId(), itemResponse3.getProductId());
   }
 
+  /*@Test
+  public void addCampaignItemToCart_Directly_ShouldPass(){
+    int accountId = 1;
+    String cartId = "5d1df2814d6a4b0a745457d3";
+    int productId = 1;
+    int variantId = 2;
+    int count = 5;
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .productId(productId)
+        .count(count)
+        .variantId(variantId)
+        .build();
 
-  @Test
+    CartDto cartDto = CartDto.builder()
+        .accountId(accountId)
+        .cartId(cartId)
+        .variantId(Optional.of(variantId))
+        .desiredCount(count)
+        .productId(productId)
+        .build();
+
+    CartEntity cartEntity = CartEntity.builder()
+        .id(cartId)
+        .accountId(accountId)
+        .build();
+
+    VariantSpec variantSpec1 = VariantSpec.builder()
+        .id(100)
+        .specDetail("Dış Renk")
+        .specData("Mavi")
+        .build();
+
+    VariantSpec variantSpec2 = VariantSpec.builder()
+        .id(101)
+        .specDetail("Ebat")
+        .specData("Small")
+        .build();
+
+    VariantSpec variantSpec3 = VariantSpec.builder()
+        .id(102)
+        .specDetail("Üretim Yılı")
+        .specData("2018")
+        .build();
+
+    List<VariantSpec> variantSpecs = new ArrayList<>();
+    variantSpecs.add(variantSpec1);
+    variantSpecs.add(variantSpec2);
+    variantSpecs.add(variantSpec3);
+
+    Variant variant = Variant.builder()
+        .id(variantId)
+        .stock(15)
+        .price(12.3)
+        .variantSpecs(variantSpecs)
+        .build();
+
+    when(baseService.getCampaignByProductId(productId)).thenReturn(Optional.of(campaignEntity));
+    when(baseService.isItemAvailable(cartDto)).thenReturn(true);
+    when(baseService.isCampaignAvailableGetById(campaignEntity.getId())).thenReturn(true);
+    when(cartServiceImpl.atLeastOneAvailability(campaignEntity, count, cartId, false)).thenReturn(true);
+    when(baseService.getCartEntityById(cartId)).thenReturn(cartEntity);
+    when(baseService.getProductPrice(productId)).thenReturn(12.3);
+    when(baseService.getProductStock(productId)).thenReturn(20);
+    when(baseService.getProductVariant(productId, variantId)).thenReturn(Optional.of(variant));
+    when(cartServiceImpl.getCartItems(cartEntity, productId)).thenReturn(Optional.empty());
+    when(baseService.getSellerIdByProductId(productId)).thenReturn(1);
+
+
+    //test
+    CartResponse cartResponse = cartService.addToCart(accountId, cartId, request);
+
+    assertNotNull(cartResponse);
+  }*/
+
+  /*@Test
   public void test_addCampaignItemToCartByDirectly() {
     RegisterResponse registerResponse = generateUserAccount();
     String cartId = getCartIdFromToken(registerResponse.getToken());
@@ -401,7 +502,7 @@ public class CartControllerTest extends BaseTestController {
     assertNull(cartResponse.getItemList().stream().filter(cartItem -> cartItem.getProductId().equals(itemResponse.getProductId())).findFirst().get().getCampaignParams());
     assertFalse(cartResponse.getItemList().stream().filter(cartItem -> cartItem.getProductId().equals(itemResponse.getProductId())).findFirst().get().getHasCampaign());
     assertEquals(10, cartResponse.getItemList().stream().filter(cartItem -> cartItem.getProductId().equals(itemResponse.getProductId())).findFirst().get().getSaleCount().intValue());
-  }
+  }*/
 
   /*@Test
   public void test_addCampaignItemToCartAfterCampaignLimitExpired(){

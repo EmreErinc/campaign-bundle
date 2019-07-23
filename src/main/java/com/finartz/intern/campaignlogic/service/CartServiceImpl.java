@@ -52,7 +52,6 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
 
   @Override
   public CartResponse addToCart(int accountId, String cartId, AddItemToCartRequest request) {
-
     return updateCart(Converters.convertToCartDto(accountId, cartId, request), false);
   }
 
@@ -370,7 +369,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
     }
   }
 
-  private boolean atLeastOneAvailability(CampaignEntity campaignEntity, int itemCount, String cartId, boolean recalculate) {
+  public Boolean atLeastOneAvailability(CampaignEntity campaignEntity, int itemCount, String cartId, boolean recalculate) {
     int itemOnCart = 0;
     int giftOnCart = 0;
 
@@ -421,7 +420,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
         .orElseGet(() -> optionalCartItems.get().stream().findFirst());
   }
 
-  private Optional<List<CartItem>> getCartItems(CartEntity cartEntity, int itemId) {
+  public Optional<List<CartItem>> getCartItems(CartEntity cartEntity, int itemId) {
     List<CartItem> cartItems = cartEntity
         .getCartItems()
         .stream()

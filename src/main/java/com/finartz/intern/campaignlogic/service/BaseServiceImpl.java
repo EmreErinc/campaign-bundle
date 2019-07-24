@@ -78,6 +78,10 @@ public class BaseServiceImpl implements BaseService {
 
   @Override
   public Optional<CampaignEntity> getCampaignByProductId(int itemId) {
+    Optional<ItemEntity> optionalItemEntity = itemRepository.findById(itemId);
+    if (!optionalItemEntity.isPresent()){
+      throw new ApplicationContextException(ITEM_NOT_FOUND);
+    }
     return campaignRepository.findByProductId(itemId);
   }
 

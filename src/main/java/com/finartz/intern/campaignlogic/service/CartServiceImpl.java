@@ -113,9 +113,10 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
         .createCart(accountId).getId();
   }
 
-  private CartResponse updateCart(CartDto cartDto, boolean recalculate) {
+  public CartResponse updateCart(CartDto cartDto, boolean recalculate) {
     Optional<CampaignEntity> optionalCampaignEntity = getCampaignByProductId(cartDto.getProductId());
 
+    System.out.println("in the updateCart");
     //checks campaign is available
     if (optionalCampaignEntity.isPresent()
         && isItemAvailable(cartDto)
@@ -199,6 +200,10 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
     if ((actualTotalGiftCount + suitableSaleAndGiftCount.getGiftCount() - actualGiftCount) / campaignEntity.getGiftCount() > campaignEntity.getCartLimit()) {
       calculateGiftsAccordingToLimit(campaignEntity, cartEntity.getId(), itemStock, optionalVariant, optionalCartItem, actualTotalGiftCount, updatedSaleCount, suitableSaleAndGiftCount);
     }
+
+    //if (campaignEntity.getRequirementCount() * campaignEntity.getGiftCount() < suitableSaleAndGiftCount.getSaleCount()){
+    //  optionalCartItem.get().setMessageKey(Messages.CART_LIMIT_EXCEED.getKey());
+    //}
 
     if (suitableSaleAndGiftCount.getSaleCount() != 0) {
       updateIndexOfItem(campaignEntity, desiredSaleCount, cartEntity, itemPrice, optionalCartItem, recalculate, itemIndex, suitableSaleAndGiftCount);
@@ -369,7 +374,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
     }
   }
 
-  public Boolean atLeastOneAvailability(CampaignEntity campaignEntity, int itemCount, String cartId, boolean recalculate) {
+  private Boolean atLeastOneAvailability(CampaignEntity campaignEntity, int itemCount, String cartId, boolean recalculate) {
     int itemOnCart = 0;
     int giftOnCart = 0;
 
@@ -420,7 +425,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
         .orElseGet(() -> optionalCartItems.get().stream().findFirst());
   }
 
-  public Optional<List<CartItem>> getCartItems(CartEntity cartEntity, int itemId) {
+  private Optional<List<CartItem>> getCartItems(CartEntity cartEntity, int itemId) {
     List<CartItem> cartItems = cartEntity
         .getCartItems()
         .stream()

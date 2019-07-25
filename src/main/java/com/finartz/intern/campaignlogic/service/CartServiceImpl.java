@@ -350,28 +350,21 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
         break;
       } else if (itemStock - (itemOnCart + suitableGiftCount + suitableSaleCount) < 0) { //suitable values exceeds stock
         //decrease for find max available value
-        decreaseAndCalculateSuitableCount(suitableSaleCount, suitableGiftCount, campaignEntity, itemOnCart, itemStock, desiredSaleCount);
+        suitableGiftCount = decreaseAndCalculateSuitableGiftCount(suitableSaleCount, suitableGiftCount, itemStock, itemOnCart);
         break;
       }
     }
-
     return SuitableSaleAndGiftCount.builder()
         .saleCount(suitableSaleCount + itemOnCart)
         .giftCount(suitableGiftCount)
         .build();
   }
 
-  private void decreaseAndCalculateSuitableCount(int suitableSaleCount, int suitableGiftCount, CampaignEntity campaignEntity, int itemOnCart, int itemStock, int desiredSaleCount) {
-    //decrease for find max available value
-    suitableSaleCount -= 1;
-
-    //calculate available gift desiredCount
-    suitableGiftCount = calculateGiftCount(campaignEntity, itemOnCart + suitableSaleCount);
-
-    int remainingStock = itemStock - (itemOnCart + suitableSaleCount + suitableGiftCount);
-    if (remainingStock > 0 && remainingStock <= campaignEntity.getGiftCount() && suitableSaleCount + remainingStock <= desiredSaleCount) {
-      suitableSaleCount += remainingStock;
+  private Integer decreaseAndCalculateSuitableGiftCount(int suitableSaleCount, int suitableGiftCount, int itemStock, int itemOnCart) {
+    while (itemOnCart + suitableSaleCount + suitableGiftCount > itemStock) {
+      suitableGiftCount -= 1;
     }
+    return suitableGiftCount;
   }
 
   private Boolean atLeastOneAvailability(CampaignEntity campaignEntity, int itemCount, String cartId, boolean recalculate) {

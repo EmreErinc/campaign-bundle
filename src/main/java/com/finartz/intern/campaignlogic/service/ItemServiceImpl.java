@@ -7,6 +7,7 @@ import com.finartz.intern.campaignlogic.model.request.AddItemRequest;
 import com.finartz.intern.campaignlogic.model.response.ItemResponse;
 import com.finartz.intern.campaignlogic.model.value.*;
 import com.finartz.intern.campaignlogic.repository.*;
+import com.finartz.intern.campaignlogic.security.Errors;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +53,7 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
   @Override
   public ItemResponse addItem(int accountId, AddItemRequest request) {
     if (!getRoleByAccountId(accountId).equals(Role.SELLER)) {
-      throw new ApplicationContextException("You do not have permission for this operation");
+      throw new ApplicationContextException(Errors.NOT_PERMISSION);
     }
 
     Integer expectedSellerId = getSellerIdByAccountId(accountId);
@@ -63,12 +64,14 @@ public class ItemServiceImpl extends BaseServiceImpl implements ItemService {
 
     List<Variant> variants = new ArrayList<>();
 
-    request
-        .getVariants()
-        .forEach(variantRequest -> {
-          Variant variant = addVariant(Converters.prepareItemVariant(itemEntity.getId(), variantRequest));
-          variants.add(variant);
-        });
+    if (request.getVariants() != null) {
+      request
+          .getVariants()
+          .forEach(addVariantRequest -> {
+            Variant variant = addVariant(Converters.prepareItemVariant(itemEntity.getId(), addVariantRequest));
+            variants.add(variant);
+          });
+    }
 
     return Converters
         .itemEntityToItemResponse(itemEntity, variants);

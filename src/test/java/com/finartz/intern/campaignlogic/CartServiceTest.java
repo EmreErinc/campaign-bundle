@@ -19,7 +19,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.Spy;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.test.context.ActiveProfiles;
@@ -42,7 +42,7 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles(value = "test")
 public class CartServiceTest {
 
-  @Autowired
+  @Spy
   private CartService cartService;
 
   @Mock
@@ -66,6 +66,13 @@ public class CartServiceTest {
   @Mock
   private SpecDetailRepository specDetailRepository;
 
+  private int specDataId1 = 151;
+  private int specDataId2 = 152;
+  private int specDataId3 = 153;
+  private int variantSpecEntityId1 = 200;
+  private int variantSpecEntityId2 = 201;
+  private int variantSpecEntityId3 = 202;
+
   @Before
   public void initialize() {
     MockitoAnnotations.initMocks(this);
@@ -79,6 +86,23 @@ public class CartServiceTest {
         variantSpecRepository,
         specDataRepository,
         specDetailRepository);
+
+    int specDetailId1 = 100;
+    int specDetailId2 = 101;
+    int specDetailId3 = 102;
+    SpecDetailEntity specDetailEntity1 = SpecDetailEntity.builder().id(specDetailId1).detail("Ebat").build();
+    SpecDetailEntity specDetailEntity2 = SpecDetailEntity.builder().id(specDetailId2).detail("Dış Renk").build();
+    SpecDetailEntity specDetailEntity3 = SpecDetailEntity.builder().id(specDetailId3).detail("Üretim Yılı").build();
+    SpecDataEntity specDataEntity1 = SpecDataEntity.builder().id(specDataId1).specDetailId(specDetailId1).data("Small").build();
+    SpecDataEntity specDataEntity2 = SpecDataEntity.builder().id(specDataId2).specDetailId(specDetailId2).data("Mavi").build();
+    SpecDataEntity specDataEntity3 = SpecDataEntity.builder().id(specDataId3).specDetailId(specDetailId3).data("2018").build();
+
+    when(specDataRepository.findById(specDataId1)).thenReturn(Optional.of(specDataEntity1));
+    when(specDataRepository.findById(specDataId2)).thenReturn(Optional.of(specDataEntity2));
+    when(specDataRepository.findById(specDataId3)).thenReturn(Optional.of(specDataEntity3));
+    when(specDetailRepository.findById(specDetailId1)).thenReturn(Optional.of(specDetailEntity1));
+    when(specDetailRepository.findById(specDetailId2)).thenReturn(Optional.of(specDetailEntity2));
+    when(specDetailRepository.findById(specDetailId3)).thenReturn(Optional.of(specDetailEntity3));
   }
 
   @Test
@@ -99,20 +123,7 @@ public class CartServiceTest {
         .variantId(variantId)
         .build();
 
-    CampaignEntity campaignEntity = CampaignEntity.builder()
-        .id(campaignId)
-        .productId(productId)
-        .requirementCount(3)
-        .giftCount(1)
-        .cartLimit(2)
-        .campaignLimit(2)
-        .status(CampaignStatus.ACTIVE)
-        .sellerId(sellerId)
-        .startAt(1562939866630L)
-        .endAt(1577653200000L)
-        .createdAt(1563862109909L)
-        .title("3 Alana 1 Bedava")
-        .build();
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId, 3, 1);
 
     CartEntity cartEntity = CartEntity.builder()
         .id(cartId)
@@ -120,56 +131,11 @@ public class CartServiceTest {
         .cartItems(new ArrayList<>())
         .build();
 
-    VariantEntity variantEntity = VariantEntity.builder()
-        .id(variantId)
-        .stock(variantStock)
-        .price(12.3)
-        .productId(productId)
-        .build();
+    VariantEntity variantEntity = generateVariantEntity(productId, variantId, variantStock);
 
-    int specDetailId1 = 100;
-    SpecDetailEntity specDetailEntity1 = SpecDetailEntity.builder().id(specDetailId1).detail("Ebat").build();
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
 
-    int specDetailId2 = 101;
-    SpecDetailEntity specDetailEntity2 = SpecDetailEntity.builder().id(specDetailId2).detail("Dış Renk").build();
-
-    int specDetailId3 = 102;
-    SpecDetailEntity specDetailEntity3 = SpecDetailEntity.builder().id(specDetailId3).detail("Üretim Yılı").build();
-
-    int specDataId1 = 151;
-    SpecDataEntity specDataEntity1 = SpecDataEntity.builder().id(specDataId1).specDetailId(specDetailId1).data("Small").build();
-
-    int specDataId2 = 152;
-    SpecDataEntity specDataEntity2 = SpecDataEntity.builder().id(specDataId2).specDetailId(specDetailId2).data("Mavi").build();
-
-    int specDataId3 = 153;
-    SpecDataEntity specDataEntity3 = SpecDataEntity.builder().id(specDataId3).specDetailId(specDetailId3).data("2018").build();
-
-    int variantSpecEntityId1 = 200;
-    VariantSpecEntity variantSpecEntity1 = VariantSpecEntity.builder().id(variantSpecEntityId1).productId(productId).specDataId(specDataId1).variantId(variantId).build();
-
-    int variantSpecEntityId2 = 201;
-    VariantSpecEntity variantSpecEntity2 = VariantSpecEntity.builder().id(variantSpecEntityId2).productId(productId).specDataId(specDataId2).variantId(variantId).build();
-
-    int variantSpecEntityId3 = 202;
-    VariantSpecEntity variantSpecEntity3 = VariantSpecEntity.builder().id(variantSpecEntityId3).productId(productId).specDataId(specDataId3).variantId(variantId).build();
-
-    List<VariantSpecEntity> variantSpecEntities = new ArrayList<>();
-    variantSpecEntities.add(variantSpecEntity1);
-    variantSpecEntities.add(variantSpecEntity2);
-    variantSpecEntities.add(variantSpecEntity3);
-
-    ItemEntity itemEntity = ItemEntity.builder()
-        .id(productId)
-        .sellerId(sellerId)
-        .stock(totalStock)
-        .cargoType(CargoType.FREE)
-        .cargoCompany("MNG Kargo")
-        .createdAt(1563892923731L)
-        .name("Gömlek")
-        .description("açıklama")
-        .price(12.3)
-        .build();
+    List<VariantSpecEntity> variantSpecEntities = generateVariantSpecEntities(variantId, productId);
 
     when(campaignRepository.findById(campaignId))
         .thenReturn(Optional.of(campaignEntity));
@@ -181,12 +147,7 @@ public class CartServiceTest {
         .thenReturn(Optional.of(cartEntity));
     when(variantRepository.findById(variantId)).thenReturn(Optional.of(variantEntity));
     when(variantSpecRepository.findByProductIdAndVariantId(productId, variantId)).thenReturn(Optional.of(variantSpecEntities));
-    when(specDataRepository.findById(specDataId1)).thenReturn(Optional.of(specDataEntity1));
-    when(specDataRepository.findById(specDataId2)).thenReturn(Optional.of(specDataEntity2));
-    when(specDataRepository.findById(specDataId3)).thenReturn(Optional.of(specDataEntity3));
-    when(specDetailRepository.findById(specDetailId1)).thenReturn(Optional.of(specDetailEntity1));
-    when(specDetailRepository.findById(specDetailId2)).thenReturn(Optional.of(specDetailEntity2));
-    when(specDetailRepository.findById(specDetailId3)).thenReturn(Optional.of(specDetailEntity3));
+
     when(itemRepository.findById(productId))
         .thenReturn(Optional.of(itemEntity));
 
@@ -231,56 +192,11 @@ public class CartServiceTest {
         .cartItems(new ArrayList<>())
         .build();
 
-    VariantEntity variantEntity = VariantEntity.builder()
-        .id(variantId)
-        .stock(variantStock)
-        .price(12.3)
-        .productId(productId)
-        .build();
+    VariantEntity variantEntity = generateVariantEntity(productId, variantId, variantStock);
 
-    int specDetailId1 = 100;
-    SpecDetailEntity specDetailEntity1 = SpecDetailEntity.builder().id(specDetailId1).detail("Ebat").build();
+    List<VariantSpecEntity> variantSpecEntities = generateVariantSpecEntities(variantId, productId);
 
-    int specDetailId2 = 101;
-    SpecDetailEntity specDetailEntity2 = SpecDetailEntity.builder().id(specDetailId2).detail("Dış Renk").build();
-
-    int specDetailId3 = 102;
-    SpecDetailEntity specDetailEntity3 = SpecDetailEntity.builder().id(specDetailId3).detail("Üretim Yılı").build();
-
-    int specDataId1 = 151;
-    SpecDataEntity specDataEntity1 = SpecDataEntity.builder().id(specDataId1).specDetailId(specDetailId1).data("Small").build();
-
-    int specDataId2 = 152;
-    SpecDataEntity specDataEntity2 = SpecDataEntity.builder().id(specDataId2).specDetailId(specDetailId2).data("Mavi").build();
-
-    int specDataId3 = 153;
-    SpecDataEntity specDataEntity3 = SpecDataEntity.builder().id(specDataId3).specDetailId(specDetailId3).data("2018").build();
-
-    int variantSpecEntityId1 = 200;
-    VariantSpecEntity variantSpecEntity1 = VariantSpecEntity.builder().id(variantSpecEntityId1).productId(productId).specDataId(specDataId1).variantId(variantId).build();
-
-    int variantSpecEntityId2 = 201;
-    VariantSpecEntity variantSpecEntity2 = VariantSpecEntity.builder().id(variantSpecEntityId2).productId(productId).specDataId(specDataId2).variantId(variantId).build();
-
-    int variantSpecEntityId3 = 202;
-    VariantSpecEntity variantSpecEntity3 = VariantSpecEntity.builder().id(variantSpecEntityId3).productId(productId).specDataId(specDataId3).variantId(variantId).build();
-
-    List<VariantSpecEntity> variantSpecEntities = new ArrayList<>();
-    variantSpecEntities.add(variantSpecEntity1);
-    variantSpecEntities.add(variantSpecEntity2);
-    variantSpecEntities.add(variantSpecEntity3);
-
-    ItemEntity itemEntity = ItemEntity.builder()
-        .id(productId)
-        .sellerId(sellerId)
-        .stock(totalStock)
-        .cargoType(CargoType.FREE)
-        .cargoCompany("MNG Kargo")
-        .createdAt(1563892923731L)
-        .name("Gömlek")
-        .description("açıklama")
-        .price(12.3)
-        .build();
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
 
     when(campaignRepository.findById(any()))
         .thenReturn(Optional.empty());
@@ -293,12 +209,6 @@ public class CartServiceTest {
     when(variantRepository.findById(variantId))
         .thenReturn(Optional.of(variantEntity));
     when(variantSpecRepository.findByProductIdAndVariantId(productId, variantId)).thenReturn(Optional.of(variantSpecEntities));
-    when(specDataRepository.findById(specDataId1)).thenReturn(Optional.of(specDataEntity1));
-    when(specDataRepository.findById(specDataId2)).thenReturn(Optional.of(specDataEntity2));
-    when(specDataRepository.findById(specDataId3)).thenReturn(Optional.of(specDataEntity3));
-    when(specDetailRepository.findById(specDetailId1)).thenReturn(Optional.of(specDetailEntity1));
-    when(specDetailRepository.findById(specDetailId2)).thenReturn(Optional.of(specDetailEntity2));
-    when(specDetailRepository.findById(specDetailId3)).thenReturn(Optional.of(specDetailEntity3));
     when(itemRepository.findById(productId))
         .thenReturn(Optional.of(itemEntity));
 
@@ -334,20 +244,7 @@ public class CartServiceTest {
         .variantId(variantId)
         .build();
 
-    CampaignEntity campaignEntity = CampaignEntity.builder()
-        .id(campaignId)
-        .productId(productId)
-        .requirementCount(3)
-        .giftCount(1)
-        .cartLimit(2)
-        .campaignLimit(2)
-        .status(CampaignStatus.ACTIVE)
-        .sellerId(sellerId)
-        .startAt(1562939866630L)
-        .endAt(1577653200000L)
-        .createdAt(1563862109909L)
-        .title("3 Alana 1 Bedava")
-        .build();
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,1);
 
     CartEntity cartEntity = CartEntity.builder()
         .id(cartId)
@@ -355,17 +252,7 @@ public class CartServiceTest {
         .cartItems(new ArrayList<>())
         .build();
 
-    ItemEntity itemEntity = ItemEntity.builder()
-        .id(productId)
-        .sellerId(sellerId)
-        .stock(totalStock)
-        .cargoType(CargoType.FREE)
-        .cargoCompany("MNG Kargo")
-        .createdAt(1563892923731L)
-        .name("Gömlek")
-        .description("açıklama")
-        .price(12.3)
-        .build();
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
 
     when(campaignRepository.findById(campaignId))
         .thenReturn(Optional.of(campaignEntity));
@@ -417,17 +304,7 @@ public class CartServiceTest {
         .cartItems(new ArrayList<>())
         .build();
 
-    ItemEntity itemEntity = ItemEntity.builder()
-        .id(productId)
-        .sellerId(sellerId)
-        .stock(totalStock)
-        .cargoType(CargoType.FREE)
-        .cargoCompany("MNG Kargo")
-        .createdAt(1563892923731L)
-        .name("Gömlek")
-        .description("açıklama")
-        .price(12.3)
-        .build();
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
 
     when(campaignRepository.findById(campaignId))
         .thenReturn(Optional.empty());
@@ -494,20 +371,7 @@ public class CartServiceTest {
         .count(count)
         .build();
 
-    CampaignEntity campaignEntity = CampaignEntity.builder()
-        .id(campaignId)
-        .productId(productId)
-        .requirementCount(3)
-        .giftCount(1)
-        .cartLimit(2)
-        .campaignLimit(2)
-        .status(CampaignStatus.ACTIVE)
-        .sellerId(sellerId)
-        .startAt(1562939866630L)
-        .endAt(1577653200000L)
-        .createdAt(1563862109909L)
-        .title("3 Alana 1 Bedava")
-        .build();
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,1);
 
     CartItem cartItem = CartItem.builder()
         .productId(productId)
@@ -532,17 +396,7 @@ public class CartServiceTest {
         .cartItems(cartItems)
         .build();
 
-    ItemEntity itemEntity = ItemEntity.builder()
-        .id(productId)
-        .sellerId(sellerId)
-        .stock(totalStock)
-        .cargoType(CargoType.FREE)
-        .cargoCompany("MNG Kargo")
-        .createdAt(1563892923731L)
-        .name("Gömlek")
-        .description("açıklama")
-        .price(12.3)
-        .build();
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
 
     when(campaignRepository.findById(campaignId))
         .thenReturn(Optional.of(campaignEntity));
@@ -580,20 +434,7 @@ public class CartServiceTest {
         .productId(productId)
         .build();
 
-    CampaignEntity campaignEntity = CampaignEntity.builder()
-        .id(campaignId)
-        .productId(productId)
-        .requirementCount(3)
-        .giftCount(1)
-        .cartLimit(2)
-        .campaignLimit(2)
-        .status(CampaignStatus.ACTIVE)
-        .sellerId(sellerId)
-        .startAt(1562939866630L)
-        .endAt(1577653200000L)
-        .createdAt(1563862109909L)
-        .title("3 Alana 1 Bedava")
-        .build();
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,1);
 
     CartItem cartItem = CartItem.builder()
         .productId(productId)
@@ -618,17 +459,7 @@ public class CartServiceTest {
         .cartItems(cartItems)
         .build();
 
-    ItemEntity itemEntity = ItemEntity.builder()
-        .id(productId)
-        .sellerId(sellerId)
-        .stock(totalStock)
-        .cargoType(CargoType.FREE)
-        .cargoCompany("MNG Kargo")
-        .createdAt(1563892923731L)
-        .name("Gömlek")
-        .description("açıklama")
-        .price(12.3)
-        .build();
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
 
     when(campaignRepository.findById(campaignId))
         .thenReturn(Optional.of(campaignEntity));
@@ -666,20 +497,7 @@ public class CartServiceTest {
         .productId(productId)
         .build();
 
-    CampaignEntity campaignEntity = CampaignEntity.builder()
-        .id(campaignId)
-        .productId(productId)
-        .requirementCount(3)
-        .giftCount(1)
-        .cartLimit(2)
-        .campaignLimit(2)
-        .status(CampaignStatus.ACTIVE)
-        .sellerId(sellerId)
-        .startAt(1562939866630L)
-        .endAt(1577653200000L)
-        .createdAt(1563862109909L)
-        .title("3 Alana 1 Bedava")
-        .build();
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,1);
 
     CartItem cartItem = CartItem.builder()
         .productId(productId)
@@ -704,17 +522,7 @@ public class CartServiceTest {
         .cartItems(cartItems)
         .build();
 
-    ItemEntity itemEntity = ItemEntity.builder()
-        .id(productId)
-        .sellerId(sellerId)
-        .stock(totalStock)
-        .cargoType(CargoType.FREE)
-        .cargoCompany("MNG Kargo")
-        .createdAt(1563892923731L)
-        .name("Gömlek")
-        .description("açıklama")
-        .price(12.3)
-        .build();
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
 
     when(campaignRepository.findById(campaignId))
         .thenReturn(Optional.of(campaignEntity));
@@ -752,20 +560,7 @@ public class CartServiceTest {
         .productId(productId)
         .build();
 
-    CampaignEntity campaignEntity = CampaignEntity.builder()
-        .id(campaignId)
-        .productId(productId)
-        .requirementCount(3)
-        .giftCount(1)
-        .cartLimit(2)
-        .campaignLimit(2)
-        .status(CampaignStatus.ACTIVE)
-        .sellerId(sellerId)
-        .startAt(1562939866630L)
-        .endAt(1577653200000L)
-        .createdAt(1563862109909L)
-        .title("3 Alana 1 Bedava")
-        .build();
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,1);
 
     CartItem cartItem = CartItem.builder()
         .productId(productId)
@@ -790,17 +585,7 @@ public class CartServiceTest {
         .cartItems(cartItems)
         .build();
 
-    ItemEntity itemEntity = ItemEntity.builder()
-        .id(productId)
-        .sellerId(sellerId)
-        .stock(totalStock)
-        .cargoType(CargoType.FREE)
-        .cargoCompany("MNG Kargo")
-        .createdAt(1563892923731L)
-        .name("Gömlek")
-        .description("açıklama")
-        .price(12.3)
-        .build();
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
 
     when(campaignRepository.findById(campaignId))
         .thenReturn(Optional.of(campaignEntity));
@@ -842,47 +627,14 @@ public class CartServiceTest {
         .variantId(variantId2)
         .build();
 
-    ItemEntity itemEntity = ItemEntity.builder()
-        .id(productId)
-        .sellerId(sellerId)
-        .stock(totalStock)
-        .cargoType(CargoType.FREE)
-        .cargoCompany("MNG Kargo")
-        .createdAt(1563892923731L)
-        .name("Gömlek")
-        .description("açıklama")
-        .price(12.3)
-        .build();
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
 
-    CampaignEntity campaignEntity = CampaignEntity.builder()
-        .id(campaignId)
-        .productId(productId)
-        .requirementCount(3)
-        .giftCount(1)
-        .cartLimit(2)
-        .campaignLimit(2)
-        .status(CampaignStatus.ACTIVE)
-        .sellerId(sellerId)
-        .startAt(1562939866630L)
-        .endAt(1577653200000L)
-        .createdAt(1563862109909L)
-        .title("3 Alana 1 Bedava")
-        .build();
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,1);
 
     //exists on cart
-    VariantEntity variantEntity1 = VariantEntity.builder()
-        .id(variantId1)
-        .stock(variantStock)
-        .price(12.3)
-        .productId(productId)
-        .build();
+    VariantEntity variantEntity1 = generateVariantEntity(productId, variantId1, variantStock);
 
-    VariantEntity variantEntity2 = VariantEntity.builder()
-        .id(variantId2)
-        .stock(variantStock)
-        .price(12.3)
-        .productId(productId)
-        .build();
+    VariantEntity variantEntity2 = generateVariantEntity(productId, variantId2, variantStock);
 
     int specDetailId1 = 100;
     SpecDetailEntity specDetailEntity1 = SpecDetailEntity.builder().id(specDetailId1).detail("Ebat").build();
@@ -1005,38 +757,31 @@ public class CartServiceTest {
     assertTrue(cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).collect(Collectors.toList()).stream().anyMatch(cartItemDto -> cartItemDto.getVariant().getVariantSpecs().stream().anyMatch(variantSpec -> variantSpec.getId().equals(variantSpecEntityId5))));
   }
 
-  @Test
-  public void addToCart_UnsuitableCampaignItemOnStock_AvailableGift_ShouldPass(){
+  /**
+   * desired sale count = 8
+   * variant stock      = 10
+   * campaign requirement = 3
+   * campaign gift        = 1
+   */
+  @Test //desired sale count = variant stock, then give available gift
+  public void addToCart_UnsuitableCampaignItemOnStock_AvailableGift_1_ShouldPass() {
     int accountId = 1;
     String cartId = "5d1df2814d6a4b0a745457d3";
     int productId = 1;
     int variantId = 2;
-    int count = 10;
-    int sellerId = 50;
     int campaignId = 10;
+    int sellerId = 50;
+    int desiredSaleCount = 8;
     int variantStock = 10;
     int totalStock = 10;
 
     AddItemToCartRequest request = AddItemToCartRequest.builder()
         .productId(productId)
-        .count(count)
+        .count(desiredSaleCount)
         .variantId(variantId)
         .build();
 
-    CampaignEntity campaignEntity = CampaignEntity.builder()
-        .id(campaignId)
-        .productId(productId)
-        .requirementCount(3)
-        .giftCount(1)
-        .cartLimit(2)
-        .campaignLimit(2)
-        .status(CampaignStatus.ACTIVE)
-        .sellerId(sellerId)
-        .startAt(1562939866630L)
-        .endAt(1577653200000L)
-        .createdAt(1563862109909L)
-        .title("3 Alana 1 Bedava")
-        .build();
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,1);
 
     CartEntity cartEntity = CartEntity.builder()
         .id(cartId)
@@ -1044,56 +789,11 @@ public class CartServiceTest {
         .cartItems(new ArrayList<>())
         .build();
 
-    VariantEntity variantEntity = VariantEntity.builder()
-        .id(variantId)
-        .stock(variantStock)
-        .price(12.3)
-        .productId(productId)
-        .build();
+    VariantEntity variantEntity = generateVariantEntity(productId, variantId, variantStock);
 
-    int specDetailId1 = 100;
-    SpecDetailEntity specDetailEntity1 = SpecDetailEntity.builder().id(specDetailId1).detail("Ebat").build();
+    List<VariantSpecEntity> variantSpecEntities = generateVariantSpecEntities(variantId, productId);
 
-    int specDetailId2 = 101;
-    SpecDetailEntity specDetailEntity2 = SpecDetailEntity.builder().id(specDetailId2).detail("Dış Renk").build();
-
-    int specDetailId3 = 102;
-    SpecDetailEntity specDetailEntity3 = SpecDetailEntity.builder().id(specDetailId3).detail("Üretim Yılı").build();
-
-    int specDataId1 = 151;
-    SpecDataEntity specDataEntity1 = SpecDataEntity.builder().id(specDataId1).specDetailId(specDetailId1).data("Small").build();
-
-    int specDataId2 = 152;
-    SpecDataEntity specDataEntity2 = SpecDataEntity.builder().id(specDataId2).specDetailId(specDetailId2).data("Mavi").build();
-
-    int specDataId3 = 153;
-    SpecDataEntity specDataEntity3 = SpecDataEntity.builder().id(specDataId3).specDetailId(specDetailId3).data("2018").build();
-
-    int variantSpecEntityId1 = 200;
-    VariantSpecEntity variantSpecEntity1 = VariantSpecEntity.builder().id(variantSpecEntityId1).productId(productId).specDataId(specDataId1).variantId(variantId).build();
-
-    int variantSpecEntityId2 = 201;
-    VariantSpecEntity variantSpecEntity2 = VariantSpecEntity.builder().id(variantSpecEntityId2).productId(productId).specDataId(specDataId2).variantId(variantId).build();
-
-    int variantSpecEntityId3 = 202;
-    VariantSpecEntity variantSpecEntity3 = VariantSpecEntity.builder().id(variantSpecEntityId3).productId(productId).specDataId(specDataId3).variantId(variantId).build();
-
-    List<VariantSpecEntity> variantSpecEntities = new ArrayList<>();
-    variantSpecEntities.add(variantSpecEntity1);
-    variantSpecEntities.add(variantSpecEntity2);
-    variantSpecEntities.add(variantSpecEntity3);
-
-    ItemEntity itemEntity = ItemEntity.builder()
-        .id(productId)
-        .sellerId(sellerId)
-        .stock(totalStock)
-        .cargoType(CargoType.FREE)
-        .cargoCompany("MNG Kargo")
-        .createdAt(1563892923731L)
-        .name("Gömlek")
-        .description("açıklama")
-        .price(12.3)
-        .build();
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
 
     when(campaignRepository.findById(campaignId))
         .thenReturn(Optional.of(campaignEntity));
@@ -1105,12 +805,6 @@ public class CartServiceTest {
         .thenReturn(Optional.of(cartEntity));
     when(variantRepository.findById(variantId)).thenReturn(Optional.of(variantEntity));
     when(variantSpecRepository.findByProductIdAndVariantId(productId, variantId)).thenReturn(Optional.of(variantSpecEntities));
-    when(specDataRepository.findById(specDataId1)).thenReturn(Optional.of(specDataEntity1));
-    when(specDataRepository.findById(specDataId2)).thenReturn(Optional.of(specDataEntity2));
-    when(specDataRepository.findById(specDataId3)).thenReturn(Optional.of(specDataEntity3));
-    when(specDetailRepository.findById(specDetailId1)).thenReturn(Optional.of(specDetailEntity1));
-    when(specDetailRepository.findById(specDetailId2)).thenReturn(Optional.of(specDetailEntity2));
-    when(specDetailRepository.findById(specDetailId3)).thenReturn(Optional.of(specDetailEntity3));
     when(itemRepository.findById(productId))
         .thenReturn(Optional.of(itemEntity));
 
@@ -1120,15 +814,719 @@ public class CartServiceTest {
     //assertions
     assertNotNull(cartResponse);
     assertTrue(cartResponse.getItemList().stream().anyMatch(cartItem -> cartItem.getProductId().equals(productId)));
-    assertEquals(10, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getDesiredSaleCount().intValue());
+    assertEquals(desiredSaleCount, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getDesiredSaleCount().intValue());
     assertEquals(8, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getSaleCount().intValue());
     //campaign assertions
     assertEquals(8, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getTotalItemCount().intValue());
     assertEquals(2, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
   }
 
-  @Test
-  public void addToCart_UnsuitableCampaignItemOnStock_NoGift_ShouldPass(){
+  /**
+   * desired sale count = 9
+   * variant stock      = 10
+   * campaign requirement = 3
+   * campaign gift        = 1
+   */
+  @Test //desired sale count = variant stock, then give available gift
+  public void addToCart_UnsuitableCampaignItemOnStock_AvailableGift_2_ShouldPass() {
+    int accountId = 1;
+    String cartId = "5d1df2814d6a4b0a745457d3";
+    int productId = 1;
+    int variantId = 2;
+    int campaignId = 10;
+    int sellerId = 50;
+    int desiredSaleCount = 9;
+    int variantStock = 10;
+    int totalStock = 10;
+
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .productId(productId)
+        .count(desiredSaleCount)
+        .variantId(variantId)
+        .build();
+
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,1);
+
+    CartEntity cartEntity = CartEntity.builder()
+        .id(cartId)
+        .accountId(accountId)
+        .cartItems(new ArrayList<>())
+        .build();
+
+    VariantEntity variantEntity = generateVariantEntity(productId, variantId, variantStock);
+
+    List<VariantSpecEntity> variantSpecEntities = generateVariantSpecEntities(variantId, productId);
+
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
+
+    when(campaignRepository.findById(campaignId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByProductId(productId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(eq(campaignEntity.getId()), anyLong(), anyLong()))
+        .thenReturn(Optional.of(campaignEntity));
+    when(cartRepository.findCart(cartId))
+        .thenReturn(Optional.of(cartEntity));
+    when(variantRepository.findById(variantId)).thenReturn(Optional.of(variantEntity));
+    when(variantSpecRepository.findByProductIdAndVariantId(productId, variantId)).thenReturn(Optional.of(variantSpecEntities));
+    when(itemRepository.findById(productId))
+        .thenReturn(Optional.of(itemEntity));
+
+    //test
+    CartResponse<CartItemDto> cartResponse = cartService.addToCart(accountId, cartId, request);
+
+    //assertions
+    assertNotNull(cartResponse);
+    assertTrue(cartResponse.getItemList().stream().anyMatch(cartItem -> cartItem.getProductId().equals(productId)));
+    assertEquals(desiredSaleCount, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getDesiredSaleCount().intValue());
+    assertEquals(8, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getSaleCount().intValue());
+    //campaign assertions
+    assertEquals(8, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getTotalItemCount().intValue());
+    assertEquals(2, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
+  }
+
+  /**
+   * desired sale count = 10
+   * variant stock      = 10
+   * campaign requirement = 3
+   * campaign gift        = 1
+   */
+  @Test //desired sale count = variant stock, then give available gift
+  public void addToCart_UnsuitableCampaignItemOnStock_AvailableGift_3_ShouldPass() {
+    int accountId = 1;
+    String cartId = "5d1df2814d6a4b0a745457d3";
+    int productId = 1;
+    int variantId = 2;
+    int campaignId = 10;
+    int sellerId = 50;
+    int desiredSaleCount = 10;
+    int variantStock = 10;
+    int totalStock = 10;
+
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .productId(productId)
+        .count(desiredSaleCount)
+        .variantId(variantId)
+        .build();
+
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,1);
+
+    CartEntity cartEntity = CartEntity.builder()
+        .id(cartId)
+        .accountId(accountId)
+        .cartItems(new ArrayList<>())
+        .build();
+
+    VariantEntity variantEntity = generateVariantEntity(productId, variantId, variantStock);
+
+    List<VariantSpecEntity> variantSpecEntities = generateVariantSpecEntities(variantId, productId);
+
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
+
+    when(campaignRepository.findById(campaignId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByProductId(productId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(eq(campaignEntity.getId()), anyLong(), anyLong()))
+        .thenReturn(Optional.of(campaignEntity));
+    when(cartRepository.findCart(cartId))
+        .thenReturn(Optional.of(cartEntity));
+    when(variantRepository.findById(variantId)).thenReturn(Optional.of(variantEntity));
+    when(variantSpecRepository.findByProductIdAndVariantId(productId, variantId)).thenReturn(Optional.of(variantSpecEntities));
+    when(itemRepository.findById(productId))
+        .thenReturn(Optional.of(itemEntity));
+
+    //test
+    CartResponse<CartItemDto> cartResponse = cartService.addToCart(accountId, cartId, request);
+
+    //assertions
+    assertNotNull(cartResponse);
+    assertTrue(cartResponse.getItemList().stream().anyMatch(cartItem -> cartItem.getProductId().equals(productId)));
+    assertEquals(desiredSaleCount, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getDesiredSaleCount().intValue());
+    assertEquals(8, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getSaleCount().intValue());
+    //campaign assertions
+    assertEquals(8, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getTotalItemCount().intValue());
+    assertEquals(2, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
+  }
+
+  /**
+   * desired sale count = 8
+   * variant stock      = 9
+   * campaign requirement = 3
+   * campaign gift        = 1
+   */
+  @Test //desired sale count = variant stock, then give available gift
+  public void addToCart_UnsuitableCampaignItemOnStock_AvailableGift_4_ShouldPass() {
+    int accountId = 1;
+    String cartId = "5d1df2814d6a4b0a745457d3";
+    int productId = 1;
+    int variantId = 2;
+    int campaignId = 10;
+    int sellerId = 50;
+    int desiredSaleCount = 8;
+    int variantStock = 9;
+    int totalStock = 9;
+
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .productId(productId)
+        .count(desiredSaleCount)
+        .variantId(variantId)
+        .build();
+
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,1);
+
+    CartEntity cartEntity = CartEntity.builder()
+        .id(cartId)
+        .accountId(accountId)
+        .cartItems(new ArrayList<>())
+        .build();
+
+    VariantEntity variantEntity = generateVariantEntity(productId, variantId, variantStock);
+
+    List<VariantSpecEntity> variantSpecEntities = generateVariantSpecEntities(variantId, productId);
+
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
+
+    when(campaignRepository.findById(campaignId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByProductId(productId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(eq(campaignEntity.getId()), anyLong(), anyLong()))
+        .thenReturn(Optional.of(campaignEntity));
+    when(cartRepository.findCart(cartId))
+        .thenReturn(Optional.of(cartEntity));
+    when(variantRepository.findById(variantId)).thenReturn(Optional.of(variantEntity));
+    when(variantSpecRepository.findByProductIdAndVariantId(productId, variantId)).thenReturn(Optional.of(variantSpecEntities));
+    when(itemRepository.findById(productId))
+        .thenReturn(Optional.of(itemEntity));
+
+    //test
+    CartResponse<CartItemDto> cartResponse = cartService.addToCart(accountId, cartId, request);
+
+    //assertions
+    assertNotNull(cartResponse);
+    assertTrue(cartResponse.getItemList().stream().anyMatch(cartItem -> cartItem.getProductId().equals(productId)));
+    assertEquals(desiredSaleCount, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getDesiredSaleCount().intValue());
+    assertEquals(7, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getSaleCount().intValue());
+    //campaign assertions
+    assertEquals(7, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getTotalItemCount().intValue());
+    assertEquals(2, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
+  }
+
+  /**
+   * desired sale count = 9
+   * variant stock      = 9
+   * campaign requirement = 3
+   * campaign gift        = 1
+   */
+  @Test //desired sale count = variant stock, then give available gift
+  public void addToCart_UnsuitableCampaignItemOnStock_AvailableGift_5_ShouldPass() {
+    int accountId = 1;
+    String cartId = "5d1df2814d6a4b0a745457d3";
+    int productId = 1;
+    int variantId = 2;
+    int campaignId = 10;
+    int sellerId = 50;
+    int desiredSaleCount = 9;
+    int variantStock = 9;
+    int totalStock = 9;
+
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .productId(productId)
+        .count(desiredSaleCount)
+        .variantId(variantId)
+        .build();
+
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,1);
+
+    CartEntity cartEntity = CartEntity.builder()
+        .id(cartId)
+        .accountId(accountId)
+        .cartItems(new ArrayList<>())
+        .build();
+
+    VariantEntity variantEntity = generateVariantEntity(productId, variantId, variantStock);
+
+    List<VariantSpecEntity> variantSpecEntities = generateVariantSpecEntities(variantId, productId);
+
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
+
+    when(campaignRepository.findById(campaignId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByProductId(productId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(eq(campaignEntity.getId()), anyLong(), anyLong()))
+        .thenReturn(Optional.of(campaignEntity));
+    when(cartRepository.findCart(cartId))
+        .thenReturn(Optional.of(cartEntity));
+    when(variantRepository.findById(variantId)).thenReturn(Optional.of(variantEntity));
+    when(variantSpecRepository.findByProductIdAndVariantId(productId, variantId)).thenReturn(Optional.of(variantSpecEntities));
+    when(itemRepository.findById(productId))
+        .thenReturn(Optional.of(itemEntity));
+
+    //test
+    CartResponse<CartItemDto> cartResponse = cartService.addToCart(accountId, cartId, request);
+
+    //assertions
+    assertNotNull(cartResponse);
+    assertTrue(cartResponse.getItemList().stream().anyMatch(cartItem -> cartItem.getProductId().equals(productId)));
+    assertEquals(desiredSaleCount, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getDesiredSaleCount().intValue());
+    assertEquals(7, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getSaleCount().intValue());
+    //campaign assertions
+    assertEquals(7, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getTotalItemCount().intValue());
+    assertEquals(2, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
+  }
+
+  /**
+   * desired sale count = 10
+   * variant stock      = 9
+   * campaign requirement = 3
+   * campaign gift        = 1
+   */
+  @Test //desired sale count = variant stock, then give available gift
+  public void addToCart_UnsuitableCampaignItemOnStock_AvailableGift_6_ShouldPass() {
+    int accountId = 1;
+    String cartId = "5d1df2814d6a4b0a745457d3";
+    int productId = 1;
+    int variantId = 2;
+    int campaignId = 10;
+    int sellerId = 50;
+    int desiredSaleCount = 10;
+    int variantStock = 9;
+    int totalStock = 9;
+
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .productId(productId)
+        .count(desiredSaleCount)
+        .variantId(variantId)
+        .build();
+
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,1);
+
+    CartEntity cartEntity = CartEntity.builder()
+        .id(cartId)
+        .accountId(accountId)
+        .cartItems(new ArrayList<>())
+        .build();
+
+    VariantEntity variantEntity = generateVariantEntity(productId, variantId, variantStock);
+
+    List<VariantSpecEntity> variantSpecEntities = generateVariantSpecEntities(variantId, productId);
+
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
+
+    when(campaignRepository.findById(campaignId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByProductId(productId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(eq(campaignEntity.getId()), anyLong(), anyLong()))
+        .thenReturn(Optional.of(campaignEntity));
+    when(cartRepository.findCart(cartId))
+        .thenReturn(Optional.of(cartEntity));
+    when(variantRepository.findById(variantId)).thenReturn(Optional.of(variantEntity));
+    when(variantSpecRepository.findByProductIdAndVariantId(productId, variantId)).thenReturn(Optional.of(variantSpecEntities));
+    when(itemRepository.findById(productId))
+        .thenReturn(Optional.of(itemEntity));
+
+    //test
+    CartResponse<CartItemDto> cartResponse = cartService.addToCart(accountId, cartId, request);
+
+    //assertions
+    assertNotNull(cartResponse);
+    assertTrue(cartResponse.getItemList().stream().anyMatch(cartItem -> cartItem.getProductId().equals(productId)));
+    assertEquals(desiredSaleCount, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getDesiredSaleCount().intValue());
+    assertEquals(7, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getSaleCount().intValue());
+    //campaign assertions
+    assertEquals(7, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getTotalItemCount().intValue());
+    assertEquals(2, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
+  }
+
+  /**
+   * desired sale count = 8
+   * variant stock      = 10
+   * campaign requirement = 3
+   * campaign gift        = 2
+   */
+  @Test //desired sale count = variant stock, then give available gift
+  public void addToCart_UnsuitableCampaignItemOnStock_AvailableGift_7_ShouldPass() {
+    int accountId = 1;
+    String cartId = "5d1df2814d6a4b0a745457d3";
+    int productId = 1;
+    int variantId = 2;
+    int campaignId = 10;
+    int sellerId = 50;
+    int desiredSaleCount = 8;
+    int variantStock = 10;
+    int totalStock = 10;
+
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .productId(productId)
+        .count(desiredSaleCount)
+        .variantId(variantId)
+        .build();
+
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,2);
+
+    CartEntity cartEntity = CartEntity.builder()
+        .id(cartId)
+        .accountId(accountId)
+        .cartItems(new ArrayList<>())
+        .build();
+
+    VariantEntity variantEntity = generateVariantEntity(productId, variantId, variantStock);
+
+    List<VariantSpecEntity> variantSpecEntities = generateVariantSpecEntities(variantId, productId);
+
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
+
+    when(campaignRepository.findById(campaignId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByProductId(productId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(eq(campaignEntity.getId()), anyLong(), anyLong()))
+        .thenReturn(Optional.of(campaignEntity));
+    when(cartRepository.findCart(cartId))
+        .thenReturn(Optional.of(cartEntity));
+    when(variantRepository.findById(variantId)).thenReturn(Optional.of(variantEntity));
+    when(variantSpecRepository.findByProductIdAndVariantId(productId, variantId)).thenReturn(Optional.of(variantSpecEntities));
+    when(itemRepository.findById(productId))
+        .thenReturn(Optional.of(itemEntity));
+
+    //test
+    CartResponse<CartItemDto> cartResponse = cartService.addToCart(accountId, cartId, request);
+
+    //assertions
+    assertNotNull(cartResponse);
+    assertTrue(cartResponse.getItemList().stream().anyMatch(cartItem -> cartItem.getProductId().equals(productId)));
+    assertEquals(desiredSaleCount, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getDesiredSaleCount().intValue());
+    assertEquals(6, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getSaleCount().intValue());
+    //campaign assertions
+    assertEquals(6, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getTotalItemCount().intValue());
+    assertEquals(4, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
+  }
+
+  /**
+   * desired sale count = 9
+   * variant stock      = 10
+   * campaign requirement = 3
+   * campaign gift        = 2
+   */
+  @Test //desired sale count = variant stock, then give available gift
+  public void addToCart_UnsuitableCampaignItemOnStock_AvailableGift_8_ShouldPass() {
+    int accountId = 1;
+    String cartId = "5d1df2814d6a4b0a745457d3";
+    int productId = 1;
+    int variantId = 2;
+    int campaignId = 10;
+    int sellerId = 50;
+    int desiredSaleCount = 9;
+    int variantStock = 10;
+    int totalStock = 10;
+
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .productId(productId)
+        .count(desiredSaleCount)
+        .variantId(variantId)
+        .build();
+
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,2);
+
+    CartEntity cartEntity = CartEntity.builder()
+        .id(cartId)
+        .accountId(accountId)
+        .cartItems(new ArrayList<>())
+        .build();
+
+    VariantEntity variantEntity = generateVariantEntity(productId, variantId, variantStock);
+
+    List<VariantSpecEntity> variantSpecEntities = generateVariantSpecEntities(variantId, productId);
+
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
+
+    when(campaignRepository.findById(campaignId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByProductId(productId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(eq(campaignEntity.getId()), anyLong(), anyLong()))
+        .thenReturn(Optional.of(campaignEntity));
+    when(cartRepository.findCart(cartId))
+        .thenReturn(Optional.of(cartEntity));
+    when(variantRepository.findById(variantId)).thenReturn(Optional.of(variantEntity));
+    when(variantSpecRepository.findByProductIdAndVariantId(productId, variantId)).thenReturn(Optional.of(variantSpecEntities));
+    when(itemRepository.findById(productId))
+        .thenReturn(Optional.of(itemEntity));
+
+    //test
+    CartResponse<CartItemDto> cartResponse = cartService.addToCart(accountId, cartId, request);
+
+    //assertions
+    assertNotNull(cartResponse);
+    assertTrue(cartResponse.getItemList().stream().anyMatch(cartItem -> cartItem.getProductId().equals(productId)));
+    assertEquals(desiredSaleCount, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getDesiredSaleCount().intValue());
+    assertEquals(6, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getSaleCount().intValue());
+    //campaign assertions
+    assertEquals(6, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getTotalItemCount().intValue());
+    assertEquals(4, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
+  }
+
+  /**
+   * desired sale count = 10
+   * variant stock      = 10
+   * campaign requirement = 3
+   * campaign gift        = 2
+   */
+  @Test //desired sale count = variant stock, then give available gift
+  public void addToCart_UnsuitableCampaignItemOnStock_AvailableGift_9_ShouldPass() {
+    int accountId = 1;
+    String cartId = "5d1df2814d6a4b0a745457d3";
+    int productId = 1;
+    int variantId = 2;
+    int campaignId = 10;
+    int sellerId = 50;
+    int desiredSaleCount = 10;
+    int variantStock = 10;
+    int totalStock = 10;
+
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .productId(productId)
+        .count(desiredSaleCount)
+        .variantId(variantId)
+        .build();
+
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,2);
+
+    CartEntity cartEntity = CartEntity.builder()
+        .id(cartId)
+        .accountId(accountId)
+        .cartItems(new ArrayList<>())
+        .build();
+
+    VariantEntity variantEntity = generateVariantEntity(productId, variantId, variantStock);
+
+    List<VariantSpecEntity> variantSpecEntities = generateVariantSpecEntities(variantId, productId);
+
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
+
+    when(campaignRepository.findById(campaignId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByProductId(productId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(eq(campaignEntity.getId()), anyLong(), anyLong()))
+        .thenReturn(Optional.of(campaignEntity));
+    when(cartRepository.findCart(cartId))
+        .thenReturn(Optional.of(cartEntity));
+    when(variantRepository.findById(variantId)).thenReturn(Optional.of(variantEntity));
+    when(variantSpecRepository.findByProductIdAndVariantId(productId, variantId)).thenReturn(Optional.of(variantSpecEntities));
+    when(itemRepository.findById(productId))
+        .thenReturn(Optional.of(itemEntity));
+
+    //test
+    CartResponse<CartItemDto> cartResponse = cartService.addToCart(accountId, cartId, request);
+
+    //assertions
+    assertNotNull(cartResponse);
+    assertTrue(cartResponse.getItemList().stream().anyMatch(cartItem -> cartItem.getProductId().equals(productId)));
+    assertEquals(desiredSaleCount, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getDesiredSaleCount().intValue());
+    assertEquals(6, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getSaleCount().intValue());
+    //campaign assertions
+    assertEquals(6, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getTotalItemCount().intValue());
+    assertEquals(4, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
+  }
+
+  /**
+   * desired sale count = 8
+   * variant stock      = 9
+   * campaign requirement = 3
+   * campaign gift        = 2
+   */
+  @Test //desired sale count = variant stock, then give available gift
+  public void addToCart_UnsuitableCampaignItemOnStock_AvailableGift_10_ShouldPass() {
+    int accountId = 1;
+    String cartId = "5d1df2814d6a4b0a745457d3";
+    int productId = 1;
+    int variantId = 2;
+    int campaignId = 10;
+    int sellerId = 50;
+    int desiredSaleCount = 8;
+    int variantStock = 9;
+    int totalStock = 9;
+
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .productId(productId)
+        .count(desiredSaleCount)
+        .variantId(variantId)
+        .build();
+
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,2);
+
+    CartEntity cartEntity = CartEntity.builder()
+        .id(cartId)
+        .accountId(accountId)
+        .cartItems(new ArrayList<>())
+        .build();
+
+    VariantEntity variantEntity = generateVariantEntity(productId, variantId, variantStock);
+
+    List<VariantSpecEntity> variantSpecEntities = generateVariantSpecEntities(variantId, productId);
+
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
+
+    when(campaignRepository.findById(campaignId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByProductId(productId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(eq(campaignEntity.getId()), anyLong(), anyLong()))
+        .thenReturn(Optional.of(campaignEntity));
+    when(cartRepository.findCart(cartId))
+        .thenReturn(Optional.of(cartEntity));
+    when(variantRepository.findById(variantId)).thenReturn(Optional.of(variantEntity));
+    when(variantSpecRepository.findByProductIdAndVariantId(productId, variantId)).thenReturn(Optional.of(variantSpecEntities));
+    when(itemRepository.findById(productId))
+        .thenReturn(Optional.of(itemEntity));
+
+    //test
+    CartResponse<CartItemDto> cartResponse = cartService.addToCart(accountId, cartId, request);
+
+    //assertions
+    assertNotNull(cartResponse);
+    assertTrue(cartResponse.getItemList().stream().anyMatch(cartItem -> cartItem.getProductId().equals(productId)));
+    assertEquals(desiredSaleCount, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getDesiredSaleCount().intValue());
+    assertEquals(6, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getSaleCount().intValue());
+    //campaign assertions
+    assertEquals(6, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getTotalItemCount().intValue());
+    assertEquals(3, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
+  }
+
+  /**
+   * desired sale count = 9
+   * variant stock      = 9
+   * campaign requirement = 3
+   * campaign gift        = 2
+   */
+  @Test //desired sale count = variant stock, then give available gift
+  public void addToCart_UnsuitableCampaignItemOnStock_AvailableGift_11_ShouldPass() {
+    int accountId = 1;
+    String cartId = "5d1df2814d6a4b0a745457d3";
+    int productId = 1;
+    int variantId = 2;
+    int campaignId = 10;
+    int sellerId = 50;
+    int desiredSaleCount = 9;
+    int variantStock = 9;
+    int totalStock = 9;
+
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .productId(productId)
+        .count(desiredSaleCount)
+        .variantId(variantId)
+        .build();
+
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,2);
+
+    CartEntity cartEntity = CartEntity.builder()
+        .id(cartId)
+        .accountId(accountId)
+        .cartItems(new ArrayList<>())
+        .build();
+
+    VariantEntity variantEntity = generateVariantEntity(productId, variantId, variantStock);
+
+    List<VariantSpecEntity> variantSpecEntities = generateVariantSpecEntities(variantId, productId);
+
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
+
+    when(campaignRepository.findById(campaignId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByProductId(productId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(eq(campaignEntity.getId()), anyLong(), anyLong()))
+        .thenReturn(Optional.of(campaignEntity));
+    when(cartRepository.findCart(cartId))
+        .thenReturn(Optional.of(cartEntity));
+    when(variantRepository.findById(variantId)).thenReturn(Optional.of(variantEntity));
+    when(variantSpecRepository.findByProductIdAndVariantId(productId, variantId)).thenReturn(Optional.of(variantSpecEntities));
+    when(itemRepository.findById(productId))
+        .thenReturn(Optional.of(itemEntity));
+
+    //test
+    CartResponse<CartItemDto> cartResponse = cartService.addToCart(accountId, cartId, request);
+
+    //assertions
+    assertNotNull(cartResponse);
+    assertTrue(cartResponse.getItemList().stream().anyMatch(cartItem -> cartItem.getProductId().equals(productId)));
+    assertEquals(desiredSaleCount, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getDesiredSaleCount().intValue());
+    assertEquals(6, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getSaleCount().intValue());
+    //campaign assertions
+    assertEquals(6, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getTotalItemCount().intValue());
+    assertEquals(3, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
+  }
+
+  /**
+   * desired sale count = 10
+   * variant stock      = 9
+   * campaign requirement = 3
+   * campaign gift        = 2
+   */
+  @Test //desired sale count = variant stock, then give available gift
+  public void addToCart_UnsuitableCampaignItemOnStock_AvailableGift_12_ShouldPass() {
+    int accountId = 1;
+    String cartId = "5d1df2814d6a4b0a745457d3";
+    int productId = 1;
+    int variantId = 2;
+    int campaignId = 10;
+    int sellerId = 50;
+    int desiredSaleCount = 10;
+    int variantStock = 9;
+    int totalStock = 9;
+
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .productId(productId)
+        .count(desiredSaleCount)
+        .variantId(variantId)
+        .build();
+
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,2);
+
+    CartEntity cartEntity = CartEntity.builder()
+        .id(cartId)
+        .accountId(accountId)
+        .cartItems(new ArrayList<>())
+        .build();
+
+    VariantEntity variantEntity = generateVariantEntity(productId, variantId, variantStock);
+
+    List<VariantSpecEntity> variantSpecEntities = generateVariantSpecEntities(variantId, productId);
+
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
+
+    when(campaignRepository.findById(campaignId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByProductId(productId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(eq(campaignEntity.getId()), anyLong(), anyLong()))
+        .thenReturn(Optional.of(campaignEntity));
+    when(cartRepository.findCart(cartId))
+        .thenReturn(Optional.of(cartEntity));
+    when(variantRepository.findById(variantId)).thenReturn(Optional.of(variantEntity));
+    when(variantSpecRepository.findByProductIdAndVariantId(productId, variantId)).thenReturn(Optional.of(variantSpecEntities));
+    when(itemRepository.findById(productId))
+        .thenReturn(Optional.of(itemEntity));
+
+    //test
+    CartResponse<CartItemDto> cartResponse = cartService.addToCart(accountId, cartId, request);
+
+    //assertions
+    assertNotNull(cartResponse);
+    assertTrue(cartResponse.getItemList().stream().anyMatch(cartItem -> cartItem.getProductId().equals(productId)));
+    assertEquals(desiredSaleCount, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getDesiredSaleCount().intValue());
+    assertEquals(6, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getSaleCount().intValue());
+    //campaign assertions
+    assertEquals(6, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getTotalItemCount().intValue());
+    assertEquals(3, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
+  }
+
+  @Test //desired sale count = variant stock, then give no gift
+  public void addToCart_UnsuitableCampaignItemOnStock_NoGift_ShouldPass() {
     int accountId = 1;
     String cartId = "5d1df2814d6a4b0a745457d3";
     int productId = 1;
@@ -1145,20 +1543,7 @@ public class CartServiceTest {
         .variantId(variantId)
         .build();
 
-    CampaignEntity campaignEntity = CampaignEntity.builder()
-        .id(campaignId)
-        .productId(productId)
-        .requirementCount(3)
-        .giftCount(1)
-        .cartLimit(2)
-        .campaignLimit(2)
-        .status(CampaignStatus.ACTIVE)
-        .sellerId(sellerId)
-        .startAt(1562939866630L)
-        .endAt(1577653200000L)
-        .createdAt(1563862109909L)
-        .title("3 Alana 1 Bedava")
-        .build();
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,1);
 
     CartEntity cartEntity = CartEntity.builder()
         .id(cartId)
@@ -1166,56 +1551,11 @@ public class CartServiceTest {
         .cartItems(new ArrayList<>())
         .build();
 
-    VariantEntity variantEntity = VariantEntity.builder()
-        .id(variantId)
-        .stock(variantStock)
-        .price(12.3)
-        .productId(productId)
-        .build();
+    VariantEntity variantEntity = generateVariantEntity(productId, variantId, variantStock);
 
-    int specDetailId1 = 100;
-    SpecDetailEntity specDetailEntity1 = SpecDetailEntity.builder().id(specDetailId1).detail("Ebat").build();
+    List<VariantSpecEntity> variantSpecEntities = generateVariantSpecEntities(variantId, productId);
 
-    int specDetailId2 = 101;
-    SpecDetailEntity specDetailEntity2 = SpecDetailEntity.builder().id(specDetailId2).detail("Dış Renk").build();
-
-    int specDetailId3 = 102;
-    SpecDetailEntity specDetailEntity3 = SpecDetailEntity.builder().id(specDetailId3).detail("Üretim Yılı").build();
-
-    int specDataId1 = 151;
-    SpecDataEntity specDataEntity1 = SpecDataEntity.builder().id(specDataId1).specDetailId(specDetailId1).data("Small").build();
-
-    int specDataId2 = 152;
-    SpecDataEntity specDataEntity2 = SpecDataEntity.builder().id(specDataId2).specDetailId(specDetailId2).data("Mavi").build();
-
-    int specDataId3 = 153;
-    SpecDataEntity specDataEntity3 = SpecDataEntity.builder().id(specDataId3).specDetailId(specDetailId3).data("2018").build();
-
-    int variantSpecEntityId1 = 200;
-    VariantSpecEntity variantSpecEntity1 = VariantSpecEntity.builder().id(variantSpecEntityId1).productId(productId).specDataId(specDataId1).variantId(variantId).build();
-
-    int variantSpecEntityId2 = 201;
-    VariantSpecEntity variantSpecEntity2 = VariantSpecEntity.builder().id(variantSpecEntityId2).productId(productId).specDataId(specDataId2).variantId(variantId).build();
-
-    int variantSpecEntityId3 = 202;
-    VariantSpecEntity variantSpecEntity3 = VariantSpecEntity.builder().id(variantSpecEntityId3).productId(productId).specDataId(specDataId3).variantId(variantId).build();
-
-    List<VariantSpecEntity> variantSpecEntities = new ArrayList<>();
-    variantSpecEntities.add(variantSpecEntity1);
-    variantSpecEntities.add(variantSpecEntity2);
-    variantSpecEntities.add(variantSpecEntity3);
-
-    ItemEntity itemEntity = ItemEntity.builder()
-        .id(productId)
-        .sellerId(sellerId)
-        .stock(totalStock)
-        .cargoType(CargoType.FREE)
-        .cargoCompany("MNG Kargo")
-        .createdAt(1563892923731L)
-        .name("Gömlek")
-        .description("açıklama")
-        .price(12.3)
-        .build();
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
 
     when(campaignRepository.findById(campaignId))
         .thenReturn(Optional.of(campaignEntity));
@@ -1227,12 +1567,6 @@ public class CartServiceTest {
         .thenReturn(Optional.of(cartEntity));
     when(variantRepository.findById(variantId)).thenReturn(Optional.of(variantEntity));
     when(variantSpecRepository.findByProductIdAndVariantId(productId, variantId)).thenReturn(Optional.of(variantSpecEntities));
-    when(specDataRepository.findById(specDataId1)).thenReturn(Optional.of(specDataEntity1));
-    when(specDataRepository.findById(specDataId2)).thenReturn(Optional.of(specDataEntity2));
-    when(specDataRepository.findById(specDataId3)).thenReturn(Optional.of(specDataEntity3));
-    when(specDetailRepository.findById(specDetailId1)).thenReturn(Optional.of(specDetailEntity1));
-    when(specDetailRepository.findById(specDetailId2)).thenReturn(Optional.of(specDetailEntity2));
-    when(specDetailRepository.findById(specDetailId3)).thenReturn(Optional.of(specDetailEntity3));
     when(itemRepository.findById(productId))
         .thenReturn(Optional.of(itemEntity));
 
@@ -1249,8 +1583,8 @@ public class CartServiceTest {
     assertEquals(0, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
   }
 
-  @Test
-  public void addToCart_UnsuitableCampaignItemOnStock_ExceedCampaignLimit_ShouldPass(){
+  @Test //stock available but user campaign limit exceed
+  public void addToCart_UnsuitableCampaignItemOnStock_ExceedCampaignLimit_ShouldPass() {
     int accountId = 1;
     String cartId = "5d1df2814d6a4b0a745457d3";
     int productId = 1;
@@ -1267,20 +1601,7 @@ public class CartServiceTest {
         .variantId(variantId)
         .build();
 
-    CampaignEntity campaignEntity = CampaignEntity.builder()
-        .id(campaignId)
-        .productId(productId)
-        .requirementCount(3)
-        .giftCount(1)
-        .cartLimit(2)
-        .campaignLimit(2)
-        .status(CampaignStatus.ACTIVE)
-        .sellerId(sellerId)
-        .startAt(1562939866630L)
-        .endAt(1577653200000L)
-        .createdAt(1563862109909L)
-        .title("3 Alana 1 Bedava")
-        .build();
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,1);
 
     CartEntity cartEntity = CartEntity.builder()
         .id(cartId)
@@ -1288,80 +1609,17 @@ public class CartServiceTest {
         .cartItems(new ArrayList<>())
         .build();
 
-    VariantEntity variantEntity = VariantEntity.builder()
-        .id(variantId)
-        .stock(variantStock)
-        .price(12.3)
-        .productId(productId)
-        .build();
+    VariantEntity variantEntity = generateVariantEntity(productId, variantId, variantStock);
 
-    int specDetailId1 = 100;
-    SpecDetailEntity specDetailEntity1 = SpecDetailEntity.builder().id(specDetailId1).detail("Ebat").build();
+    List<VariantSpecEntity> variantSpecEntities = generateVariantSpecEntities(variantId, productId);
 
-    int specDetailId2 = 101;
-    SpecDetailEntity specDetailEntity2 = SpecDetailEntity.builder().id(specDetailId2).detail("Dış Renk").build();
-
-    int specDetailId3 = 102;
-    SpecDetailEntity specDetailEntity3 = SpecDetailEntity.builder().id(specDetailId3).detail("Üretim Yılı").build();
-
-    int specDataId1 = 151;
-    SpecDataEntity specDataEntity1 = SpecDataEntity.builder().id(specDataId1).specDetailId(specDetailId1).data("Small").build();
-
-    int specDataId2 = 152;
-    SpecDataEntity specDataEntity2 = SpecDataEntity.builder().id(specDataId2).specDetailId(specDetailId2).data("Mavi").build();
-
-    int specDataId3 = 153;
-    SpecDataEntity specDataEntity3 = SpecDataEntity.builder().id(specDataId3).specDetailId(specDetailId3).data("2018").build();
-
-    int variantSpecEntityId1 = 200;
-    VariantSpecEntity variantSpecEntity1 = VariantSpecEntity.builder().id(variantSpecEntityId1).productId(productId).specDataId(specDataId1).variantId(variantId).build();
-
-    int variantSpecEntityId2 = 201;
-    VariantSpecEntity variantSpecEntity2 = VariantSpecEntity.builder().id(variantSpecEntityId2).productId(productId).specDataId(specDataId2).variantId(variantId).build();
-
-    int variantSpecEntityId3 = 202;
-    VariantSpecEntity variantSpecEntity3 = VariantSpecEntity.builder().id(variantSpecEntityId3).productId(productId).specDataId(specDataId3).variantId(variantId).build();
-
-    List<VariantSpecEntity> variantSpecEntities = new ArrayList<>();
-    variantSpecEntities.add(variantSpecEntity1);
-    variantSpecEntities.add(variantSpecEntity2);
-    variantSpecEntities.add(variantSpecEntity3);
-
-    ItemEntity itemEntity = ItemEntity.builder()
-        .id(productId)
-        .sellerId(sellerId)
-        .stock(totalStock)
-        .cargoType(CargoType.FREE)
-        .cargoCompany("MNG Kargo")
-        .createdAt(1563892923731L)
-        .name("Gömlek")
-        .description("açıklama")
-        .price(12.3)
-        .build();
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
 
     int saleEntityId1 = 60;
-    SalesEntity salesEntity1 = SalesEntity.builder()
-        .id(saleEntityId1)
-        .productId(productId)
-        .ownerId(accountId)
-        .variantId(variantId)
-        .saleCount(6)
-        .price(6 * 12.3)
-        .giftCount(1)
-        .soldAt(1563967454239L)
-        .build();
+    SalesEntity salesEntity1 = generateSaleEntity(accountId, productId, variantId, 6, 1, 1563967454239L, saleEntityId1);
 
     int saleEntityId2 = 61;
-    SalesEntity salesEntity2 = SalesEntity.builder()
-        .id(saleEntityId2)
-        .productId(productId)
-        .ownerId(accountId)
-        .variantId(variantId)
-        .saleCount(8)
-        .price(8 * 12.3)
-        .giftCount(2)
-        .soldAt(1563967539863L)
-        .build();
+    SalesEntity salesEntity2 = generateSaleEntity(accountId, productId, variantId, 8, 2, 1563967539863L, saleEntityId2);
 
     List<SalesEntity> salesEntities = new ArrayList<>();
     salesEntities.add(salesEntity1);
@@ -1379,12 +1637,6 @@ public class CartServiceTest {
         .thenReturn(Optional.of(cartEntity));
     when(variantRepository.findById(variantId)).thenReturn(Optional.of(variantEntity));
     when(variantSpecRepository.findByProductIdAndVariantId(productId, variantId)).thenReturn(Optional.of(variantSpecEntities));
-    when(specDataRepository.findById(specDataId1)).thenReturn(Optional.of(specDataEntity1));
-    when(specDataRepository.findById(specDataId2)).thenReturn(Optional.of(specDataEntity2));
-    when(specDataRepository.findById(specDataId3)).thenReturn(Optional.of(specDataEntity3));
-    when(specDetailRepository.findById(specDetailId1)).thenReturn(Optional.of(specDetailEntity1));
-    when(specDetailRepository.findById(specDetailId2)).thenReturn(Optional.of(specDetailEntity2));
-    when(specDetailRepository.findById(specDetailId3)).thenReturn(Optional.of(specDetailEntity3));
     when(itemRepository.findById(productId))
         .thenReturn(Optional.of(itemEntity));
 
@@ -1401,5 +1653,71 @@ public class CartServiceTest {
     //campaign assertions
     assertFalse(cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getHasCampaign());
     assertNull(cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams());
+  }
+
+  private ItemEntity generateItemEntity(int productId, int sellerId, int totalStock) {
+    return ItemEntity.builder()
+        .id(productId)
+        .sellerId(sellerId)
+        .stock(totalStock)
+        .cargoType(CargoType.FREE)
+        .cargoCompany("MNG Kargo")
+        .createdAt(1563892923731L)
+        .name("Gömlek")
+        .description("açıklama")
+        .price(12.3)
+        .build();
+  }
+
+  private VariantEntity generateVariantEntity(int productId, int variantId, int variantStock) {
+    return VariantEntity.builder()
+        .id(variantId)
+        .stock(variantStock)
+        .price(12.3)
+        .productId(productId)
+        .build();
+  }
+
+  private SalesEntity generateSaleEntity(int accountId, int productId, int variantId, int saleCount, int giftCount, Long soldAt, int saleEntityId1) {
+    return SalesEntity.builder()
+        .id(saleEntityId1)
+        .productId(productId)
+        .ownerId(accountId)
+        .variantId(variantId)
+        .saleCount(saleCount)
+        .price(saleCount * 12.3)
+        .giftCount(giftCount)
+        .soldAt(soldAt)
+        .build();
+  }
+
+  private List<VariantSpecEntity> generateVariantSpecEntities(int variantId, int productId) {
+    VariantSpecEntity variantSpecEntity1 = VariantSpecEntity.builder().id(variantSpecEntityId1).productId(productId).specDataId(specDataId1).variantId(variantId).build();
+    VariantSpecEntity variantSpecEntity2 = VariantSpecEntity.builder().id(variantSpecEntityId2).productId(productId).specDataId(specDataId2).variantId(variantId).build();
+    VariantSpecEntity variantSpecEntity3 = VariantSpecEntity.builder().id(variantSpecEntityId3).productId(productId).specDataId(specDataId3).variantId(variantId).build();
+
+    List<VariantSpecEntity> variantSpecEntities = new ArrayList<>();
+    variantSpecEntities.add(variantSpecEntity1);
+    variantSpecEntities.add(variantSpecEntity2);
+    variantSpecEntities.add(variantSpecEntity3);
+
+    return variantSpecEntities;
+  }
+
+  private CampaignEntity generateCampaignEntity(int campaignId, int productId, int sellerId, int requirementCount, int giftCount) {
+    return CampaignEntity.builder()
+        .id(campaignId)
+        .productId(productId)
+        .requirementCount(requirementCount)
+        .giftCount(giftCount)
+        .cartLimit(2)
+        .campaignLimit(2)
+        .status(CampaignStatus.ACTIVE)
+        .sellerId(sellerId)
+        .startAt(1562939866630L)
+        .endAt(1577653200000L)
+        .createdAt(1563862109909L)
+        .title("3 Alana 1 Bedava")
+        .build();
   }
 }

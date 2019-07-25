@@ -388,9 +388,10 @@ public class BaseServiceImpl implements BaseService {
 
   @Override
   public Variant addVariant(VariantEntity variantEntity) {
+    VariantEntity savedVariantEntity = variantRepository.save(variantEntity);
     return Converters
-        .variantEntityToVariant(variantRepository.save(variantEntity),
-            getProductVariantSpecs(variantEntity.getProductId(), variantEntity.getId()));
+        .variantEntityToVariant(savedVariantEntity,
+            getProductVariantSpecs(savedVariantEntity.getProductId(), savedVariantEntity.getId()));
   }
 
   @Override

@@ -12,4 +12,5 @@ public class Errors {
   public final static String CAMPAIGN_NOT_FOUND = "Kampanya Bulunamadı.";
   public final static String CAMPAIGN_BADGE_NOT_FOUND = "Kampanya Rozet Bilgisi Bulunamadı.";
   public final static String CART_NOT_FOUND = "Sepet Bulunamadı.";
+  public final static String NOT_PERMISSION = "You do not have permission for this operation";
 }

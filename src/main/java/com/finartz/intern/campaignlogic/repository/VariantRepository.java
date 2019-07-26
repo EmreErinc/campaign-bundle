@@ -15,6 +15,6 @@ public interface VariantRepository extends BaseRepository<VariantEntity, String>
 
   @Transactional
   @Modifying
-  @Query(value = "update finartz.variants v set v.stock=v.stock + ?1 where v.id=?2", nativeQuery = true)
+  @Query(value = "update variants v set v.stock=v.stock + ?1 where v.id=?2", nativeQuery = true)
   void addStock(int stock, int variantId);
 }

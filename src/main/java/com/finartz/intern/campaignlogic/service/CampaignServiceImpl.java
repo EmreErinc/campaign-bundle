@@ -17,7 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.finartz.intern.campaignlogic.security.Errors.*;
+import static com.finartz.intern.campaignlogic.security.Errors.CAMPAIGN_NOT_FOUND;
+import static com.finartz.intern.campaignlogic.security.Errors.NOT_PERMISSION;
 
 @Service
 public class CampaignServiceImpl extends BaseServiceImpl implements CampaignService {
@@ -78,7 +79,7 @@ public class CampaignServiceImpl extends BaseServiceImpl implements CampaignServ
   @Override
   public boolean updateCampaignStatus(int accountId, String campaignId, CampaignStatus status) {
     if (!getRoleByAccountId(accountId).equals(Role.SELLER)) {
-      throw new ApplicationContextException("You do not have permission for this operation");
+      throw new ApplicationContextException(NOT_PERMISSION);
     }
 
     Optional<CampaignEntity> optionalCampaignEntity = campaignRepository.findById(Integer.valueOf(campaignId));

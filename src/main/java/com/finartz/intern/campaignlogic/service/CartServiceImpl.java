@@ -116,7 +116,6 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
   public CartResponse updateCart(CartDto cartDto, boolean recalculate) {
     Optional<CampaignEntity> optionalCampaignEntity = getCampaignByProductId(cartDto.getProductId());
 
-    System.out.println("in the updateCart");
     //checks campaign is available
     if (optionalCampaignEntity.isPresent()
         && isItemAvailable(cartDto)

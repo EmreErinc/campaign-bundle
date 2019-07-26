@@ -1,28 +1,38 @@
 package com.finartz.intern.campaignlogic;
 
-import com.finartz.intern.campaignlogic.model.entity.CampaignEntity;
-import com.finartz.intern.campaignlogic.model.request.*;
+import com.finartz.intern.campaignlogic.model.request.AddItemToCartRequest;
+import com.finartz.intern.campaignlogic.model.request.AddSellerRequest;
+import com.finartz.intern.campaignlogic.model.request.CartItemIncrementRequest;
 import com.finartz.intern.campaignlogic.model.response.CartResponse;
 import com.finartz.intern.campaignlogic.model.response.ItemResponse;
 import com.finartz.intern.campaignlogic.model.response.RegisterResponse;
 import com.finartz.intern.campaignlogic.model.response.SellerResponse;
-import com.finartz.intern.campaignlogic.model.value.CampaignStatus;
-import com.finartz.intern.campaignlogic.model.value.CartItemDto;
-import com.finartz.intern.campaignlogic.repository.CampaignRepository;
-import com.finartz.intern.campaignlogic.service.*;
+import com.finartz.intern.campaignlogic.model.value.Messages;
+import com.finartz.intern.campaignlogic.service.CartService;
+import com.finartz.intern.campaignlogic.service.SellerService;
+import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-import static org.junit.Assert.*;
+import java.nio.charset.Charset;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Slf4j
 @TestPropertySource(locations = {"classpath:application-test.properties"})
@@ -31,54 +41,24 @@ import static org.junit.Assert.*;
 @ActiveProfiles(value = "test")
 public class CartIntegrationTest extends BaseTestController {
 
-  //@Autowired
-  //private MockMvc mockMvc;
+  @Autowired
+  private WebApplicationContext wac;
+  private MockMvc mockMvc;
 
   @Autowired
   private CartService cartService;
 
   @Autowired
-  private SalesService salesService;
-
-  @Autowired
   private SellerService sellerService;
 
-  @Mock
-  private CartServiceImpl cartServiceImpl;
-
-  @Mock
-  private CampaignRepository campaignRepository;
-
-  @Mock
-  private BaseService baseService;
-
   private RegisterResponse sellerAccountRegisterResponse;
-  private String cartId;
 
-  private ItemResponse itemResponse1;
-  private ItemResponse itemResponse2;
-  private ItemResponse itemResponse3;
-
-  private CampaignEntity campaignEntity;
+  private MediaType contentType = new MediaType(MediaType.APPLICATION_JSON, Charset.forName("UTF-8"));
 
   @Before
   public void initialize() {
-    MockitoAnnotations.initMocks(this);
-
-    campaignEntity = CampaignEntity.builder()
-        .id(1)
-        .productId(5)
-        .requirementCount(3)
-        .giftCount(1)
-        .cartLimit(2)
-        .campaignLimit(2)
-        .status(CampaignStatus.ACTIVE)
-        .sellerId(1)
-        .startAt(1562939866630L)
-        .endAt(1577653200000L)
-        .createdAt(1563862109909L)
-        .title("3 Alana 1 Bedava")
-        .build();
+    DefaultMockMvcBuilder builder = MockMvcBuilders.webAppContextSetup(this.wac);
+    this.mockMvc = builder.build();
 
     //create seller account
     sellerAccountRegisterResponse = generateSellerAccount();
@@ -90,353 +70,508 @@ public class CartIntegrationTest extends BaseTestController {
         .address("Test Mahallesi, Seller Sokak, No: 1, Daire: 1")
         .build());
     log.info("SELLER CREATED : " + sellerResponse.toString());
-
-    //add item
-    itemResponse1 = generateItem(sellerAccountRegisterResponse.getId());
-    log.info("ITEM CREATED : " + itemResponse1.toString());
-    itemResponse2 = generateItem(sellerAccountRegisterResponse.getId());
-    log.info("ITEM CREATED : " + itemResponse2.toString());
-    itemResponse3 = generateItem(sellerAccountRegisterResponse.getId());
-    log.info("ITEM CREATED : " + itemResponse2.toString());
-
-    //generate campaign
-    generateCampaign(sellerAccountRegisterResponse.getId(), itemResponse1.getProductId());
-    generateCampaign(sellerAccountRegisterResponse.getId(), itemResponse3.getProductId());
   }
 
   @Test
-  public void test_addCampaignItemToCartByDirectly() {
+  public void test_addCampaignItemToCartByDirectly() throws Exception {
     RegisterResponse registerResponse = generateUserAccount();
-    String cartId = getCartIdFromToken(registerResponse.getToken());
     int count = 2;
 
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 20, 3,3,4, 1);
+
     AddItemToCartRequest request = AddItemToCartRequest.builder()
-        .productId(itemResponse1.getProductId())
+        .productId(itemGenerateResponse.getProductId())
         .count(count)
         .build();
 
-    CartResponse<CartItemDto> cartResponse = cartService.addToCart(registerResponse.getId(), cartId, request);
-
-    assertNotNull(cartResponse);
-    assertTrue(cartResponse
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse1.getProductId()) && cartItem.getSaleCount().equals(count)));
+    //test
+    mockMvc.perform(post("/cart/add")
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", "Bearer " + registerResponse.getToken())
+        .content(new Gson().toJson(request)))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(contentType))
+        .andExpect(jsonPath("$.itemList", hasSize(1)))
+        .andExpect(jsonPath("$.itemList[0].productId", is(itemGenerateResponse.getProductId())))
+        .andExpect(jsonPath("$.itemList[0].sellerId", is(sellerAccountRegisterResponse.getId())))
+        .andExpect(jsonPath("$.itemList[0].desiredSaleCount", is(count)))
+        .andExpect(jsonPath("$.itemList[0].saleCount", is(count)))
+        .andExpect(jsonPath("$.itemList[0].price", is(itemGenerateResponse.getPrice() * count)))
+        .andExpect(jsonPath("$.itemList[0].hasCampaign", is(true)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.actualGiftCount", is(0)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.totalItemCount", is(2)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.badge.requirement", is(4)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.badge.gift", is(1)))
+        .andExpect(jsonPath("$.itemList[0].hasVariant", is(false)))
+        .andExpect(jsonPath("$.itemList[0].variant", nullValue()))
+        .andExpect(jsonPath("$.itemList[0].message", is("")));
   }
 
   @Test
-  public void test_addNonCampaignItemToCartByDirectly() {
+  public void test_addNonCampaignItemToCartByDirectly() throws Exception {
     RegisterResponse registerResponse = generateUserAccount();
-    String cartId = getCartIdFromToken(registerResponse.getToken());
     int count = 2;
 
+    ItemResponse itemResponse = generateItem(sellerAccountRegisterResponse.getId());
+    log.info("ITEM CREATED : " + itemResponse.toString());
+
     AddItemToCartRequest request = AddItemToCartRequest.builder()
-        .productId(itemResponse1.getProductId())
+        .productId(itemResponse.getProductId())
         .count(count)
         .build();
 
-    CartResponse<CartItemDto> cartResponse = cartService.addToCart(registerResponse.getId(), cartId, request);
+    //test
+    mockMvc.perform(post("/cart/add")
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", "Bearer " + registerResponse.getToken())
+        .content(new Gson().toJson(request)))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(contentType))
+        .andExpect(jsonPath("$.itemList", hasSize(1)))
+        .andExpect(jsonPath("$.itemList[0].productId", is(itemResponse.getProductId())))
+        .andExpect(jsonPath("$.itemList[0].sellerId", is(sellerAccountRegisterResponse.getId())))
+        .andExpect(jsonPath("$.itemList[0].desiredSaleCount", is(count)))
+        .andExpect(jsonPath("$.itemList[0].saleCount", is(count)))
+        .andExpect(jsonPath("$.itemList[0].price", is(itemResponse.getPrice() * count)))
+        .andExpect(jsonPath("$.itemList[0].hasCampaign", is(false)))
+        .andExpect(jsonPath("$.itemList[0].hasVariant", is(false)))
+        .andExpect(jsonPath("$.itemList[0].variant", nullValue()))
+        .andExpect(jsonPath("$.itemList[0].message", is("")));
+  }
 
+  @Test
+  public void test_addCampaignItemToCartByIncrementItemCount() throws Exception {
+    RegisterResponse registerResponse = generateUserAccount();
+
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 20, 3,3,4, 1);
+
+    CartItemIncrementRequest request = CartItemIncrementRequest.builder()
+        .productId(itemGenerateResponse.getProductId())
+        .build();
+
+    //test
+    mockMvc.perform(post("/cart/inc")
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", "Bearer " + registerResponse.getToken())
+        .content(new Gson().toJson(request)))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(contentType))
+        .andExpect(jsonPath("$.itemList", hasSize(1)))
+        .andExpect(jsonPath("$.itemList[0].productId", is(itemGenerateResponse.getProductId())))
+        .andExpect(jsonPath("$.itemList[0].sellerId", is(sellerAccountRegisterResponse.getId())))
+        .andExpect(jsonPath("$.itemList[0].desiredSaleCount", is(1)))
+        .andExpect(jsonPath("$.itemList[0].saleCount", is(1)))
+        .andExpect(jsonPath("$.itemList[0].price", is(itemGenerateResponse.getPrice() * 1)))
+        .andExpect(jsonPath("$.itemList[0].hasCampaign", is(true)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.actualGiftCount", is(0)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.totalItemCount", is(1)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.badge.requirement", is(4)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.badge.gift", is(1)))
+        .andExpect(jsonPath("$.itemList[0].hasVariant", is(false)))
+        .andExpect(jsonPath("$.itemList[0].variant", nullValue()))
+        .andExpect(jsonPath("$.itemList[0].message", is("")));
+  }
+
+  @Test
+  public void test_addNonCampaignItemToCartByIncrementItemCount() throws Exception {
+    RegisterResponse registerResponse = generateUserAccount();
+
+    ItemResponse itemResponse = generateItem(sellerAccountRegisterResponse.getId());
+    log.info("ITEM CREATED : " + itemResponse.toString());
+
+    CartItemIncrementRequest request = CartItemIncrementRequest.builder()
+        .productId(itemResponse.getProductId())
+        .build();
+
+    //test
+    mockMvc.perform(post("/cart/inc")
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", "Bearer " + registerResponse.getToken())
+        .content(new Gson().toJson(request)))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(contentType))
+        .andExpect(jsonPath("$.itemList", hasSize(1)))
+        .andExpect(jsonPath("$.itemList[0].productId", is(itemResponse.getProductId())))
+        .andExpect(jsonPath("$.itemList[0].sellerId", is(sellerAccountRegisterResponse.getId())))
+        .andExpect(jsonPath("$.itemList[0].desiredSaleCount", is(1)))
+        .andExpect(jsonPath("$.itemList[0].saleCount", is(1)))
+        .andExpect(jsonPath("$.itemList[0].price", is(itemResponse.getPrice() * 1)))
+        .andExpect(jsonPath("$.itemList[0].hasCampaign", is(false)))
+        .andExpect(jsonPath("$.itemList[0].hasVariant", is(false)))
+        .andExpect(jsonPath("$.itemList[0].variant", nullValue()))
+        .andExpect(jsonPath("$.itemList[0].message", is("")));
+  }
+
+  @Test
+  public void test_addCampaignItemToCartAndDecrease_WhenHasGotGift() throws Exception {
+    RegisterResponse registerResponse = generateUserAccount();
+    int count = 4;
+
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 20, 3,3,4, 1);
+
+    //add to cart before test
+    AddItemToCartRequest addItemToCartRequest = AddItemToCartRequest.builder()
+        .productId(itemGenerateResponse.getProductId())
+        .count(count)
+        .build();
+
+    CartResponse cartResponse = cartService.addToCart(registerResponse.getId(), getCartIdFromToken(registerResponse.getToken()), addItemToCartRequest);
     assertNotNull(cartResponse);
-    assertTrue(cartResponse
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse2.getProductId()) && cartItem.getSaleCount().equals(count)));
+
+    CartItemIncrementRequest request = CartItemIncrementRequest.builder()
+        .productId(itemGenerateResponse.getProductId())
+        .build();
+
+    //test
+    mockMvc.perform(post("/cart/dec")
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", "Bearer " + registerResponse.getToken())
+        .content(new Gson().toJson(request)))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(contentType))
+        .andExpect(jsonPath("$.itemList", hasSize(1)))
+        .andExpect(jsonPath("$.itemList[0].productId", is(itemGenerateResponse.getProductId())))
+        .andExpect(jsonPath("$.itemList[0].sellerId", is(sellerAccountRegisterResponse.getId())))
+        .andExpect(jsonPath("$.itemList[0].desiredSaleCount", is(3)))
+        .andExpect(jsonPath("$.itemList[0].saleCount", is(3)))
+        .andExpect(jsonPath("$.itemList[0].price", is(itemGenerateResponse.getPrice() * 3)))
+        .andExpect(jsonPath("$.itemList[0].hasCampaign", is(true)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.actualGiftCount", is(0)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.totalItemCount", is(3)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.badge.requirement", is(4)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.badge.gift", is(1)))
+        .andExpect(jsonPath("$.itemList[0].hasVariant", is(false)))
+        .andExpect(jsonPath("$.itemList[0].variant", nullValue()))
+        .andExpect(jsonPath("$.itemList[0].message", is("")));
   }
 
   @Test
-  public void test_addCampaignItemToCartByIncrementItemCount() {
+  public void test_addNonCampaignItemToCartAndDecrease() throws Exception {
     RegisterResponse registerResponse = generateUserAccount();
-    String cartId = getCartIdFromToken(registerResponse.getToken());
+    int count = 4;
 
-    CartResponse<CartItemDto> cartResponseBeforeIncrement = cartService.getCart(cartId);
-    assertFalse(cartResponseBeforeIncrement
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse1.getProductId())));
+    ItemResponse itemResponse = generateItem(sellerAccountRegisterResponse.getId());
+    log.info("ITEM CREATED : " + itemResponse.toString());
 
-    //test
-    CartItemIncrementRequest request = CartItemIncrementRequest.builder()
-        .productId(itemResponse1.getProductId())
+    AddItemToCartRequest addItemToCartRequest = AddItemToCartRequest.builder()
+        .productId(itemResponse.getProductId())
+        .count(count)
         .build();
 
-    CartResponse<CartItemDto> cartResponse = cartService.incrementItem(registerResponse.getId(), cartId, request);
-
+    CartResponse cartResponse = cartService.addToCart(registerResponse.getId(), getCartIdFromToken(registerResponse.getToken()), addItemToCartRequest);
     assertNotNull(cartResponse);
-    int saleCountAfterIncrement = cartResponse
-        .getItemList()
-        .stream()
-        .filter(cartItem -> cartItem.getProductId().equals(itemResponse1.getProductId()))
-        .findFirst()
-        .get()
-        .getSaleCount();
-    assertEquals(1, saleCountAfterIncrement);
+
+    CartItemIncrementRequest request = CartItemIncrementRequest.builder()
+        .productId(itemResponse.getProductId())
+        .build();
+
+    mockMvc.perform(post("/cart/dec")
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", "Bearer " + registerResponse.getToken())
+        .content(new Gson().toJson(request)))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(contentType))
+        .andExpect(jsonPath("$.itemList", hasSize(1)))
+        .andExpect(jsonPath("$.itemList[0].productId", is(itemResponse.getProductId())))
+        .andExpect(jsonPath("$.itemList[0].sellerId", is(sellerAccountRegisterResponse.getId())))
+        .andExpect(jsonPath("$.itemList[0].desiredSaleCount", is(3)))
+        .andExpect(jsonPath("$.itemList[0].saleCount", is(3)))
+        .andExpect(jsonPath("$.itemList[0].price", is(itemResponse.getPrice() * 3)))
+        .andExpect(jsonPath("$.itemList[0].hasCampaign", is(false)))
+        .andExpect(jsonPath("$.itemList[0].hasVariant", is(false)))
+        .andExpect(jsonPath("$.itemList[0].variant", nullValue()))
+        .andExpect(jsonPath("$.itemList[0].message", is("")));
   }
 
   @Test
-  public void test_addNonCampaignItemToCartByIncrementItemCount() {
+  public void test_addCampaignItemToCartAndIncrease_WhenReachToCampaignRequirementCount() throws Exception {
     RegisterResponse registerResponse = generateUserAccount();
-    String cartId = getCartIdFromToken(registerResponse.getToken());
-    CartResponse<CartItemDto> cartResponseBeforeIncrement = cartService.getCart(cartId);
-    assertFalse(cartResponseBeforeIncrement
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse2.getProductId())));
+    int count = 3;
 
-    //test
-    CartItemIncrementRequest request = CartItemIncrementRequest.builder()
-        .productId(itemResponse1.getProductId())
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 20, 3,3,4, 1);
+
+    //add to cart before test
+    AddItemToCartRequest addItemToCartRequest = AddItemToCartRequest.builder()
+        .productId(itemGenerateResponse.getProductId())
+        .count(count)
         .build();
 
-    CartResponse<CartItemDto> cartResponse = cartService.incrementItem(registerResponse.getId(), cartId, request);
-
+    CartResponse cartResponse = cartService.addToCart(registerResponse.getId(), getCartIdFromToken(registerResponse.getToken()), addItemToCartRequest);
     assertNotNull(cartResponse);
-    int saleCountAfterIncrement = cartResponse
-        .getItemList()
-        .stream()
-        .filter(cartItem -> cartItem.getProductId().equals(itemResponse2.getProductId()))
-        .findFirst()
-        .get()
-        .getSaleCount();
-    assertEquals(1, saleCountAfterIncrement);
-  }
-
-  @Test
-  public void test_removeCampaignItemByDirectly() {
-    RegisterResponse registerResponse = generateUserAccount();
-    int userId = registerResponse.getId();
-    String cartId = getCartIdFromToken(registerResponse.getToken());
-
-    CartResponse<CartItemDto> cartResponseBeforeIncrement = cartService.getCart(cartId);
-    assertFalse(cartResponseBeforeIncrement
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse1.getProductId())));
 
     CartItemIncrementRequest request = CartItemIncrementRequest.builder()
-        .productId(itemResponse1.getProductId())
+        .productId(itemGenerateResponse.getProductId())
         .build();
-
-    CartResponse<CartItemDto> cartResponse = cartService.incrementItem(userId, cartId, request);
-
-    assertTrue(cartResponse
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse1.getProductId())));
 
     //test
-    CartItemRemoveRequest removeRequest = CartItemRemoveRequest.builder()
-        .productId(itemResponse1.getProductId())
-        .build();
-
-    CartResponse<CartItemDto> cartResponseBeforeDecrement = cartService.removeFromCart(userId, cartId, removeRequest);
-    assertFalse(cartResponseBeforeDecrement
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse1.getProductId())));
+    mockMvc.perform(post("/cart/inc")
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", "Bearer " + registerResponse.getToken())
+        .content(new Gson().toJson(request)))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(contentType))
+        .andExpect(jsonPath("$.itemList", hasSize(1)))
+        .andExpect(jsonPath("$.itemList[0].productId", is(itemGenerateResponse.getProductId())))
+        .andExpect(jsonPath("$.itemList[0].sellerId", is(sellerAccountRegisterResponse.getId())))
+        .andExpect(jsonPath("$.itemList[0].desiredSaleCount", is(4)))
+        .andExpect(jsonPath("$.itemList[0].saleCount", is(4)))
+        .andExpect(jsonPath("$.itemList[0].price", is(itemGenerateResponse.getPrice() * 4)))
+        .andExpect(jsonPath("$.itemList[0].hasCampaign", is(true)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.actualGiftCount", is(1)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.totalItemCount", is(4)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.badge.requirement", is(4)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.badge.gift", is(1)))
+        .andExpect(jsonPath("$.itemList[0].hasVariant", is(false)))
+        .andExpect(jsonPath("$.itemList[0].variant", nullValue()))
+        .andExpect(jsonPath("$.itemList[0].message", is("")));
   }
 
   @Test
-  public void test_removeNonCampaignItemByDirectly() {
+  public void test_addNonCampaignItemToCartAndIncrease() throws Exception {
     RegisterResponse registerResponse = generateUserAccount();
-    int userId = registerResponse.getId();
-    String cartId = getCartIdFromToken(registerResponse.getToken());
+    int count = 3;
 
-    CartResponse<CartItemDto> cartResponseBeforeIncrement = cartService.getCart(cartId);
-    assertFalse(cartResponseBeforeIncrement
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse2.getProductId())));
+    ItemResponse itemResponse = generateItem(sellerAccountRegisterResponse.getId());
+    log.info("ITEM CREATED : " + itemResponse.toString());
+
+    AddItemToCartRequest addItemToCartRequest = AddItemToCartRequest.builder()
+        .productId(itemResponse.getProductId())
+        .count(count)
+        .build();
+
+    CartResponse cartResponse = cartService.addToCart(registerResponse.getId(), getCartIdFromToken(registerResponse.getToken()), addItemToCartRequest);
+    assertNotNull(cartResponse);
 
     CartItemIncrementRequest request = CartItemIncrementRequest.builder()
-        .productId(itemResponse2.getProductId())
+        .productId(itemResponse.getProductId())
         .build();
 
-    CartResponse<CartItemDto> cartResponse = cartService.incrementItem(userId, cartId, request);
-    assertTrue(cartResponse
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse2.getProductId())));
-
-    //test
-    CartItemRemoveRequest removeRequest = CartItemRemoveRequest.builder()
-        .productId(itemResponse2.getProductId())
-        .build();
-
-    CartResponse<CartItemDto> cartResponseBeforeDecrement = cartService.removeFromCart(userId, cartId, removeRequest);
-    assertFalse(cartResponseBeforeDecrement
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse2.getProductId())));
+    mockMvc.perform(post("/cart/inc")
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", "Bearer " + registerResponse.getToken())
+        .content(new Gson().toJson(request)))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(contentType))
+        .andExpect(jsonPath("$.itemList", hasSize(1)))
+        .andExpect(jsonPath("$.itemList[0].productId", is(itemResponse.getProductId())))
+        .andExpect(jsonPath("$.itemList[0].sellerId", is(sellerAccountRegisterResponse.getId())))
+        .andExpect(jsonPath("$.itemList[0].desiredSaleCount", is(4)))
+        .andExpect(jsonPath("$.itemList[0].saleCount", is(4)))
+        .andExpect(jsonPath("$.itemList[0].price", is(itemResponse.getPrice() * 4)))
+        .andExpect(jsonPath("$.itemList[0].hasCampaign", is(false)))
+        .andExpect(jsonPath("$.itemList[0].hasVariant", is(false)))
+        .andExpect(jsonPath("$.itemList[0].variant", nullValue()))
+        .andExpect(jsonPath("$.itemList[0].message", is("")));
   }
 
   @Test
-  public void test_removeCampaignItemByDecrementItemCount() {
+  public void test_removeCampaignItemByDirectly() throws Exception {
     RegisterResponse registerResponse = generateUserAccount();
-    int userId = registerResponse.getId();
-    String cartId = getCartIdFromToken(registerResponse.getToken());
+    int count = 4;
 
-    CartResponse<CartItemDto> cartResponseBeforeIncrement = cartService.getCart(cartId);
-    assertFalse(cartResponseBeforeIncrement
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse1.getProductId())));
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 20, 3,3,4, 1);
+
+    //add to cart before test
+    AddItemToCartRequest addItemToCartRequest = AddItemToCartRequest.builder()
+        .productId(itemGenerateResponse.getProductId())
+        .count(count)
+        .build();
+
+    CartResponse cartResponse = cartService.addToCart(registerResponse.getId(), getCartIdFromToken(registerResponse.getToken()), addItemToCartRequest);
+    assertNotNull(cartResponse);
 
     CartItemIncrementRequest request = CartItemIncrementRequest.builder()
-        .productId(itemResponse1.getProductId())
+        .productId(itemGenerateResponse.getProductId())
         .build();
-
-    CartResponse<CartItemDto> cartResponse = cartService.incrementItem(userId, cartId, request);
-
-    assertTrue(cartResponse
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse1.getProductId())));
 
     //test
-    CartItemDecrementRequest decrementRequest = CartItemDecrementRequest.builder()
-        .productId(itemResponse1.getProductId())
-        .build();
-
-    CartResponse<CartItemDto> cartResponseBeforeDecrement = cartService.decrementItem(userId, cartId, decrementRequest);
-    assertFalse(cartResponseBeforeDecrement
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse1.getProductId())));
+    mockMvc.perform(post("/cart/remove")
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", "Bearer " + registerResponse.getToken())
+        .content(new Gson().toJson(request)))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(contentType))
+        .andExpect(jsonPath("$.itemList", hasSize(0)));
   }
 
   @Test
-  public void test_removeNonCampaignItemByDecrementItemCount() {
+  public void test_removeNonCampaignItemByDirectly() throws Exception {
     RegisterResponse registerResponse = generateUserAccount();
-    int userId = registerResponse.getId();
-    String cartId = getCartIdFromToken(registerResponse.getToken());
+    int count = 4;
 
-    CartResponse<CartItemDto> cartResponseBeforeIncrement = cartService.getCart(cartId);
-    assertFalse(cartResponseBeforeIncrement
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse2.getProductId())));
+    ItemResponse itemResponse = generateItem(sellerAccountRegisterResponse.getId());
+
+    //add to cart before test
+    AddItemToCartRequest addItemToCartRequest = AddItemToCartRequest.builder()
+        .productId(itemResponse.getProductId())
+        .count(count)
+        .build();
+
+    CartResponse cartResponse = cartService.addToCart(registerResponse.getId(), getCartIdFromToken(registerResponse.getToken()), addItemToCartRequest);
+    assertNotNull(cartResponse);
 
     CartItemIncrementRequest request = CartItemIncrementRequest.builder()
-        .productId(itemResponse2.getProductId())
+        .productId(itemResponse.getProductId())
         .build();
-
-    CartResponse<CartItemDto> cartResponse = cartService
-        .incrementItem(userId,
-            cartId,
-            request);
-    assertTrue(cartResponse
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse2.getProductId())));
 
     //test
-    CartItemDecrementRequest decrementRequest = CartItemDecrementRequest.builder()
-        .productId(itemResponse1.getProductId())
-        .build();
-
-    CartResponse<CartItemDto> cartResponseBeforeDecrement = cartService
-        .decrementItem(userId,
-            cartId,
-            decrementRequest);
-    assertFalse(cartResponseBeforeDecrement
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse2.getProductId())));
+    mockMvc.perform(post("/cart/remove")
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", "Bearer " + registerResponse.getToken())
+        .content(new Gson().toJson(request)))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(contentType))
+        .andExpect(jsonPath("$.itemList", hasSize(0)));
   }
 
   @Test
-  public void test_addCampaignItemToCartTillStockFull() {
+  public void test_addCampaignItemToCart_WhenStockSufficient() throws Exception {
     RegisterResponse registerResponse = generateUserAccount();
-    int userId = registerResponse.getId();
-    String cartId = getCartIdFromToken(registerResponse.getToken());
+    int count = 15;
+
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 10, 3,3,4, 1);
+
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .productId(itemGenerateResponse.getProductId())
+        .count(count)
+        .build();
+
+    //test
+    mockMvc.perform(post("/cart/add")
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", "Bearer " + registerResponse.getToken())
+        .content(new Gson().toJson(request)))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(contentType))
+        .andExpect(jsonPath("$.itemList", hasSize(1)))
+        .andExpect(jsonPath("$.itemList[0].productId", is(itemGenerateResponse.getProductId())))
+        .andExpect(jsonPath("$.itemList[0].sellerId", is(sellerAccountRegisterResponse.getId())))
+        .andExpect(jsonPath("$.itemList[0].desiredSaleCount", is(count)))
+        .andExpect(jsonPath("$.itemList[0].saleCount", is(8)))
+        .andExpect(jsonPath("$.itemList[0].price", is(itemGenerateResponse.getPrice() * 8)))
+        .andExpect(jsonPath("$.itemList[0].hasCampaign", is(true)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.actualGiftCount", is(2)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.totalItemCount", is(8)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.badge.requirement", is(4)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.badge.gift", is(1)))
+        .andExpect(jsonPath("$.itemList[0].hasVariant", is(false)))
+        .andExpect(jsonPath("$.itemList[0].variant", nullValue()))
+        .andExpect(jsonPath("$.itemList[0].message", is(Messages.CART_UPDATED.getValue())));
+  }
+
+  @Test
+  public void test_addNonCampaignItemToCart_WhenStockSufficient() throws Exception {
+    RegisterResponse registerResponse = generateUserAccount();
+    int count = 15;
 
     ItemResponse itemResponse = generateItem(sellerAccountRegisterResponse.getId(), 10);
-    generateCampaign(sellerAccountRegisterResponse.getId(), itemResponse.getProductId(), 3, 1, 5, 2);
-
-    CartResponse<CartItemDto> cartResponseBeforeIncrement = cartService.getCart(cartId);
-    assertFalse(cartResponseBeforeIncrement
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse.getProductId())));
 
     AddItemToCartRequest request = AddItemToCartRequest.builder()
         .productId(itemResponse.getProductId())
-        .count(10)
+        .count(count)
         .build();
 
-    CartResponse<CartItemDto> cartResponse = cartService
-        .addToCart(userId,
-            cartId,
-            request);
-
-    assertNotNull(cartResponse);
-    assertEquals(2, cartResponse.getItemList().stream().filter(cartItem -> cartItem.getProductId().equals(itemResponse.getProductId())).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
-    assertEquals(8, cartResponse.getItemList().stream().filter(cartItem -> cartItem.getProductId().equals(itemResponse.getProductId())).findFirst().get().getCampaignParams().getTotalItemCount().intValue());
+    //test
+    mockMvc.perform(post("/cart/add")
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", "Bearer " + registerResponse.getToken())
+        .content(new Gson().toJson(request)))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(contentType))
+        .andExpect(jsonPath("$.itemList", hasSize(1)))
+        .andExpect(jsonPath("$.itemList[0].productId", is(itemResponse.getProductId())))
+        .andExpect(jsonPath("$.itemList[0].sellerId", is(sellerAccountRegisterResponse.getId())))
+        .andExpect(jsonPath("$.itemList[0].desiredSaleCount", is(count)))
+        .andExpect(jsonPath("$.itemList[0].saleCount", is(10)))
+        .andExpect(jsonPath("$.itemList[0].price", is(itemResponse.getPrice() * 10)))
+        .andExpect(jsonPath("$.itemList[0].hasCampaign", is(false)))
+        .andExpect(jsonPath("$.itemList[0].hasVariant", is(false)))
+        .andExpect(jsonPath("$.itemList[0].variant", nullValue()))
+        .andExpect(jsonPath("$.itemList[0].message", is("")));
   }
 
   @Test
-  public void test_addNonCampaignItemToCartTillStockFull() {
+  public void test_addCampaignItemToCart_WhenCartLimitExceed() throws Exception {
     RegisterResponse registerResponse = generateUserAccount();
-    int userId = registerResponse.getId();
-    String cartId = getCartIdFromToken(registerResponse.getToken());
+    int count = 20;
 
-    ItemResponse itemResponse = generateItem(sellerAccountRegisterResponse.getId(), 10);
-
-    CartResponse<CartItemDto> cartResponseBeforeIncrement = cartService.getCart(cartId);
-    assertFalse(cartResponseBeforeIncrement
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse.getProductId())));
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 25, 3,3,4, 1);
 
     AddItemToCartRequest request = AddItemToCartRequest.builder()
-        .productId(itemResponse.getProductId())
-        .count(10)
+        .productId(itemGenerateResponse.getProductId())
+        .count(count)
         .build();
 
-
-    CartResponse<CartItemDto> cartResponse = cartService.addToCart(userId, cartId, request);
-
-    assertNotNull(cartResponse);
-    assertNull(cartResponse.getItemList().stream().filter(cartItem -> cartItem.getProductId().equals(itemResponse.getProductId())).findFirst().get().getCampaignParams());
-    assertFalse(cartResponse.getItemList().stream().filter(cartItem -> cartItem.getProductId().equals(itemResponse.getProductId())).findFirst().get().getHasCampaign());
-    assertEquals(10, cartResponse.getItemList().stream().filter(cartItem -> cartItem.getProductId().equals(itemResponse.getProductId())).findFirst().get().getSaleCount().intValue());
+    //test
+    mockMvc.perform(post("/cart/add")
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", "Bearer " + registerResponse.getToken())
+        .content(new Gson().toJson(request)))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(contentType))
+        .andExpect(jsonPath("$.itemList", hasSize(1)))
+        .andExpect(jsonPath("$.itemList[0].productId", is(itemGenerateResponse.getProductId())))
+        .andExpect(jsonPath("$.itemList[0].sellerId", is(sellerAccountRegisterResponse.getId())))
+        .andExpect(jsonPath("$.itemList[0].desiredSaleCount", is(count)))
+        .andExpect(jsonPath("$.itemList[0].saleCount", is(count)))
+        .andExpect(jsonPath("$.itemList[0].price", is(itemGenerateResponse.getPrice() * count)))
+        .andExpect(jsonPath("$.itemList[0].hasCampaign", is(true)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.actualGiftCount", is(3)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.totalItemCount", is(count)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.badge.requirement", is(4)))
+        .andExpect(jsonPath("$.itemList[0].campaignParams.badge.gift", is(1)))
+        .andExpect(jsonPath("$.itemList[0].hasVariant", is(false)))
+        .andExpect(jsonPath("$.itemList[0].variant", nullValue()))
+        .andExpect(jsonPath("$.itemList[0].message", is("")));
   }
 
-  /*@Test
-  public void test_addCampaignItemToCartAfterCampaignLimitExpired(){
+  @Test
+  public void test_addCampaignItemToCart_WhenCampaignLimitExceed() throws Exception{
     RegisterResponse registerResponse = generateUserAccount();
-    int userId = registerResponse.getId();
-    String cartId = getCartIdFromToken(registerResponse.getToken());
+    int count = 7;
 
-    ItemResponse itemResponse = generateItem(sellerAccountRegisterResponse.getId(), 10);
-    generateCampaign(sellerAccountRegisterResponse.getId(), itemResponse.getProductId(), 3, 1, 5, 2);
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 40, 3,3,4, 1);
 
-    CartResponse<CartItem> cartResponseBeforeIncrement = cartService.getCart(cartId);
-    assertFalse(cartResponseBeforeIncrement
-        .getItemList()
-        .stream()
-        .anyMatch(cartItem -> cartItem.getProductId().equals(itemResponse.getProductId())));
+    generateSale(registerResponse.getId(), itemGenerateResponse.getProductId(), 8, 2, itemGenerateResponse.getPrice());
+    generateSale(registerResponse.getId(), itemGenerateResponse.getProductId(), 10, 2, itemGenerateResponse.getPrice());
+    generateSale(registerResponse.getId(), itemGenerateResponse.getProductId(), 12, 3, itemGenerateResponse.getPrice());
 
-    CartResponse<CartItem> cartResponse = cartService
-        .addToCart(userId,
-            cartId,
-            itemResponse.getProductId().toString(),
-            String.valueOf(2));
-    assertNotNull(cartId);
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .productId(itemGenerateResponse.getProductId())
+        .count(count)
+        .build();
 
-    SaleResponse firstSaleResponse = salesService.addSale(userId, cartId);
-    assertNotNull(firstSaleResponse);
+    //test
+    mockMvc.perform(post("/cart/add")
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", "Bearer " + registerResponse.getToken())
+        .content(new Gson().toJson(request)))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(contentType))
+        .andExpect(jsonPath("$.itemList", hasSize(1)))
+        .andExpect(jsonPath("$.itemList[0].productId", is(itemGenerateResponse.getProductId())))
+        .andExpect(jsonPath("$.itemList[0].sellerId", is(sellerAccountRegisterResponse.getId())))
+        .andExpect(jsonPath("$.itemList[0].desiredSaleCount", is(count)))
+        .andExpect(jsonPath("$.itemList[0].saleCount", is(count)))
+        .andExpect(jsonPath("$.itemList[0].price", is(itemGenerateResponse.getPrice() * count)))
+        .andExpect(jsonPath("$.itemList[0].hasCampaign", is(false)))
+        .andExpect(jsonPath("$.itemList[0].hasVariant", is(false)))
+        .andExpect(jsonPath("$.itemList[0].variant", nullValue()))
+        .andExpect(jsonPath("$.itemList[0].message", is("")));
 
-    CartResponse<CartItem> cartResponse = cartService
-        .addToCart(userId,
-            cartId,
-            itemResponse.getProductId().toString(),
-            String.valueOf(2));
-
-    SaleResponse secondSaleResponse = salesService.addSale(userId, cartId);
-    assertNotNull(secondSaleResponse);
-
-
-  }*/
+  }
 }

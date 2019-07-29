@@ -356,8 +356,18 @@ public class CartServiceTest {
     }
   }
 
+  /**
+   * desired sale count = 8
+   * item count already on cart = 5
+   * gift count already on cart = 1
+   * campaign requirement = 3
+   * campaign gift        = 1
+   * cart limit           = 2
+   * campaign limit       = 2
+   * total stock          = 25
+   */
   @Test
-  public void addToCart_AlreadyExistsCampaignItemOnCart_ShouldPass() {
+  public void addToCart_AlreadyExistsCampaignItemOnCart_1_ShouldPass() {
     int accountId = 1;
     String cartId = "5d1df2814d6a4b0a745457d3";
     int productId = 1;
@@ -417,6 +427,156 @@ public class CartServiceTest {
     assertNotNull(cartResponse);
     //campaign assertions
     assertEquals(13, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getTotalItemCount().intValue());
+    assertEquals(2, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
+    //assertEquals(Messages.CART_LIMIT_EXCEED.getValue(), cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getMessage());
+  }
+
+  /**
+   * desired sale count = 5
+   * item count already on cart = 2
+   * gift count already on cart = 0
+   * campaign requirement = 3
+   * campaign gift        = 1
+   * cart limit           = 2
+   * campaign limit       = 2
+   * total stock          = 25
+   */
+  @Test
+  public void addToCart_AlreadyExistsCampaignItemOnCart_2_ShouldPass() {
+    int accountId = 1;
+    String cartId = "5d1df2814d6a4b0a745457d3";
+    int productId = 1;
+    int count = 5;
+    int sellerId = 50;
+    int campaignId = 10;
+    int totalStock = 25;
+
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .productId(productId)
+        .count(count)
+        .build();
+
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,1);
+
+    CartItem cartItem = CartItem.builder()
+        .productId(productId)
+        .sellerId(sellerId)
+        .hasVariant(false)
+        .variant(null)
+        .hasCampaign(true)
+        .campaignParams(CampaignParams.builder().totalItemCount(2).actualGiftCount(0).badge(Badge.builder().requirement(3).gift(1).build()).build())
+        .desiredSaleCount(2)
+        .saleCount(2)
+        .price(12.3)
+        .addedAt(1563948163800L)
+        .messageKey(0)
+        .build();
+
+    List<CartItem> cartItems = new ArrayList<>();
+    cartItems.add(cartItem);
+
+    CartEntity cartEntity = CartEntity.builder()
+        .id(cartId)
+        .accountId(accountId)
+        .cartItems(cartItems)
+        .build();
+
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
+
+    when(campaignRepository.findById(campaignId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByProductId(productId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(anyInt(), anyLong(), anyLong()))
+        .thenReturn(Optional.of(campaignEntity));
+    when(cartRepository.findCart(cartId))
+        .thenReturn(Optional.of(cartEntity));
+    when(variantRepository.findById(anyInt()))
+        .thenReturn(Optional.empty());
+    when(itemRepository.findById(productId))
+        .thenReturn(Optional.of(itemEntity));
+
+    //test
+    CartResponse<CartItemDto> cartResponse = cartService.addToCart(accountId, cartId, request);
+
+    assertNotNull(cartResponse);
+    //campaign assertions
+    assertEquals(7, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getTotalItemCount().intValue());
+    assertEquals(2, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
+    //assertEquals(Messages.CART_LIMIT_EXCEED.getValue(), cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getMessage());
+  }
+
+  /**
+   * desired sale count = 8
+   * item count already on cart = 3
+   * gift count already on cart = 1
+   * campaign requirement = 3
+   * campaign gift        = 1
+   * cart limit           = 2
+   * campaign limit       = 2
+   * total stock          = 10
+   */
+  @Test
+  public void addToCart_AlreadyExistsCampaignItemOnCart_3_ShouldPass() {
+    int accountId = 1;
+    String cartId = "5d1df2814d6a4b0a745457d3";
+    int productId = 1;
+    int count = 8;
+    int sellerId = 50;
+    int campaignId = 10;
+    int totalStock = 10;
+
+    AddItemToCartRequest request = AddItemToCartRequest.builder()
+        .productId(productId)
+        .count(count)
+        .build();
+
+    CampaignEntity campaignEntity = generateCampaignEntity(campaignId, productId, sellerId,3,1);
+
+    CartItem cartItem = CartItem.builder()
+        .productId(productId)
+        .sellerId(sellerId)
+        .hasVariant(false)
+        .variant(null)
+        .hasCampaign(true)
+        .campaignParams(CampaignParams.builder().totalItemCount(3).actualGiftCount(1).badge(Badge.builder().requirement(3).gift(1).build()).build())
+        .desiredSaleCount(3)
+        .saleCount(3)
+        .price(12.3)
+        .addedAt(1563948163800L)
+        .messageKey(0)
+        .build();
+
+    List<CartItem> cartItems = new ArrayList<>();
+    cartItems.add(cartItem);
+
+    CartEntity cartEntity = CartEntity.builder()
+        .id(cartId)
+        .accountId(accountId)
+        .cartItems(cartItems)
+        .build();
+
+    ItemEntity itemEntity = generateItemEntity(productId, sellerId, totalStock);
+
+    when(campaignRepository.findById(campaignId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByProductId(productId))
+        .thenReturn(Optional.of(campaignEntity));
+    when(campaignRepository.findByIdAndStartAtLessThanEqualAndEndAtGreaterThanEqual(anyInt(), anyLong(), anyLong()))
+        .thenReturn(Optional.of(campaignEntity));
+    when(cartRepository.findCart(cartId))
+        .thenReturn(Optional.of(cartEntity));
+    when(variantRepository.findById(anyInt()))
+        .thenReturn(Optional.empty());
+    when(itemRepository.findById(productId))
+        .thenReturn(Optional.of(itemEntity));
+
+    //test
+    CartResponse<CartItemDto> cartResponse = cartService.addToCart(accountId, cartId, request);
+
+    assertNotNull(cartResponse);
+    //campaign assertions
+    assertEquals(8, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getTotalItemCount().intValue());
     assertEquals(2, cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getCampaignParams().getActualGiftCount().intValue());
     //assertEquals(Messages.CART_LIMIT_EXCEED.getValue(), cartResponse.getItemList().stream().filter(cartItemDto -> cartItemDto.getProductId().equals(productId)).findFirst().get().getMessage());
   }

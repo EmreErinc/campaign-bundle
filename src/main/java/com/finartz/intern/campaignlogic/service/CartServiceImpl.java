@@ -391,8 +391,8 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
         .filter(cartItem -> cartItem.getProductId().equals(campaignEntity.getProductId()))
         .findFirst();
     if (optionalCartItem.isPresent()) {
-      itemOnCart = optionalCartItem.get().getSaleCount();
-      giftOnCart = optionalCartItem.get().getCampaignParams().getActualGiftCount();
+      optionalCartItem.get().getSaleCount();
+      optionalCartItem.get().getCampaignParams().getActualGiftCount();
     }
   }
 
@@ -576,7 +576,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
         .accountId(accountId)
         .cartId(cartId)
         .productId(cartControlResponse.getProductId())
-        .variantId(Optional.ofNullable(cartControlResponse.getVariantId()))
+        .variantId(Optional.of(cartControlResponse.getVariantId()))
         .desiredCount(cartControlResponse.getDesiredSaleCount())
         .build();
 

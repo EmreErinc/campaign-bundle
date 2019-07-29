@@ -1,4 +1,4 @@
-package com.finartz.intern.campaignlogic;
+package com.finartz.intern.campaignlogic.model.value;
 
 import lombok.Builder;
 import lombok.Data;

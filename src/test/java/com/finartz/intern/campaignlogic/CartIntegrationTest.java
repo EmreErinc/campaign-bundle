@@ -7,6 +7,8 @@ import com.finartz.intern.campaignlogic.model.response.CartResponse;
 import com.finartz.intern.campaignlogic.model.response.ItemResponse;
 import com.finartz.intern.campaignlogic.model.response.RegisterResponse;
 import com.finartz.intern.campaignlogic.model.response.SellerResponse;
+import com.finartz.intern.campaignlogic.model.value.CampaignSpecifications;
+import com.finartz.intern.campaignlogic.model.value.ItemGenerateResponse;
 import com.finartz.intern.campaignlogic.model.value.Messages;
 import com.finartz.intern.campaignlogic.service.CartService;
 import com.finartz.intern.campaignlogic.service.SellerService;
@@ -77,7 +79,15 @@ public class CartIntegrationTest extends BaseTestController {
     RegisterResponse registerResponse = generateUserAccount();
     int count = 2;
 
-    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 20, 3,3,4, 1);
+    CampaignSpecifications campaignSpecifications = CampaignSpecifications.builder()
+        .sellerId(sellerAccountRegisterResponse.getId())
+        .cartLimit(3)
+        .campaignLimit(3)
+        .requirementCount(4)
+        .giftCount(1)
+        .build();
+
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(20, campaignSpecifications);
 
     AddItemToCartRequest request = AddItemToCartRequest.builder()
         .productId(itemGenerateResponse.getProductId())
@@ -145,7 +155,15 @@ public class CartIntegrationTest extends BaseTestController {
   public void test_addCampaignItemToCartByIncrementItemCount() throws Exception {
     RegisterResponse registerResponse = generateUserAccount();
 
-    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 20, 3,3,4, 1);
+    CampaignSpecifications campaignSpecifications = CampaignSpecifications.builder()
+        .sellerId(sellerAccountRegisterResponse.getId())
+        .cartLimit(3)
+        .campaignLimit(3)
+        .requirementCount(4)
+        .giftCount(1)
+        .build();
+
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(20, campaignSpecifications);
 
     CartItemIncrementRequest request = CartItemIncrementRequest.builder()
         .productId(itemGenerateResponse.getProductId())
@@ -211,7 +229,15 @@ public class CartIntegrationTest extends BaseTestController {
     RegisterResponse registerResponse = generateUserAccount();
     int count = 4;
 
-    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 20, 3,3,4, 1);
+    CampaignSpecifications campaignSpecifications = CampaignSpecifications.builder()
+        .sellerId(sellerAccountRegisterResponse.getId())
+        .cartLimit(3)
+        .campaignLimit(3)
+        .requirementCount(4)
+        .giftCount(1)
+        .build();
+
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(20, campaignSpecifications);
 
     //add to cart before test
     AddItemToCartRequest addItemToCartRequest = AddItemToCartRequest.builder()
@@ -294,7 +320,15 @@ public class CartIntegrationTest extends BaseTestController {
     RegisterResponse registerResponse = generateUserAccount();
     int count = 3;
 
-    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 20, 3,3,4, 1);
+    CampaignSpecifications campaignSpecifications = CampaignSpecifications.builder()
+        .sellerId(sellerAccountRegisterResponse.getId())
+        .cartLimit(3)
+        .campaignLimit(3)
+        .requirementCount(4)
+        .giftCount(1)
+        .build();
+
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(20, campaignSpecifications);
 
     //add to cart before test
     AddItemToCartRequest addItemToCartRequest = AddItemToCartRequest.builder()
@@ -377,7 +411,15 @@ public class CartIntegrationTest extends BaseTestController {
     RegisterResponse registerResponse = generateUserAccount();
     int count = 4;
 
-    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 20, 3,3,4, 1);
+    CampaignSpecifications campaignSpecifications = CampaignSpecifications.builder()
+        .sellerId(sellerAccountRegisterResponse.getId())
+        .cartLimit(3)
+        .campaignLimit(3)
+        .requirementCount(4)
+        .giftCount(1)
+        .build();
+
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(20, campaignSpecifications);
 
     //add to cart before test
     AddItemToCartRequest addItemToCartRequest = AddItemToCartRequest.builder()
@@ -439,7 +481,15 @@ public class CartIntegrationTest extends BaseTestController {
     RegisterResponse registerResponse = generateUserAccount();
     int count = 15;
 
-    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 10, 3,3,4, 1);
+    CampaignSpecifications campaignSpecifications = CampaignSpecifications.builder()
+        .sellerId(sellerAccountRegisterResponse.getId())
+        .cartLimit(3)
+        .campaignLimit(3)
+        .requirementCount(4)
+        .giftCount(1)
+        .build();
+
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(10, campaignSpecifications);
 
     AddItemToCartRequest request = AddItemToCartRequest.builder()
         .productId(itemGenerateResponse.getProductId())
@@ -507,7 +557,15 @@ public class CartIntegrationTest extends BaseTestController {
     RegisterResponse registerResponse = generateUserAccount();
     int count = 20;
 
-    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 25, 3,3,4, 1);
+    CampaignSpecifications campaignSpecifications = CampaignSpecifications.builder()
+        .sellerId(sellerAccountRegisterResponse.getId())
+        .cartLimit(3)
+        .campaignLimit(3)
+        .requirementCount(4)
+        .giftCount(1)
+        .build();
+
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(25, campaignSpecifications);
 
     AddItemToCartRequest request = AddItemToCartRequest.builder()
         .productId(itemGenerateResponse.getProductId())
@@ -539,11 +597,19 @@ public class CartIntegrationTest extends BaseTestController {
   }
 
   @Test
-  public void test_addCampaignItemToCart_WhenCampaignLimitExceed() throws Exception{
+  public void test_addCampaignItemToCart_WhenCampaignLimitExceed() throws Exception {
     RegisterResponse registerResponse = generateUserAccount();
     int count = 7;
 
-    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 40, 3,3,4, 1);
+    CampaignSpecifications campaignSpecifications = CampaignSpecifications.builder()
+        .sellerId(sellerAccountRegisterResponse.getId())
+        .cartLimit(3)
+        .campaignLimit(3)
+        .requirementCount(4)
+        .giftCount(1)
+        .build();
+
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(40, campaignSpecifications);
 
     generateSale(registerResponse.getId(), itemGenerateResponse.getProductId(), 8, 2, itemGenerateResponse.getPrice());
     generateSale(registerResponse.getId(), itemGenerateResponse.getProductId(), 10, 2, itemGenerateResponse.getPrice());

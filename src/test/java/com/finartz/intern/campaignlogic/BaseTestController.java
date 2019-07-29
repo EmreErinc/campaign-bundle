@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class BaseTestController {
@@ -53,14 +54,14 @@ public abstract class BaseTestController {
   @Autowired
   private JwtTokenProvider jwtTokenProvider;
 
-  public ItemGenerateResponse generateItemWithCampaign(int accountId, int stock, int cartLimit, int campaignLimit, int requirementCount, int giftCount) {
+  public ItemGenerateResponse generateItemWithCampaign(int stock, CampaignSpecifications campaignSpecifications) {
     String[] cargoList = {"MNG Kargo", "Sürat Kargo", "Yurtiçi Kargo", "PTT", "UPS"};
 
     //item creation
     ItemEntity itemEntity = ItemEntity.builder()
         .name("test-item-" + Instant.now().toEpochMilli())
         .description("item-description-1")
-        .sellerId(accountId)
+        .sellerId(campaignSpecifications.getSellerId())
         .price(new Random().nextDouble() * 50D)
         .stock(stock)
         .cargoType(CargoType.values()[new Random().nextInt(2)])
@@ -74,12 +75,12 @@ public abstract class BaseTestController {
     CampaignEntity campaignEntity = CampaignEntity.builder()
         .title("custom campaign")
         .productId(itemEntity.getId())
-        .cartLimit(cartLimit)
-        .campaignLimit(campaignLimit)
+        .cartLimit(campaignSpecifications.getCartLimit())
+        .campaignLimit(campaignSpecifications.getCampaignLimit())
         .createdAt(1564128135680L)
-        .sellerId(accountId)
-        .requirementCount(requirementCount)
-        .giftCount(giftCount)
+        .sellerId(campaignSpecifications.getSellerId())
+        .requirementCount(campaignSpecifications.getRequirementCount())
+        .giftCount(campaignSpecifications.getGiftCount())
         .startAt(1562939866630L)
         .endAt(1577653200000L)
         .status(CampaignStatus.ACTIVE)
@@ -94,14 +95,14 @@ public abstract class BaseTestController {
         .build();
   }
 
-  public ItemGenerateResponse generateItemWithCampaignCanceledStatus(int accountId, int stock, int cartLimit, int campaignLimit, int requirementCount, int giftCount) {
+  public ItemGenerateResponse generateItemWithCampaignCanceledStatus(int stock, CampaignSpecifications campaignSpecifications) {
     String[] cargoList = {"MNG Kargo", "Sürat Kargo", "Yurtiçi Kargo", "PTT", "UPS"};
 
     //item creation
     ItemEntity itemEntity = ItemEntity.builder()
         .name("test-item-" + Instant.now().toEpochMilli())
         .description("item-description-1")
-        .sellerId(accountId)
+        .sellerId(campaignSpecifications.getSellerId())
         .price(new Random().nextDouble() * 50D)
         .stock(stock)
         .cargoType(CargoType.values()[new Random().nextInt(2)])
@@ -115,12 +116,12 @@ public abstract class BaseTestController {
     CampaignEntity campaignEntity = CampaignEntity.builder()
         .title("custom campaign")
         .productId(itemEntity.getId())
-        .cartLimit(cartLimit)
-        .campaignLimit(campaignLimit)
+        .cartLimit(campaignSpecifications.getCartLimit())
+        .campaignLimit(campaignSpecifications.getCampaignLimit())
         .createdAt(1564128135680L)
-        .sellerId(accountId)
-        .requirementCount(requirementCount)
-        .giftCount(giftCount)
+        .sellerId(campaignSpecifications.getSellerId())
+        .requirementCount(campaignSpecifications.getRequirementCount())
+        .giftCount(campaignSpecifications.getGiftCount())
         .startAt(1562939866630L)
         .endAt(1577653200000L)
         .status(CampaignStatus.CANCELED)
@@ -179,16 +180,16 @@ public abstract class BaseTestController {
     return Converters.itemEntityToItemResponse(itemEntity, variants);
   }
 
-  public CampaignResponse generateCampaign(int productId, int accountId, int cartLimit, int campaignLimit, int requirementCount, int giftCount) {
+  public CampaignResponse generateCampaign(int productId, CampaignSpecifications campaignSpecifications) {
     CampaignEntity campaignEntity = CampaignEntity.builder()
         .title("custom campaign")
         .productId(productId)
-        .cartLimit(cartLimit)
-        .campaignLimit(campaignLimit)
+        .cartLimit(campaignSpecifications.getCartLimit())
+        .campaignLimit(campaignSpecifications.getCampaignLimit())
         .createdAt(1564128135680L)
-        .sellerId(accountId)
-        .requirementCount(requirementCount)
-        .giftCount(giftCount)
+        .sellerId(campaignSpecifications.getSellerId())
+        .requirementCount(campaignSpecifications.getRequirementCount())
+        .giftCount(campaignSpecifications.getGiftCount())
         .startAt(1562939866630L)
         .endAt(1577653200000L)
         .status(CampaignStatus.ACTIVE)
@@ -197,8 +198,8 @@ public abstract class BaseTestController {
     campaignEntity = campaignRepository.save(campaignEntity);
 
     Badge badge = Badge.builder()
-        .requirement(requirementCount)
-        .gift(giftCount)
+        .requirement(campaignSpecifications.getRequirementCount())
+        .gift(campaignSpecifications.getGiftCount())
         .build();
 
     return Converters.campaignEntityToCampaignResponse(campaignEntity, badge);
@@ -211,15 +212,23 @@ public abstract class BaseTestController {
         .price(new Random().nextDouble() * 15D)
         .build());
 
-    variantSpecs.forEach(variantSpec -> {
+    String[] specData = {"small", "medium", "large", "sarı", "kırmızı", "beyaz", "2017", "2018", "2019"};
+
+    variantSpecs = variantSpecs.stream().map(variantSpec -> {
       VariantSpecEntity variantSpecEntity = VariantSpecEntity.builder()
           .variantId(variantEntity.getId())
-          .specDataId(getIndexOfSpecData(variantSpec.getSpecData()))
+          .specDataId(Lists.newArrayList(specData).indexOf(variantSpec.getSpecData()))
           .productId(productId)
           .build();
 
       variantSpecRepository.save(variantSpecEntity);
-    });
+
+      return VariantSpec.builder()
+          .id(variantSpecEntity.getId())
+          .specData(variantSpec.getSpecData())
+          .specDetail(variantSpec.getSpecDetail())
+          .build();
+    }).collect(Collectors.toList());
 
     return Variant.builder()
         .id(variantEntity.getId())
@@ -227,11 +236,6 @@ public abstract class BaseTestController {
         .stock(variantEntity.getStock())
         .variantSpecs(variantSpecs)
         .build();
-  }
-
-  public Integer getIndexOfSpecData(String data){
-    String[] specData = {"small", "medium", "large", "sarı", "kırmızı", "beyaz", "2017", "2018", "2019"};
-    return Lists.newArrayList(specData).indexOf(data);
   }
 
   public void prepareVariantSpecs() {
@@ -246,7 +250,7 @@ public abstract class BaseTestController {
     String[] specData = {"small", "medium", "large", "sarı", "kırmızı", "beyaz", "2017", "2018", "2019"};
     for (int i = 0; i < 9; i++) {
       SpecDataEntity specDataEntity = SpecDataEntity.builder()
-          .specDetailId(i / 3)
+          .specDetailId((i / 3) + 1)
           .data(specData[i])
           .build();
       specDataRepository.save(specDataEntity);
@@ -258,7 +262,7 @@ public abstract class BaseTestController {
     String[] specData = {"small", "medium", "large", "sarı", "kırmızı", "beyaz", "2017", "2018", "2019"};
 
     int detailSelector = new Random().nextInt(3);
-    int dataSelector = (new Random().nextInt(3) * 3) + detailSelector;
+    int dataSelector = new Random().nextInt(3) + (detailSelector * 3);
 
     return VariantSpec.builder()
         .specDetail(specDetails[detailSelector])
@@ -270,10 +274,10 @@ public abstract class BaseTestController {
     cartRepository.updateCart(cartEntity);
   }
 
-  public CartItem generateCartItem(int accountId, int stock, int desiredSaleCount, boolean variant) {
+  public CartItem generateCartItem(int accountId, int stock, int desiredSaleCount, boolean variant, boolean campaign, Optional<CampaignSpecifications> optionalCampaignSpecifications) {
     ItemResponse itemResponse = generateItem(accountId, stock);
 
-    Variant variantResult = Variant.builder().build();
+    Variant variantResult = null;
 
     if (variant) {
       VariantSpec variantSpec1 = generateVariantSpec();
@@ -290,6 +294,16 @@ public abstract class BaseTestController {
       variantResult = generateVariant(itemResponse.getProductId(), stock, variantSpecs);
     }
 
+    CampaignParams campaignParams = null;
+    if (campaign && optionalCampaignSpecifications.isPresent()){
+      CampaignResponse campaignResponse = generateCampaign(itemResponse.getProductId(), optionalCampaignSpecifications.get());
+      campaignParams = CampaignParams.builder()
+          .actualGiftCount(0)
+          .totalItemCount(0)
+          .badge(campaignResponse.getBadge())
+          .build();
+    }
+
     return CartItem.builder()
         .productId(itemResponse.getProductId())
         .desiredSaleCount(desiredSaleCount)
@@ -298,8 +312,8 @@ public abstract class BaseTestController {
         .price(itemResponse.getPrice())
         .addedAt(Instant.now().toEpochMilli())
         .messageKey(0)
-        .hasCampaign(false)
-        .campaignParams(null)
+        .hasCampaign(campaign)
+        .campaignParams(campaignParams)
         .hasVariant(variant)
         .variant(variantResult)
         .build();
@@ -345,5 +359,10 @@ public abstract class BaseTestController {
   public String getCartIdFromToken(String token) {
     return jwtTokenProvider
         .getCartIdFromToken(token);
+  }
+
+  public void decreaseStock(int productId, Optional<Integer> variantId, int stock) {
+    variantId.ifPresent(id -> variantRepository.addStock(-stock, id));
+    itemRepository.addStock(-stock, productId);
   }
 }

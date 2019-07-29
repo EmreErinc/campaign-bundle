@@ -5,7 +5,9 @@ import com.finartz.intern.campaignlogic.model.request.AddSellerRequest;
 import com.finartz.intern.campaignlogic.model.response.ItemResponse;
 import com.finartz.intern.campaignlogic.model.response.RegisterResponse;
 import com.finartz.intern.campaignlogic.model.response.SellerResponse;
+import com.finartz.intern.campaignlogic.model.value.CampaignSpecifications;
 import com.finartz.intern.campaignlogic.model.value.CampaignStatus;
+import com.finartz.intern.campaignlogic.model.value.ItemGenerateResponse;
 import com.finartz.intern.campaignlogic.service.SellerService;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
@@ -108,7 +110,16 @@ public class CampaignIntegrationTest extends BaseTestController {
     int giftCount = 1;
     int cartLimit = 3;
     int campaignLimit = 3;
-    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 10, cartLimit, campaignLimit, requirementCount, giftCount);
+
+    CampaignSpecifications campaignSpecifications = CampaignSpecifications.builder()
+        .sellerId(sellerAccountRegisterResponse.getId())
+        .cartLimit(cartLimit)
+        .campaignLimit(campaignLimit)
+        .requirementCount(requirementCount)
+        .giftCount(giftCount)
+        .build();
+
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(10, campaignSpecifications);
 
     mockMvc.perform(get("/campaign/" + itemGenerateResponse.getCampaignId() + "/cancel")
         .contentType(MediaType.APPLICATION_JSON)
@@ -125,7 +136,16 @@ public class CampaignIntegrationTest extends BaseTestController {
     int giftCount = 1;
     int cartLimit = 3;
     int campaignLimit = 3;
-    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaignCanceledStatus(sellerAccountRegisterResponse.getId(), 10, cartLimit, campaignLimit, requirementCount, giftCount);
+
+    CampaignSpecifications campaignSpecifications = CampaignSpecifications.builder()
+        .sellerId(sellerAccountRegisterResponse.getId())
+        .cartLimit(cartLimit)
+        .campaignLimit(campaignLimit)
+        .requirementCount(requirementCount)
+        .giftCount(giftCount)
+        .build();
+
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaignCanceledStatus(10, campaignSpecifications);
 
     mockMvc.perform(get("/campaign/" + itemGenerateResponse.getCampaignId() + "/active")
         .contentType(MediaType.APPLICATION_JSON)
@@ -142,7 +162,16 @@ public class CampaignIntegrationTest extends BaseTestController {
     int giftCount = 1;
     int cartLimit = 3;
     int campaignLimit = 3;
-    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(sellerAccountRegisterResponse.getId(), 10, cartLimit, campaignLimit, requirementCount, giftCount);
+
+    CampaignSpecifications campaignSpecifications = CampaignSpecifications.builder()
+        .sellerId(sellerAccountRegisterResponse.getId())
+        .cartLimit(cartLimit)
+        .campaignLimit(campaignLimit)
+        .requirementCount(requirementCount)
+        .giftCount(giftCount)
+        .build();
+
+    ItemGenerateResponse itemGenerateResponse = generateItemWithCampaign(10, campaignSpecifications);
 
     mockMvc.perform(get("/campaign/" + itemGenerateResponse.getCampaignId())
         .contentType(MediaType.APPLICATION_JSON)

@@ -61,11 +61,11 @@ public class SalesIntegrationTest extends BaseTestController {
 
   @Before
   public void initialize() {
-    DefaultMockMvcBuilder builder = MockMvcBuilders.webAppContextSetup(this.wac);
-    this.mockMvc = builder.build();
-
     //pre-save variant specs to db
     prepareVariantSpecs();
+
+    DefaultMockMvcBuilder builder = MockMvcBuilders.webAppContextSetup(this.wac);
+    this.mockMvc = builder.build();
 
     //create seller account
     sellerAccountRegisterResponse = generateSellerAccount();

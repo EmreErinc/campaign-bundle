@@ -544,4 +544,9 @@ public class BaseServiceImpl implements BaseService {
     itemRepository.addStock(-soldCount, itemId);
     variantId.ifPresent(id -> variantRepository.addStock(-soldCount, id));
   }
+
+  @Override
+  public String getProductName(int itemId){
+    return getItemEntity(itemId).getName();
+  }
 }

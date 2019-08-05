@@ -83,4 +83,6 @@ public interface BaseService {
   List<CartControlResponse> controlCartItems(CartEntity cartEntity);
 
   void decreaseItemStock(int itemId, Optional<Integer> variantId, int soldCount);
+
+  String getProductName(int itemId);
 }

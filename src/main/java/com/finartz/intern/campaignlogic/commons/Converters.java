@@ -163,6 +163,7 @@ public class Converters {
     return cartItems
         .stream()
         .map(cartItem -> CartItemDto.builder()
+            .productName(cartItem.getProductName())
             .productId(cartItem.getProductId())
             .saleCount(cartItem.getSaleCount())
             .sellerId(cartItem.getSellerId())

@@ -7,6 +7,7 @@ import lombok.Data;
 @Builder
 public class CartItemDto {
   private Integer productId;
+  private String productName;
   private Integer sellerId;
   private Integer desiredSaleCount;
   private Integer saleCount;

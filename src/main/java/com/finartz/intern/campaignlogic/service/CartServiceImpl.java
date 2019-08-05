@@ -279,6 +279,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
       cartEntity
           .getCartItems()
           .add(CartItem.builder()
+              .productName(getProductName(itemId))
               .productId(campaignEntity.getProductId())
               .sellerId(sellerId)
               .desiredSaleCount(desiredSaleCount)
@@ -519,6 +520,7 @@ public class CartServiceImpl extends BaseServiceImpl implements CartService {
           .getCartItems()
           .add(CartItem.builder()
               .productId(cartDto.getProductId())
+              .productName(getProductName(cartDto.getProductId()))
               .sellerId(sellerId)
               .desiredSaleCount(cartDto.getDesiredCount())
               .saleCount(desiredSaleCount)

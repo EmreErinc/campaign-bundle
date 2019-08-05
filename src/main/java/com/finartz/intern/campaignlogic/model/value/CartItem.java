@@ -11,6 +11,9 @@ public class CartItem {
   @NotNull(message = "productId should not be empty")
   private Integer productId;
 
+  @NotNull(message = "productName should not be empty")
+  private String productName;
+
   @NotNull(message = "sellerId should not be empty")
   private Integer sellerId;
 

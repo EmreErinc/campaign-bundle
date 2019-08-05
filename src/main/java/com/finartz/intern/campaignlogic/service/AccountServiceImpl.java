@@ -57,6 +57,7 @@ public class AccountServiceImpl implements AccountService, UserDetailsService {
         .name(accountEntity.getName())
         .lastName(accountEntity.getLastName())
         .token(generateToken(accountEntity.getId().toString(), cartId, Role.USER))
+        .role(Role.USER)
         .build();
   }
 
@@ -72,6 +73,7 @@ public class AccountServiceImpl implements AccountService, UserDetailsService {
 
     LoginResponse loginResponse = Converters.accountToLoginResponse(optionalUserEntity.get());
     loginResponse.setToken(generateToken(optionalUserEntity.get().getId().toString(), cartId, optionalUserEntity.get().getRole()));
+    loginResponse.setRole(optionalUserEntity.get().getRole());
 
     return loginResponse;
   }
@@ -90,6 +92,7 @@ public class AccountServiceImpl implements AccountService, UserDetailsService {
         .name(accountEntity.getName())
         .lastName(accountEntity.getLastName())
         .token(generateToken(accountEntity.getId().toString(), cartId, Role.SELLER))
+        .role(Role.SELLER)
         .build();
   }
 

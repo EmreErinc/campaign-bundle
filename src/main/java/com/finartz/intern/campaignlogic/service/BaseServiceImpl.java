@@ -370,7 +370,7 @@ public class BaseServiceImpl implements BaseService {
         .collect(Collectors.toList());
 
     if (optionalVariant.isPresent()) {
-      return collect.stream().filter(cartItem -> cartItem.getVariant().getId().equals(optionalVariantId)).mapToInt(CartItem::getSaleCount).sum();
+      return collect.stream().filter(cartItem -> cartItem.getVariant().getId().equals(optionalVariantId.get())).mapToInt(CartItem::getSaleCount).sum();
     }
 
     return collect.get(0).getSaleCount();
